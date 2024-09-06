@@ -1,0 +1,133 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div class="topnav">
+    <a class="active" href="/">Home</a>
+    <a href="/create_admin">Admin account</a>
+    <a href="/create_tour">Tour</a>
+    <a href="/create_tourtype">Tour Type</a>
+    <a href="/create_detail">Tour Detail</a>
+    <a href="/create_destination">Destination</a>
+    <a href="/create_partner">Partner</a>
+  </div>
+  <div class="form-add-new">
+    <form action="/create_Tour" method="post">
+      <fieldset>
+        <legend>Form add new Tour</legend>
+      
+        <div class="input-group">
+          <label>TourName: </label>
+          <input type="text" name="TourName"/>
+        </div>
+
+        <div class="input-group">
+          <label>Tourtype: </label>
+          <input type="text" name="TourType"/>
+        </div>
+        <div>
+          <button type="submit">Save</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+  <div class="table_container">
+    <div class="title">List Admin</div>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Typename</th>
+        <th>Action</th>
+      </tr>
+      <% listTour.forEach(function(tour) { %> 
+        <tr>
+          <td><%= tour.id %></td>
+          <td><%= tour.tourName %></td>
+          <td><%= tour.Thumnail %></td>
+          <td><%= tour.tourType %></td>
+
+          <td>
+            <button class="EditBtn">Edit</button>
+            <button class="DeleteBtn">Delete</button>
+          </td>
+        </tr>
+      <% }); %>
+      
+    </table>
+  </div>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Tour</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div class="topnav">
+    <a class="active" href="/">Home</a>
+    <a href="/create_admin">Admin account</a>
+    <a href="/create_tour">Tour</a>
+    <a href="/create_tourtype">Tour Type</a>
+    <a href="/create_detail">Tour Detail</a>
+    <a href="/create_destination">Destination</a>
+    <a href="/create_partner">Partner</a>
+  </div>
+  <div class="form-add-new">
+    <form action="/create_Tour" method="post">
+      <fieldset>
+        <legend>Form add new Tour</legend>
+      
+        <div class="input-group">
+          <label>Tour Name: </label>
+          <input type="text" name="TourName" required/>
+        </div>
+
+        <div class="input-group">
+          <label>Tour Type: </label>
+          <select name="TourType" class="styled-select" required>
+            <% tourTypes.forEach(function(tourType) { %>
+              <option value="<%= tourType._id %>"><%= tourType.tourType %></option>
+            <% }); %>
+          </select>
+        </div>
+        <div>
+          <button type="submit">Save</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+  
+  <div class="table_container">
+    <div class="title">List Tours</div>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Tour Name</th>
+        <th>Tour Type</th>
+        <th>Action</th>
+      </tr>
+      <% listTour.forEach(function(tour) { %> 
+        <tr>
+          <td><%= tour._id %></td>
+          <td><%= tour.tourname %></td>
+          <td><%= tour.tourtype.tourType %></td>
+          <td>
+            <a href="/update_tour/<%= tour._id %>" class="EditBtn">Edit</a>
+            <button class="DeleteBtn">Delete</button>
+          </td>
+        </tr>
+      <% }); %>
+    </table>
+  </div>
+</body>
+</html>

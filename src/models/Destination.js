@@ -1,0 +1,10 @@
+const mongoose = require('mongoose')
+//shape data
+const DestinationSchema = new mongoose.Schema({
+  Destination:String,
+
+})
+
+const Destination = mongoose.model('Destination', DestinationSchema)
+
+module.exports= Destination;

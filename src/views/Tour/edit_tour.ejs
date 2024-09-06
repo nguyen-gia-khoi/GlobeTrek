@@ -1,0 +1,131 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div class="topnav">
+    <a class="active" href="/">Home</a>
+    <a href="/create_admin">Admin account</a>
+    <a href="/create_tour">Tour</a>
+    <a href="/create_tourtype">Tour Type</a>
+    <a href="/create_detail">Tour Detail</a>
+    <a href="/create_destination">Destination</a>
+    <a href="/create_partner">Partner</a>
+  </div>
+  <div class="form-add-new">
+    <form action="/update_tour" method="post">
+      <fieldset>
+        <legend>Form add new Tour</legend>
+        <div class="input-group d-non">
+          <label>ID: </label>
+          <input type="text" value="<%= tourEdit.id %>" name="TourId" />
+        </div>
+        <div class="input-group">
+          <label>TourName: </label>
+          <input type="text" name="TourName" />
+        </div>
+
+        <div class="input-group">
+          <label>Tour Type: </label>
+          <select name="TourType" class="styled-select" required>
+            <% tourTypes.forEach(function(tourType) { %>
+              <option value="<%= tourType._id %>">
+                <%= tourType.tourType %>
+              </option>
+              <% }); %>
+          </select>
+        </div>
+        <div>
+          <button type="submit">Save</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</body>
+
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Tour</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div class="topnav">
+    <a class="active" href="/">Home</a>
+    <a href="/create_admin">Admin account</a>
+    <a href="/create_tour">Tour</a>
+    <a href="/create_tourtype">Tour Type</a>
+    <a href="/create_detail">Tour Detail</a>
+    <a href="/create_destination">Destination</a>
+    <a href="/create_partner">Partner</a>
+  </div>
+  <div class="form-add-new">
+    <!-- <form action="/update_tour/<%= tourEdit._id %>" method="post">
+      <fieldset>
+        <legend>Edit Tour</legend>
+        <div class="input-group d-non">
+          <label>ID: </label>
+          <input type="text" value="<%= tourEdit._id %>" name="TourId" readonly />
+        </div>
+        <div class="input-group">
+          <label>Tour Name: </label>
+          <input type="text" value="<%= tourEdit.tourname %>" name="TourName" />
+        </div>
+        <div class="input-group">
+          <label>Tour Type: </label>
+          <select name="TourType" class="styled-select" required>
+            <% tourTypes.forEach(function(tourType) { %>
+              <option value="<%= tourType._id %>" <%=tourEdit.tourtype._id.equals(tourType._id) ? 'selected' : '' %> >
+                <%= tourType.tourType %>
+              </option>
+              <% }); %>
+          </select>
+        </div>
+        <div>
+          <button type="submit">Save</button>
+        </div>
+      </fieldset>
+    </form> -->
+    <form action="/update_tour" method="post">
+      <fieldset>
+        <legend>Edit Tour</legend>
+        <div class="input-group d-non">
+          <label>ID: </label>
+          <input type="text" value="<%= tourEdit._id %>" name="TourId" readonly />
+        </div>
+        <div class="input-group">
+          <label>Tour Name: </label>
+          <input type="text" value="<%= tourEdit.tourname %>" name="TourName" required />
+        </div>
+        <div class="input-group">
+          <label>Tour Type: </label>
+          <select name="TourType" class="styled-select" required>
+            <% tourTypes.forEach(function(tourType) { %>
+              <option value="<%= tourType._id %>" <%= tourEdit.tourtype && tourEdit.tourtype._id.equals(tourType._id) ? 'selected' : '' %>>
+                <%= tourType.tourType %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+        <div>
+          <button type="submit">Save</button>
+        </div>
+      </fieldset>
+    </form>
+    
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div class="topnav">
+    <a class="active" href="/">Home</a>
+    <a href="/create_admin">Admin account</a>
+    <a href="/create_tour">Tour</a>
+    <a href="/create_tourtype">Tour Type</a>
+    <a href="/create_detail">Tour Detail</a>
+    <a href="/create_destination">Destination</a>
+    <a href="/create_partner">Partner</a>
+  </div>
+  <div class="form-add-new">
+    <form action="/create-user" method="post">
+      <fieldset>
+        <legend>create Admin</legend>
+      
+        <div class="input-group">
+          <label>Username: </label>
+          <input type="text" name="Username"/>
+        </div>
+
+        <div class="input-group">
+          <label>Password: </label>
+          <input type="password" name="Password"/>
+        </div>
+
+        <div>
+          <button type="submit">Save</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+  <div class="table_container">
+    <div class="title">List Admin</div>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Action</th>
+      </tr>
+      <% listUser.forEach(function(admin) { %> 
+        <tr>
+          <td><%= admin.id %></td>
+          <td><%= admin.username %></td>
+          <td><%= admin.password %></td>
+          <td>
+            <a href="/update_Admin/<%= admin.id %>" class="EditBtn">Edit</a>
+
+            <form action="/delete_admin/<%= admin.id %>" method="post">
+
+              <button class="DeleteBtn">Delete</button>
+
+            </form>
+          </td>
+        </tr>
+      <% }); %>
+      
+    </table>
+  </div>
+
+</body>
+</html>

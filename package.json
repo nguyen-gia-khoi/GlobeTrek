@@ -1,0 +1,25 @@
+{
+  "name": "fullstack-be",
+  "version": "1.0.0",
+  "description": "Test server BE",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "keywords": [
+    "nodejs",
+    "react"
+  ],
+  "author": "khoi",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "16.0.3",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "mongoose": "^6.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "3.1.4"
+  }
+}
