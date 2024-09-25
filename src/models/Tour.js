@@ -42,7 +42,7 @@ const TourSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'TourType'
   }
-});
+},{ timestamps: true });
 
 const Tour = mongoose.model('Tour', TourSchema);
 module.exports = Tour;

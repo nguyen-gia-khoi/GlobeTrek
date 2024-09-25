@@ -3,7 +3,7 @@ const Destination = require("../models/Destination");
 
 //destination
 const getCreateDestination =async(req,res) =>{
-  let result = await Destination.find({});
+  let result = await Destination.find({}).sort({ createdAt: -1 });
   res.render('Destination/create_destination.ejs',{listDestination:result})
 }
 

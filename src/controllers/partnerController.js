@@ -2,7 +2,7 @@ const Partner = require("../models/Partner");
 
 
 const getCreatePartner = async (req, res) => {
-  let result = await Partner.find({});
+  let result = await Partner.find({}).sort({ createdAt: -1 });
   res.render('Partner/create_partner.ejs', { listPartner: result })
 }
 

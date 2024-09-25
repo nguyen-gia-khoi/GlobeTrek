@@ -7,7 +7,7 @@ const getHomepage = async (req, res) => {
 };
 //admin
 const getCreatePage =async (req, res) => {
-  let results = await Admin.find({});
+  let results = await Admin.find({}).sort({ createdAt: -1 });
   res.render('Admin/create_admin.ejs', { listUser: results });
 };
 
@@ -54,6 +54,7 @@ const postHandleRemoveAdmin = async (req,res) =>{
   res.redirect('/create_admin');
 
 }
+
 module.exports = {
   getHomepage,
   postCreateAdmin,
@@ -61,5 +62,6 @@ module.exports = {
   getUpdateAdmin,
   postUpdateAdmin,
   postDeleteAdmin,
-  postHandleRemoveAdmin
+  postHandleRemoveAdmin,
+  
 };

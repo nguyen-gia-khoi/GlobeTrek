@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Tour Details</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .form-container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .form-group textarea {
+      resize: vertical;
+    }
+    .form-group button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .form-group button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <%- include('../header', { pageTitle: 'Edit Tour Details' }) %>
+
+  <div class="container">
+    <h1>Edit Tour Detail</h1>
+
+    <!-- Start the form to edit a tour detail -->
+    <div class="form-container">
+      <h2>Edit Tour Detail</h2>
+      <form action="/edit_tour_detail" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="tourDetailID" value="<%= tourDetailEdit._id %>">
+
+        <div class="form-group">  
+          <label for="tourID">Tour</label>
+          <select name="tourID" id="tourID" required>
+            <% tours.forEach(tour => { %>
+              <option value="<%= tour._id %>" <%= tourDetailEdit.tourID && tourDetailEdit.tourID._id.equals(tour._id) ? 'selected' : '' %>><%= tour.tourname %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tourDuration">Duration (days)</label>
+          <input type="number" name="tourDuration" id="tourDuration" value="<%= tourDetailEdit.tourDuration %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="norPrice">Price (VND)</label>
+          <input type="number" name="norPrice" id="norPrice" step="0.01" value="<%= tourDetailEdit.norPrice %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="destination">Destination</label>
+          <select name="destination" id="destination" required>
+            <% destinations.forEach(destination => { %>
+              <option value="<%= destination._id %>" <%= tourDetailEdit.destination && tourDetailEdit.destination._id.equals(destination._id) ? 'selected' : '' %>><%= destination.Destination %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="address">Address</label>
+          <input type="text" name="address" id="address" value="<%= tourDetailEdit.address %>" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="partner">Partner</label>
+          <select name="partner" id="partner" required>
+            <% partners.forEach(partner => { %>
+              <option value="<%= partner._id %>" <%= tourDetailEdit.partner && tourDetailEdit.partner._id.equals(partner._id) ? 'selected' : '' %>><%= partner.partnername %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div class="form-group">
+            <label for="video">Video Link</label>
+            <input type="file" name="videos" id="videos" accept="video/*" multiple>
+          </div>
+          
+          <div class="form-group">
+            <label for="image">Image URL</label>
+            <input type="file" name="images" id="images" accept="images/*"  multiple>
+          </div>
+          
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea name="description" id="description" rows="4"><%= tourDetailEdit.description %></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="state">Status</label>
+          <input type="text" name="state" id="state" value="<%= tourDetailEdit.state %>">
+        </div>
+
+        <div class="form-group">
+          <button type="submit">Update Tour Detail</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

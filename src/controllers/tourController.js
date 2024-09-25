@@ -11,7 +11,7 @@ const { getUpdateTourType } = require("./homeController");
 const getCreateTour = async (req, res) => {
   try {
     console.log("Fetching tours...");
-    let tours = await Tour.find({}).populate('tourtype');
+    let tours = await Tour.find({}).populate('tourtype').sort({ createdAt : -1});
     console.log("Tours fetched:", tours);
 
     console.log("Fetching tour types...");
@@ -60,21 +60,6 @@ const getUpdateTour = async (req, res) => {
     res.status(500).send("Error fetching data");
   }
 };
-// const postUpdateTour = async (req, res) =>{
-//   let { TourName, TourType,TourId } = req.body;
-
-//   try {
-//     await Tour.updateOne( { _id: TourId },{
-//       tourname: TourName,
-//       tourtype: TourType  // Assuming TourType is an ObjectId reference
-//     });
-//     console.log("tourname ",tourname,"tourtype",tourtype)
-//     res.redirect('/create_tour');
-//   } catch (error) {
-//     console.error("Error creating tour:", error);
-//     res.status(500).send("Error creating tour");
-//   }
-// }
 
 const postUpdateTour = async (req, res) => {
   const { TourName, TourType, TourId } = req.body;
@@ -114,5 +99,65 @@ const postUpdateTour = async (req, res) => {
   }
 };
 
+const postDeleteTour = async (req, res) => {
+  const TourID = req.params.id;
 
-module.exports = { getCreateTour, postCreateTour, getUpdateTour,postUpdateTour };
+  try {
+    // Fetch the tour by ID
+    let tour = await Tour.findById(TourID).exec();
+
+    // Render the delete confirmation page
+    res.render('Tour/delete_tour.ejs', { tourEdit: tour });
+  } catch (error) {
+    console.error("Error fetching tour for deletion:", error.message);
+    res.status(500).send("Error fetching tour: " + error.message);
+  }
+};
+const postHandleRemoveTour = async (req, res) => {
+  const tourID = req.body.tourId;
+
+  try {
+    // Delete the tour by ID
+    await Tour.deleteOne({ _id: tourID });
+
+    console.log("Tour has been deleted");
+    res.redirect('/create_tour'); // Redirect after deletion
+  } catch (error) {
+    console.error("Error deleting tour:", error.message);
+    res.status(500).send("Error deleting tour: " + error.message);
+  }
+};
+
+///////////////////////////////////// <<<<API ONLY>>>>
+
+
+const getToursAPI = async (req, res) => {
+  try {
+      // Fetch all tours and populate the associated tour types
+      const tours = await Tour.find({}).populate('tourtype').sort({ createdAt : -1 });
+      
+      // Return a successful response with both tours and tour types
+      return res.status(200).json({
+          errorCode: 0,
+          message: 'Tours fetched successfully',
+          data: {
+              tours
+          }
+      });
+  } catch (error) {
+      // Handle any errors that occur during the process
+      return res.status(500).json({
+          errorCode: 1,
+          message: 'An error occurred while fetching tours',
+          error: error.message
+      });
+  }
+};
+
+module.exports = { getCreateTour, 
+                   postCreateTour, 
+                   getUpdateTour,
+                   postUpdateTour,
+                   getToursAPI,
+                   postDeleteTour,
+                   postHandleRemoveTour };

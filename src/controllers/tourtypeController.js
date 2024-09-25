@@ -2,7 +2,7 @@ const TourType = require("../models/TourType")
 
 
 const getCreateTourType = async(req,res) =>{
-  let result = await TourType.find({});
+  let result = await TourType.find({}).sort({ createdAt: -1 });
   return res.render('TourType/create_tourtype.ejs',{listTourType: result});
 }
 const postCreateTourType = async(req,res) =>{

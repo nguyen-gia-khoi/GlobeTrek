@@ -9,6 +9,7 @@ const TourDetailSchema = new Schema({
   },
   tourDuration: Number,
   norPrice: Number,
+  address: String,
   destination: {
     type: Schema.Types.ObjectId,
     ref: 'Destination',
@@ -19,11 +20,11 @@ const TourDetailSchema = new Schema({
     ref: 'Partner',
     required: true
   },
-  video: String,
-  image: String,
+  images: [String], // Array to store image paths
+  videos: [String], // Array to store video paths
   description: String,
-  state: String
-});
+  state: Boolean
+},{ timestamps: true });
 
 const TourDetail = mongoose.model('TourDetail', TourDetailSchema);
 module.exports = TourDetail;

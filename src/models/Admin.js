@@ -1,10 +1,15 @@
-const mongoose = require('mongoose')
-//shape data
-const AdminSchema = new mongoose.Schema({
-  username: String,
-  password: String
-})
+const mongoose = require('mongoose');
 
-const Admin = mongoose.model('Admin', AdminSchema)
+const adminSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true
+  },
+  password: {
+    type: String,
+    required: true
+  }
+}, { timestamps: true });
 
-module.exports= Admin;
+const Admin = mongoose.model('Admin', adminSchema);
+module.exports = Admin;

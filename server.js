@@ -7,6 +7,7 @@ const port = process.env.PORT || 8888;
 const hostname = process.env.HOST_NAME;
 const configViewEngine = require('./src/config/viewEngine');
 const webRoutes = require('./src/routes/web');
+const apiRoutes = require('./src/routes/api')
 const connection = require('./src/config/database');
 const mongoose = require('mongoose');
 
@@ -22,6 +23,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Định nghĩa các route
 app.use('/', webRoutes);
+// Route API
+// app.use('/', apiRoutes);
 
 (async () => {
   try {

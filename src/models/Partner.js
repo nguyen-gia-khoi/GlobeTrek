@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const PartnerSchema = new mongoose.Schema({
   partnername:String,
   partnernumber:String
-})
+},{ timestamps: true });
 
 const Partner = mongoose.model('Partner', PartnerSchema)
 
