@@ -1,48 +1,72 @@
-// const mongoose = require('mongoose');
-// const { Schema } = mongoose; // Import Schema from mongoose
-// const TourType = require('./TourType');
-
-// // Define the TourSchema
-// const TourSchema = new Schema({
-//   tourName: String,
-//   thumbnail: String,
-//   tourType: {
-//     type: Schema.Types.ObjectId,
-//     ref: 'TourType',
-//     required: true
-//   }
-// });
-
-// // Create the Tour model
-// const Tour = mongoose.model('Tour', TourSchema); // Change 'TourType' to 'Tour'
-
-// module.exports = Tour;
-// const mongoose = require('mongoose');
-// const Schema = mongoose.Schema;
-
-// const TourSchema = new Schema({
-//   tourname: {
-//     type: String,
-//     required: true,
-//   },
-//   tourtype: {  // Ensure this matches the field you're trying to populate
-//     type: Schema.Types.ObjectId,
-//     ref: 'TourType',
-//     required: true,
-//   }
-// });
-
-// const Tour = mongoose.model('Tour', TourSchema);
-// module.exports = Tour;
 const mongoose = require('mongoose');
 
-const TourSchema = new mongoose.Schema({
-  tourname: String,
-  tourtype: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'TourType'
-  }
-},{ timestamps: true });
+// Schema for each scheduled tour
+const scheduleSchema = new mongoose.Schema({
+  startDate: {
+    type: Date,
+    required: true,
+  },
+  endDate: {
+    type: Date,
+    required: true,
+  },
+  isActive: {
+    type: Boolean,
+    default: true, // Allows enabling/disabling of the schedule
+  },
+  itinerary: [
+    {
+      time: {
+        type: String,
+        required: true,
+      },
+      activity: {
+        type: String,
+        required: true,
+      },
+      location: {
+        type: String, // Optional: Where the activity takes place
+      },
+    },
+  ],
+});
 
-const Tour = mongoose.model('Tour', TourSchema);
-module.exports = Tour;
+// Main tour schema
+const tourSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, 'Tour title is required'],
+  },
+  description: {
+    type: String,
+    required: [true, 'Tour description is required'],
+  },
+  price: {
+    type: Number,
+    required: [true, 'Price is required'],
+  },
+  location: {
+    type: String,
+    required: [true, 'Location is required'],
+  },
+  duration: {
+    type: String,
+    required: true,
+  },
+  contact: {
+    type: String,
+    required: true,
+  },
+  availableSpots: {
+    type: Number,
+    required: true,
+    default: 0, // Fixed number of available spots
+  },
+  isDisabled: {
+    type: Boolean,
+    default: false, // Enables manual disabling of the tour
+  },
+  schedules: [scheduleSchema], // Array of schedules
+}, { timestamps: true });
+
+module.exports = mongoose.model('Tour', tourSchema);
