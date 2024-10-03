@@ -1,11 +1,11 @@
-const path =require('path');
+const path = require('path');
 const express = require('express')
 
 const configViewEngine =(app) =>{
   app.set('views', path.join('./src','views'));
-  app.set('views engine','ejs')
+  app.set('view engine','ejs')
   app.use(express.static(path.join('./src','public')));
 
 }
 
-module.exports = configViewEngine;
+module.exports = configViewEngine;  

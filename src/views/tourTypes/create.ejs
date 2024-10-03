@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Create Tour Type</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Create Tour Type</h1>
+        <form action="/tourtypes" method="POST">
+            <div class="form-group">
+                <label for="name">Tour Type Name:</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a href="/tourtypes" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

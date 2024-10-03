@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh sách Tour</title>
+</head>
+<body>
+  <h1>Danh sách Tour</h1>
+  <a href="/tours/create">Tạo Tour mới</a>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Tiêu đề</th>
+        <th>Giá</th>
+        <th>Địa điểm</th>
+        <th>Loại Tour</th>
+        <th>Thao tác</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% tours.forEach(tour => { %>
+        <tr>
+          <td><%= tour.title %></td>
+          <td><%= tour.price %></td>
+          <td><%= tour.location %></td>
+          <td><%= tour.tourType ? tour.tourType.name : 'N/A' %></td>
+          <td>
+            <a href="/tours/<%= tour._id %>/edit">Chỉnh sửa</a>
+            <form action="/tours/<%= tour._id %>?_method=DELETE" method="POST" style="display:inline;">
+              <button type="submit">Xóa</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</body>
+</html>

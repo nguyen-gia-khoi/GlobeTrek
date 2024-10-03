@@ -3,21 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home page</title>
+  <title><%= pageTitle %></title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
-
 <body>
-  <div class="topnav">
-    <a class="active" href="/">Home</a>
-    <a href="/create_admin">Admin account</a>
-    <a href="/create_tour">Tour</a>
-    <a href="/create_tourtype">Tour Type</a>
-    <a href="/create_tour_detail">Tour Detail</a>
-    <a href="/create_destination">Destination</a>
-    <a href="/create_partner">Partner</a>
-  </div>
-  
+  <%- include('header', { pageTitle: 'home' }) %>
 
+  <!-- <div class="topnav">
+    <a class="active" href="/">Home</a>
+    <a href="/tours">Tour</a>
+  </div> -->
 </body>
 </html>

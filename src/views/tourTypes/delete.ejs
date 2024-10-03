@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Confirm Delete Tour Type</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Confirm Delete Tour Type</h1>
+        <p>Are you sure you want to delete the Tour Type: <strong><%= tourType.name %></strong>?</p>
+        <form action="/tourTypes/delete/<%= tourType._id %>" method="POST">
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a href="/tourtypes" class="btn btn-secondary">Cancel</a>
+        </form>
+        
+    </div>
+</body>
+</html>
