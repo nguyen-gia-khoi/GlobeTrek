@@ -1,52 +1,87 @@
-const TourType = require("../models/TourType")
+// src/controllers/tourTypeController.js
+const { TourType } = require('../models/Tour'); // Điều chỉnh đường dẫn nếu cần
 
-
-const getCreateTourType = async(req,res) =>{
-  let result = await TourType.find({}).sort({ createdAt: -1 });
-  return res.render('TourType/create_tourtype.ejs',{listTourType: result});
-}
-const postCreateTourType = async(req,res) =>{
-  let Tourtype = req.body.TypeName;
-  console.log(">>>>> typename= ", Tourtype);
-
-  await TourType.create({
-    tourType:Tourtype
-  })
-  res.redirect('/create_tourtype')
-}
-const getUpdateTourType = async(req,res) =>{
-  const TourTypeID = req.params.id;
-  let tourtype = await TourType.findById(TourTypeID).exec()
-  res.render('TourType/edit_tourtype.ejs',{tourtypeEdit:tourtype})
-}
-const postUpdateTourType = async (req, res) => {
-  let Tourtype = req.body.TypeName;
-  let tourtypeId = req.body.tourtypeId;
-  console.log(">>>>> username= ", Tourtype );
-
-  await TourType.updateOne({ _id: tourtypeId }, { tourType: Tourtype });
-  res.redirect('/create_tourtype');
-
-  
+// Lấy danh sách tất cả các TourType
+const getAllTourTypes = async (req, res) => {
+  try {
+    const tourTypes = await TourType.find();
+    res.render('tourTypes/list', { tourTypes });
+  } catch (error) {
+    res.status(500).send('Error retrieving tour types');
+  }
 };
-const postDeleteTourType = async ( req,res) =>{
-  const TourTypeID = req.params.id;
-  let tourtype = await TourType.findById(TourTypeID).exec()
 
-  res.render('TourType/delete_tourtype.ejs',{tourtypeEdit:tourtype});
-}
-const postHandleRemoveTourType = async (req,res) =>{
-  const tourtypeID = req.body.tourtypeId
-  await TourType.deleteOne({_id: tourtypeID })
-  console.log("admin has been deleted")
-  res.redirect('/create_tourtype');
+// Hiển thị trang tạo TourType mới
+const createTourTypeForm = (req, res) => {
+  res.render('tourTypes/create');
+};
 
-}
+// Tạo một TourType mới
+const createTourType = async (req, res) => {
+  const { name } = req.body;
+  try {
+    const newTourType = new TourType({ name });
+    await newTourType.save();
+    res.redirect('/tourtypes'); // Điều chỉnh đường dẫn sau khi tạo thành công
+  } catch (error) {
+    res.status(400).send('Error creating tour type: ' + error.message);
+  }
+};
+
+// Hiển thị trang chỉnh sửa TourType
+const editTourTypeForm = async (req, res) => {
+  try {
+    const tourType = await TourType.findById(req.params.id);
+    if (!tourType) {
+      return res.status(404).send('TourType not found');
+    }
+    res.render('tourTypes/edit', { tourType });
+  } catch (error) {
+    res.status(500).send('Error retrieving tour type');
+  }
+};
+
+// Cập nhật TourType
+const updateTourType = async (req, res) => {
+  const { name } = req.body;
+  try {
+    await TourType.findByIdAndUpdate(req.params.id, { name });
+    res.redirect('/tourTypes');
+  } catch (error) {
+    res.status(400).send('Error updating tour type: ' + error.message);
+  }
+};
+
+// Xóa TourType
+const deleteTourType = async (req, res) => {
+    console.log('Attempting to delete TourType with ID:', req.params.id); // Log ID
+    try {
+      const result = await TourType.findByIdAndDelete(req.params.id);
+      if (!result) {
+        console.log('TourType not found'); // Log nếu không tìm thấy
+        return res.status(404).send('TourType not found');
+      }
+      console.log('Deleted TourType:', result); // Log kết quả xóa
+      res.redirect('/tourtypes');
+    } catch (error) {
+      console.error('Error deleting tour type:', error); // Log lỗi
+      res.status(500).send('Error deleting tour type');
+    }
+  };
+  
+  
+// Hàm để xác nhận xóa
+const confirmDeleteTourType = async (req, res) => {
+    const tourType = await TourType.findById(req.params.id);
+    res.render('tourTypes/delete', { tourType });
+};
+
 module.exports = {
-  getCreateTourType,
-  postCreateTourType,
-  getUpdateTourType,
-  postUpdateTourType,
-  postDeleteTourType,
-  postHandleRemoveTourType
-}
+  getAllTourTypes,
+  createTourTypeForm,
+  createTourType,
+  editTourTypeForm,
+  updateTourType,
+  deleteTourType,
+  confirmDeleteTourType
+};

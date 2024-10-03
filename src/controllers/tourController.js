@@ -1,163 +1,161 @@
-
 const mongoose = require('mongoose');
+const { Tour, TourType, Destination } = require('../models/Tour');
+const cloudinary = require('cloudinary').v2;
 
-const Tour = require("../models/Tour");
-const TourType = require("../models/TourType");
+// Middleware for handling Cloudinary uploads
+const { storage } = require('../Middleware/cloudinary');
+const multer = require('multer');
+const upload = multer({ storage });
 
-const { getUpdateTourType } = require("./homeController");
+// GET: Display list of all tours
+const getTours = async (req, res) => {
+  try {
+    const tours = await Tour.find()
+      .populate('tourType')
+      .populate('destination')
+      .sort({ createdAt: -1 });
 
-// Get all tours and render the create tour page
+    res.render('tour/list', { tours });
+  } catch (error) {
+    console.error('Error fetching tours:', error);
+    res.status(500).send('Error fetching tours');
+  }
+};
 
+// GET: Display form for creating a new tour
 const getCreateTour = async (req, res) => {
   try {
-    console.log("Fetching tours...");
-    let tours = await Tour.find({}).populate('tourtype').sort({ createdAt : -1});
-    console.log("Tours fetched:", tours);
+    const tourTypes = await TourType.find({});
+    const destinations = await Destination.find({});
 
-    console.log("Fetching tour types...");
-    let tourTypes = await TourType.find({});
-    console.log("Tour types fetched:", tourTypes);
-
-    res.render('Tour/create_tour.ejs', { listTour: tours, tourTypes: tourTypes });
+    res.render('Tours/create', { tourTypes, destinations });
   } catch (error) {
-    console.error("Error fetching tours or tour types:", error);
-    res.status(500).send("Error fetching data");
+    console.error('Error fetching data for creating tour:', error);
+    res.status(500).send('Error fetching data');
   }
 };
 
-
-
-// Create a new tour
+// POST: Create a new tour
 const postCreateTour = async (req, res) => {
-  let { TourName, TourType } = req.body;
-  console.log(">>>>> TourName= ", TourName, "TourType =", TourType);
+  const { title, description, price, location, duration, contact, availableSpots, tourType, destination } = req.body;
 
   try {
-    await Tour.create({
-      tourname: TourName,
-      tourtype: TourType  // Assuming TourType is an ObjectId reference
+    const uploadedImage = await cloudinary.uploader.upload(req.file.path, { folder: 'tours' });
+
+    const newTour = await Tour.create({
+      title,
+      description,
+      price,
+      location,
+      duration,
+      contact,
+      availableSpots,
+      tourType,
+      destination,
+      img: uploadedImage.secure_url,
     });
-    res.redirect('/create_tour');
+
+    res.redirect('/Tours/list');
   } catch (error) {
-    console.error("Error creating tour:", error);
-    res.status(500).send("Error creating tour");
+    console.error('Error creating tour:', error);
+    res.status(500).send('Error creating tour');
   }
 };
 
-// Render the update tour page
-
+// GET: Display form for editing a tour
 const getUpdateTour = async (req, res) => {
   try {
-    console.log(">>>> req.param: ", req.params);
-    const TourID = req.params.id; // Get the ID from the request parameters
-    let tourEdit = await Tour.findById(TourID).populate('tourtype').exec(); // Fetch the specific tour by ID and populate the tour type
-    let tourTypes = await TourType.find({}); // Fetch all tour types for the dropdown
+    const tour = await Tour.findById(req.params.id).populate('tourType').populate('destination');
+    const tourTypes = await TourType.find({});
+    const destinations = await Destination.find({});
 
-    // Pass the tour to edit and the tour types to the EJS template
-    res.render('Tour/edit_tour.ejs', { tourEdit: tourEdit, tourTypes: tourTypes });
+    res.render('Tours/edit', { tour, tourTypes, destinations });
   } catch (error) {
-    console.error("Error fetching tour for editing:", error);
-    res.status(500).send("Error fetching data");
+    console.error('Error fetching tour for editing:', error);
+    res.status(500).send('Error fetching tour');
   }
 };
 
+// POST: Update an existing tour
 const postUpdateTour = async (req, res) => {
-  const { TourName, TourType, TourId } = req.body;
-
-  // Log the request body to see if it's correctly populated
-  console.log("Request body:", req.body);
+  const { title, description, price, location, duration, contact, availableSpots, tourType, destination, isDisabled } = req.body;
+  const tourID = req.params.id;
 
   try {
-    // Check if the TourId is a valid ObjectId before proceeding
-    if (!mongoose.Types.ObjectId.isValid(TourId)) {
-      throw new Error("Invalid TourId");
+    const updatedTour = {
+      title,
+      description,
+      price,
+      location,
+      duration,
+      contact,
+      availableSpots,
+      tourType,
+      destination,
+      isDisabled: isDisabled === 'on', // Convert checkbox to boolean
+    };
+
+    // If a new image was uploaded
+    if (req.file) {
+      const uploadedImage = await cloudinary.uploader.upload(req.file.path, { folder: 'tours' });
+      updatedTour.img = uploadedImage.secure_url;
     }
 
-    // Attempt to update the tour in the database
-    const result = await Tour.updateOne(
-      { _id: TourId },
-      {
-        tourname: TourName,
-        tourtype: TourType
-      }
-    );
-
-    // Log the result of the update operation
-    console.log("Update Result:", result);
-
-    // Check if the update operation affected any document
-    if (result.nModified === 0) {
-      console.error("No tour was updated. Please check the TourId.");
-      return res.status(404).send("Tour not found or no changes detected.");
-    }
-
-    // Redirect after a successful update
-    res.redirect('/create_tour');
+    await Tour.findByIdAndUpdate(tourID, updatedTour);
+    res.redirect('/tours');
   } catch (error) {
-    console.error("Error updating tour:", error.message);
-    res.status(500).send("Error updating tour: " + error.message);
+    console.error('Error updating tour:', error);
+    res.status(500).send('Error updating tour');
   }
 };
 
+// GET: Confirm deletion of a tour
+const getDeleteTour = async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id);
+    res.render('Tours/delete', { tour });
+  } catch (error) {
+    console.error('Error fetching tour for deletion:', error);
+    res.status(500).send('Error fetching tour');
+  }
+};
+
+// POST: Delete a tour
 const postDeleteTour = async (req, res) => {
-  const TourID = req.params.id;
-
   try {
-    // Fetch the tour by ID
-    let tour = await Tour.findById(TourID).exec();
-
-    // Render the delete confirmation page
-    res.render('Tour/delete_tour.ejs', { tourEdit: tour });
+    await Tour.findByIdAndDelete(req.params.id);
+    res.redirect('/tours');
   } catch (error) {
-    console.error("Error fetching tour for deletion:", error.message);
-    res.status(500).send("Error fetching tour: " + error.message);
-  }
-};
-const postHandleRemoveTour = async (req, res) => {
-  const tourID = req.body.tourId;
-
-  try {
-    // Delete the tour by ID
-    await Tour.deleteOne({ _id: tourID });
-
-    console.log("Tour has been deleted");
-    res.redirect('/create_tour'); // Redirect after deletion
-  } catch (error) {
-    console.error("Error deleting tour:", error.message);
-    res.status(500).send("Error deleting tour: " + error.message);
+    console.error('Error deleting tour:', error);
+    res.status(500).send('Error deleting tour');
   }
 };
 
-///////////////////////////////////// <<<<API ONLY>>>>
-
-
-const getToursAPI = async (req, res) => {
+// POST: Toggle schedule status
+const toggleScheduleStatus = async (req, res) => {
   try {
-      // Fetch all tours and populate the associated tour types
-      const tours = await Tour.find({}).populate('tourtype').sort({ createdAt : -1 });
-      
-      // Return a successful response with both tours and tour types
-      return res.status(200).json({
-          errorCode: 0,
-          message: 'Tours fetched successfully',
-          data: {
-              tours
-          }
-      });
+    const { tourID, scheduleIndex } = req.body;
+
+    const tour = await Tour.findById(tourID);
+    if (!tour) return res.status(404).send('Tour not found');
+
+    tour.schedules[scheduleIndex].isActive = !tour.schedules[scheduleIndex].isActive;
+    await tour.save();
+
+    res.redirect(`/tours/${tourID}/edit`);
   } catch (error) {
-      // Handle any errors that occur during the process
-      return res.status(500).json({
-          errorCode: 1,
-          message: 'An error occurred while fetching tours',
-          error: error.message
-      });
+    console.error('Error toggling schedule status:', error);
+    res.status(500).send('Error toggling schedule status');
   }
 };
 
-module.exports = { getCreateTour, 
-                   postCreateTour, 
-                   getUpdateTour,
-                   postUpdateTour,
-                   getToursAPI,
-                   postDeleteTour,
-                   postHandleRemoveTour };
+module.exports = {
+  getTours,
+  getCreateTour,
+  postCreateTour,
+  getUpdateTour,
+  postUpdateTour,
+  getDeleteTour,
+  postDeleteTour,
+  toggleScheduleStatus,
+};

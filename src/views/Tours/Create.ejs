@@ -1,0 +1,42 @@
+<h1>Create Tour</h1>
+<form action="/tours/create" method="POST" enctype="multipart/form-data">
+  <label for="title">Title</label>
+  <input type="text" name="title" required>
+
+  <label for="description">Description</label>
+  <textarea name="description" required></textarea>
+
+  <label for="price">Price</label>
+  <input type="number" name="price" required>
+
+  <label for="location">Location</label>
+  <input type="text" name="location" required>
+
+  <label for="duration">Duration</label>
+  <input type="text" name="duration" required>
+
+  <label for="contact">Contact</label>
+  <input type="text" name="contact" required>
+
+  <label for="availableSpots">Available Spots</label>
+  <input type="number" name="availableSpots" required>
+
+  <label for="tourType">Tour Type</label>
+  <select name="tourType" required>
+    <% tourTypes.forEach(tourType => { %>
+      <option value="<%= tourType._id %>"><%= tourType.name %></option>
+    <% }) %>
+  </select>
+
+  <label for="destination">Destination</label>
+  <select name="destination" required>
+    <% destinations.forEach(destination => { %>
+      <option value="<%= destination._id %>"><%= destination.name %></option>
+    <% }) %>
+  </select>
+
+  <label for="img">Image</label>
+  <input type="file" name="img" required>
+
+  <button type="submit">Create Tour</button>
+</form>
