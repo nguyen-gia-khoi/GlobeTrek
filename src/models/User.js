@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+const jwt = require("jsonwebtoken");
+// const crypto = require("crypto");
+// const bcrypt = require("bcryptjs");
+
 
 const CustomerSchema = new Schema({
   name: {
@@ -46,6 +50,10 @@ const CustomerSchema = new Schema({
       ref: "Order",
     },
   ],
+  resetPasswordTOken: String,
+  resetPasswordExpireAt: Date,
+  verificationToken: String,
+  verificationTokenExpireAt: Date 
 },
 { timestamps: true }
 );

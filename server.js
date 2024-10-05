@@ -14,7 +14,7 @@ const mongoose = require('mongoose');
 const toursRouter = require('./src/routes/tourRouter');
 const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
 const destinationsRoutes = require('./src/routes/destinationRouter');
-
+const authRoutes = require("./src/routes/authRoutes")
 // Cấu hình view engine
 configViewEngine(app);
 // trang home 
@@ -31,6 +31,10 @@ app.use(express.urlencoded({ extended: true })); // cho dữ liệu từ form
 
 // Cấu hình tệp tĩnh
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Route authen/author
+
+app.use("/api/auth",authRoutes)
 
 // Định nghĩa các route
 app.use('/tours', toursRouter);
