@@ -23,8 +23,6 @@ app.get('/', (req, res) => {
 });
 
 
-
-
 // Middleware để phân tích req.body
 app.use(express.json()); // cho JSON
 app.use(express.urlencoded({ extended: true })); // cho dữ liệu từ form
