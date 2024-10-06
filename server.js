@@ -14,6 +14,7 @@ const mongoose = require('mongoose');
 const toursRouter = require('./src/routes/tourRouter');
 const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
 const destinationsRoutes = require('./src/routes/destinationRouter');
+const scheduleRoutes = require('./src/routes/ScheduleRouter');
 const authRoutes = require("./src/routes/authRoutes")
 // Cấu hình view engine
 configViewEngine(app);
@@ -38,6 +39,7 @@ app.use("/api/auth",authRoutes)
 app.use('/tours', toursRouter);
 app.use('/tourtypes', tourTypeRoutes);
 app.use('/destinations', destinationsRoutes);
+app.use('/schedules', scheduleRoutes);
 
 (async () => {
   try {

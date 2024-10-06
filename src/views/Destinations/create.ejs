@@ -7,9 +7,11 @@
     <title>Create Destination</title>
 </head>
 <body>
+    
+    <%- include('../header', { pageTitle: 'Create Destination' }) %>
     <div class="container mt-5">
         <h1>Create Destination</h1>
-        <form action="/destinations" method="POST">
+        <form action="/destinations/create" method="POST">
             <div class="form-group">
                 <label for="name">Destination Name</label>
                 <input type="text" class="form-control" id="name" name="name" required>

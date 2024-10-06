@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 const { Tour, TourType, Destination } = require('../models/Tour');
 const cloudinary = require('cloudinary').v2;
-
-// Middleware for handling Cloudinary uploads
 const { storage } = require('../Middleware/cloudinary');
 const multer = require('multer');
 const upload = multer({ storage });
@@ -15,10 +13,25 @@ const getTours = async (req, res) => {
       .populate('destination')
       .sort({ createdAt: -1 });
 
-    res.render('tour/list', { tours });
+    res.render('Tours/list', { tours });
   } catch (error) {
     console.error('Error fetching tours:', error);
     res.status(500).send('Error fetching tours');
+  }
+};
+
+// API: Get all tours in JSON format
+const getToursAPI = async (req, res) => {
+  try {
+    const tours = await Tour.find()
+      .populate('tourType')
+      .populate('destination')
+      .sort({ createdAt: -1 });
+
+    res.json(tours);
+  } catch (error) {
+    console.error('Error fetching tours:', error);
+    res.status(500).json({ error: 'Error fetching tours' });
   }
 };
 
@@ -38,10 +51,18 @@ const getCreateTour = async (req, res) => {
 // POST: Create a new tour
 const postCreateTour = async (req, res) => {
   const { title, description, price, location, duration, contact, availableSpots, tourType, destination } = req.body;
+  const isDisabled = req.body.isDisabled ? true : false;
+  // Validate numeric fields
+  if (duration < 1 || price < 0 || availableSpots < 0) {
+    return res.status(400).send('Invalid input: Duration must be at least 1 day, and Price/Available Spots must be non-negative.');
+  }
+
+  // Get image paths from Cloudinary
+  const images = req.files['images'] ? req.files['images'].map(file => file.path) : [];
+  const videos = req.files['videos'] ? req.files['videos'].map(file => file.path) : [];
 
   try {
-    const uploadedImage = await cloudinary.uploader.upload(req.file.path, { folder: 'tours' });
-
+    // Create a new tour
     const newTour = await Tour.create({
       title,
       description,
@@ -52,15 +73,22 @@ const postCreateTour = async (req, res) => {
       availableSpots,
       tourType,
       destination,
-      img: uploadedImage.secure_url,
+      isDisabled,
+      images, 
+      videos, 
     });
+    
+// Cập nhật trường tours trong Destination
+await Destination.findByIdAndUpdate(destination, { $addToSet: { tours: newTour._id } }); // Thêm tour vào danh sách tours
 
-    res.redirect('/Tours/list');
+    // Redirect to the list of tours or another appropriate page
+    res.redirect('/tours');
   } catch (error) {
     console.error('Error creating tour:', error);
     res.status(500).send('Error creating tour');
   }
 };
+
 
 // GET: Display form for editing a tour
 const getUpdateTour = async (req, res) => {
@@ -76,10 +104,21 @@ const getUpdateTour = async (req, res) => {
   }
 };
 
+
 // POST: Update an existing tour
 const postUpdateTour = async (req, res) => {
-  const { title, description, price, location, duration, contact, availableSpots, tourType, destination, isDisabled } = req.body;
+  const { title, description, price, location, duration, contact, availableSpots, tourType, destination } = req.body;
   const tourID = req.params.id;
+  const isDisabled = req.body.isDisabled ? true : false;
+
+  // Validate numeric fields
+  if (duration < 1 || price < 0 || availableSpots < 0) {
+    return res.status(400).send('Invalid input: Duration must be at least 1 day, and Price/Available Spots must be non-negative.');
+  }
+
+  // Get image and video paths from Cloudinary if they were uploaded
+  const images = req.files['images'] ? req.files['images'].map(file => file.path) : [];
+  const videos = req.files['videos'] ? req.files['videos'].map(file => file.path) : [];
 
   try {
     const updatedTour = {
@@ -92,17 +131,22 @@ const postUpdateTour = async (req, res) => {
       availableSpots,
       tourType,
       destination,
-      isDisabled: isDisabled === 'on', // Convert checkbox to boolean
+      isDisabled,
     };
 
-    // If a new image was uploaded
-    if (req.file) {
-      const uploadedImage = await cloudinary.uploader.upload(req.file.path, { folder: 'tours' });
-      updatedTour.img = uploadedImage.secure_url;
+    // If new images were uploaded, merge them with existing images
+    if (images.length > 0) {
+      updatedTour.images = [...images]; // Cập nhật trường images với hình ảnh mới
     }
 
+    // If new videos were uploaded, merge them with existing videos
+    if (videos.length > 0) {
+      updatedTour.videos = [...videos]; // Cập nhật trường videos với video mới
+    }
+
+    // Cập nhật tour
     await Tour.findByIdAndUpdate(tourID, updatedTour);
-    res.redirect('/tours');
+    res.redirect('/Tours');
   } catch (error) {
     console.error('Error updating tour:', error);
     res.status(500).send('Error updating tour');
@@ -124,7 +168,7 @@ const getDeleteTour = async (req, res) => {
 const postDeleteTour = async (req, res) => {
   try {
     await Tour.findByIdAndDelete(req.params.id);
-    res.redirect('/tours');
+    res.redirect('/Tours');
   } catch (error) {
     console.error('Error deleting tour:', error);
     res.status(500).send('Error deleting tour');
@@ -151,6 +195,7 @@ const toggleScheduleStatus = async (req, res) => {
 
 module.exports = {
   getTours,
+  getToursAPI,
   getCreateTour,
   postCreateTour,
   getUpdateTour,
