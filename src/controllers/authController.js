@@ -19,12 +19,13 @@ const signup = async( req, res ) => {
         verificationStore[email] = {
             verificationCode,
             verificationTokenExpireAt,
+            password
         };
 
         await sendVerificationEmail(email, verificationCode);
 
         res.status(200).json({ message: "Check your email for the OTP" });
-
+        
     } catch (error) {
         console.log("Error in login controller: ", error.message);
         res.status(500).json({ message: "Server Error!", error: error.message });
@@ -40,6 +41,16 @@ const verfiaccount = async(req,res)=>{
         if (!storedData) {
             return res.status(400).json({ message: "OTP expired or invalid" });
         }
+        const { verificationCode, verificationTokenExpireAt,password } = storedData;
+        
+        if (otp !== verificationCode.toString()|| Date.now() > verificationTokenExpireAt) {
+            return res.status(400).json({ message: "Invalid OTP" });
+          }
+        const user = await User.create({ email, password });
+
+        delete verificationStore[email];
+
+        res.status(200).json({ message: "user created!"});
     } catch (error) {
         console.log("Error in login controller: ", error.message);
         res.status(500).json({ message: "Server Error!", error: error.message });
