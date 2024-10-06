@@ -14,6 +14,7 @@ const mongoose = require('mongoose');
 const toursRouter = require('./src/routes/tourRouter');
 const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
 const destinationsRoutes = require('./src/routes/destinationRouter');
+const scheduleRoutes = require('./src/routes/ScheduleRouter');
 
 // Cấu hình view engine
 configViewEngine(app);
@@ -36,6 +37,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/tours', toursRouter);
 app.use('/tourtypes', tourTypeRoutes);
 app.use('/destinations', destinationsRoutes);
+app.use('/schedules', scheduleRoutes);
 
 (async () => {
   try {

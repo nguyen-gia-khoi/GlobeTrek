@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Tour</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <%- include('../header', { pageTitle: 'Edit Tour' }) %>
+    <style>
+        /* CSS cho toggler switch */
+        .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #3cfe53;
+            border-color: #3cfe53;
+        }
+    </style>
+    <div class="container">
+        <h1 class="mt-4">Edit Tour</h1>
+        <form action="/Tours/edit/<%= tour._id %>" method="POST" enctype="multipart/form-data">
+            <!-- Các trường khác của form -->
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" class="form-control" name="title" value="<%= tour.title %>" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea class="form-control" name="description" required><%= tour.description %></textarea>
+            </div>
+            <div class="form-group">
+                <label for="price">Price</label>
+                <input type="number" class="form-control" name="price" value="<%= tour.price %>" required>
+            </div>
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" class="form-control" name="location" value="<%= tour.location %>" required>
+            </div>
+            <div class="form-group">
+                <label for="duration">Duration (in days)</label>
+                <input type="number" class="form-control" name="duration" value="<%= tour.duration %>" required>
+            </div>
+            <div class="form-group">
+                <label for="contact">Contact</label>
+                <input type="text" class="form-control" name="contact" value="<%= tour.contact %>" required>
+            </div>
+            <div class="form-group">
+                <label for="availableSpots">Available Spots</label>
+                <input type="number" class="form-control" name="availableSpots" value="<%= tour.availableSpots %>" required>
+            </div>
+            <div class="form-group">
+                <label for="tourType">Tour Type</label>
+                <select class="form-control" name="tourType" required>
+                    <% tourTypes.forEach(type => { %>
+                        <option value="<%= type._id %>" <%= type._id == tour.tourType ? 'selected' : '' %>><%= type.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="destination">Destination</label>
+                <select class="form-control" name="destination" required>
+                    <% destinations.forEach(dest => { %>
+                        <option value="<%= dest._id %>" <%= dest._id == tour.destination ? 'selected' : '' %>><%= dest.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="images">Images</label>
+                <input type="file" class="form-control" name="images" multiple accept="image/*">
+                <small class="form-text text-muted">Leave empty if you don't want to change the images.</small>
+            </div>
+            <div class="form-group">
+                <label for="videos">Videos</label>
+                <input type="file" class="form-control" name="videos" multiple accept="video/*">
+                <small class="form-text text-muted">Leave empty if you don't want to change the videos.</small>
+            </div>
+            
+            <!-- Trường bật/tắt trạng thái isDisabled với toggler switch -->
+            <div class="form-group">
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="isDisabled" name="isDisabled" <%= tour.isDisabled ? 'checked' : '' %> >
+                    <label class="custom-control-label" for="isDisabled">Disable Tour</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Tour</button>
+            <a href="/tours" class="btn btn-primary m-3">Quay lại danh sách tour</a>
+        </form>
+    </div>
+</body>
+</html>

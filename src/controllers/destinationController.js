@@ -3,7 +3,7 @@ const { Destination } = require('../models/Tour'); // Điều chỉnh đường 
 // Lấy danh sách tất cả các Destination
 const getAllDestinations = async (req, res) => {
   try {
-    const destinations = await Destination.find().populate('tours'); // Thêm populate nếu cần
+    const destinations = await Destination.find().populate('tours'); // Đảm bảo tours được populate
     res.render('destinations/list', { destinations });
   } catch (error) {
     res.status(500).send('Error retrieving destinations: ' + error.message);
