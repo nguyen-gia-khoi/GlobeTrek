@@ -1,20 +1,23 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 
-const CustomerSchema = new Schema({
+
+const UserSchema = new Schema({
   name: {
     type: String,
-    required: [true, "Name is required"],
   },
   email: {
     type: String,
     required: [true, "Email is required"],
-    unique: true,
+    // unique: true,
     trim: true,
   },
   password: {
     type: String,
-    required: [true, "Password is required"],
+    // required: [true, "Password is required"],
   },
   phoneNumber: {
     type: String,
@@ -22,11 +25,9 @@ const CustomerSchema = new Schema({
   gender: {
     type: String,
     enum: ["male", "female", "non-binary", "other"],
-    required: true,
   },
   dateOfBirth: {
     type: Date,
-    required: true,
     validate: {
       validator: function (value) {
         // Ensure the date is in the past
@@ -46,11 +47,15 @@ const CustomerSchema = new Schema({
       ref: "Order",
     },
   ],
+  resetPasswordTOken: String,
+  resetPasswordExpireAt: Date,
+  verificationToken: String,
+  verificationTokenExpireAt: Date 
 },
 { timestamps: true }
 );
 
-CustomerSchema.pre("save", async function (next) {
+UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
   }
@@ -63,8 +68,8 @@ CustomerSchema.pre("save", async function (next) {
   }
 });
 
-CustomerSchema.methods.comparePassword = async function (enteredPassword) {
+UserSchema.methods.comparePassword = async function (enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };
-const Customer = mongoose.model('Customer', CustomerSchema);
-module.exports = Customer;
+const User = mongoose.model('User', UserSchema);
+module.exports = User;
