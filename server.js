@@ -19,7 +19,6 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
 const scheduleRoutes = require('./src/routes/ScheduleRouter');
-const authRoutes = require("./src/routes/authRoutes")
 
 // Cấu hình view engine
 configViewEngine(app);
