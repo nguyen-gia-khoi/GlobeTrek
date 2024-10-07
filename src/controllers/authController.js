@@ -79,24 +79,19 @@ const login = async( req, res ) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({email});
-        if(user||(await User.comparePassword(password))){
-            //Generate access token
-            const accessToken = authController.generateAccessToken(user);
-            //Generate refresh token
-            const refreshToken = authController.generateRefreshToken(user);
-
-
-
+        if(user && (await user.comparePassword(password))){
+            const { accessToken, refreshToken } = generateToken(user._id);
+           
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure:false, // đổi thành true khi deploy
-                path: "/",
                 sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                secure: process.env.NODE_ENV === "production",
               });
 
+            await storeRefreshToken(user._id, refreshToken);
             res.status(200).json({ accessToken, message: "Login success" });
         }
-
         else {
             res.status(400).json({ message: "Invalid email or password" });
           }
@@ -170,7 +165,8 @@ module.exports ={
     verfiaccount,
     logout,
     refreshToken,
-
+    forgotPassword,
+    resetPassword
 }
 
 
