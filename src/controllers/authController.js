@@ -1,7 +1,12 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken"); // Add this import
-const {sendVerificationEmail} = require("../service/mailtrap/email");
+const {
+        sendVerificationEmail,
+        sendPasswordResetEmail,
+        sendResetSuccessEmail
+} = require("../service/mailtrap/email");
 const redis = require("../config/redis")
+const crypto = require("crypto");
 const {
     generateToken,
     storeRefreshToken,
@@ -120,11 +125,64 @@ const signout = async( req, res ) => {
     }
 }
 const forgotPassword = async(req,res)=>{
+    const { email } = req.body;
+    try {
+        const user = await User.findOne({ email });
 
+        if (!user) {
+            return res.status(400).json({ success: false, message: "User not found" });
+        }
+
+        const resetToken = crypto.randomBytes(20).toString("hex");
+
+        await redis.set(
+        `resetpassword:${resetToken}`,
+        JSON.stringify({ userId: user._id,resetToken }),  
+        "EX",
+        5 * 60  
+        );
+
+        await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
+        res.status(200).json({ success: true, message: "Password reset link sent to your email" });
+  } catch (error) {
+    console.log("Error in forgotPassword", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 }
 
 const resetPassword = async(req,res)=>{
+    try {
+        const { token } = req.params;  
+        const { password } = req.body;  
+        
+        const userData = await redis.get(`resetpassword:${token}`);
+        console.log("Redis data:", userData);  
+       
+        if (!userData) {
+          return res.status(400).json({ success: false, message: "Invalid or expired reset token" });
+        }
     
+        const parsedData = JSON.parse(userData);
+        console.log("Parsed data:", parsedData);  
+    
+        const { userId } = parsedData;
+        if (!userId) {
+          return res.status(500).json({ success: false, message: "userId not found in Redis data" });
+        }
+    
+        const user = await User.findById(userId);
+        if (!user) {
+          return res.status(404).json({ success: false, message: "User not found" });
+        }
+    
+        user.password = password;
+        await user.save();
+    
+        await sendResetSuccessEmail(user.email);
+        return res.status(200).json({ success: true, message: "Password reset successful" });
+      } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
 }
 
 const refreshToken = async (req, res) => {
