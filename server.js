@@ -13,11 +13,15 @@ const mongoose = require('mongoose');
 const toursRouter = require('./src/routes/tourRouter');
 const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
 const destinationsRoutes = require('./src/routes/destinationRouter');
+
 const authRoutes = require("./src/routes/authRoutes");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
-// Configure view engine
+const scheduleRoutes = require('./src/routes/ScheduleRouter');
+const authRoutes = require("./src/routes/authRoutes")
+
+// Cấu hình view engine
 configViewEngine(app);
 
 // Home route
@@ -50,6 +54,7 @@ app.use("/api/auth", authRoutes);
 app.use('/tours', toursRouter);
 app.use('/tourtypes', tourTypeRoutes);
 app.use('/destinations', destinationsRoutes);
+app.use('/schedules', scheduleRoutes);
 
 // Database connection and server start
 (async () => {

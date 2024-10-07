@@ -63,6 +63,7 @@ const tourSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: [true, 'Price is required'],
+    min: [0, 'Price must be a positive number'],
   },
   location: {
     type: String,
@@ -80,6 +81,7 @@ const tourSchema = new mongoose.Schema({
     type: Number,
     required: true,
     default: 0,
+    min: 0 
   },
   isDisabled: {
     type: Boolean,
@@ -88,10 +90,8 @@ const tourSchema = new mongoose.Schema({
   schedules: [scheduleSchema],
   tourType: { type: mongoose.Schema.Types.ObjectId, ref: 'TourType', required: true }, // Mối quan hệ với tourType
   destination: { type: mongoose.Schema.Types.ObjectId, ref: 'Destination', required: true }, // Mối quan hệ với destination
-  img: {
-    type: String,
-    required: [true, 'Tour image is required'],
-  },
+  images: { type: [String], default: [] }, 
+  videos: { type: [String], default: [] }, 
 }, { timestamps: true });
 
 module.exports = {
@@ -99,8 +99,6 @@ module.exports = {
   TourType: mongoose.model('TourType', tourTypeSchema),
   Destination: mongoose.model('Destination', destinationSchema),
 };
-
-
 
 // const mongoose = require('mongoose');
 

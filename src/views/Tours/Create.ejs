@@ -1,42 +1,90 @@
-<h1>Create Tour</h1>
-<form action="/tours/create" method="POST" enctype="multipart/form-data">
-  <label for="title">Title</label>
-  <input type="text" name="title" required>
+<!-- views/Tours/create.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Tour</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <%- include('../header', { pageTitle: 'Create Tours' }) %>
+    <style>
+        /* CSS cho toggler switch */
+        .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #3cfe53;
+            border-color: #3cfe53;
+        }
+    </style>
 
-  <label for="description">Description</label>
-  <textarea name="description" required></textarea>
+    <div class="container">
+        <h1 class="mt-4">Create Tour</h1>
+        <form action="/tours/create" method="POST" enctype="multipart/form-data">
+            <!-- Các trường khác của form -->
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" class="form-control" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea class="form-control" name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="price">Price</label>
+                <input type="number" class="form-control" name="price" required>
+            </div>
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" class="form-control" name="location" required>
+            </div>
+            <div class="form-group">
+                <label for="duration">Duration (in days)</label>
+                <input type="number" class="form-control" name="duration" required>
+            </div>
+            <div class="form-group">
+                <label for="contact">Contact</label>
+                <input type="text" class="form-control" name="contact" required>
+            </div>
+            <div class="form-group">
+                <label for="availableSpots">Available Spots</label>
+                <input type="number" class="form-control" name="availableSpots" required>
+            </div>
+            <div class="form-group">
+                <label for="tourType">Tour Type</label>
+                <select class="form-control" name="tourType" required>
+                    <% tourTypes.forEach(type => { %>
+                        <option value="<%= type._id %>"><%= type.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="destination">Destination</label>
+                <select class="form-control" name="destination" required>
+                    <% destinations.forEach(dest => { %>
+                        <option value="<%= dest._id %>"><%= dest.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="images">Images</label>
+                <input type="file" class="form-control" name="images" multiple accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="videos">Videos</label>
+                <input type="file" class="form-control" name="videos" multiple accept="video/*">
+            </div>
+            
+           <!-- Trường bật/tắt trạng thái isDisabled với toggler switch -->
+           <div class="form-group">
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="isDisabled" name="isDisabled">
+                <label class="custom-control-label" for="isDisabled">Disable Tour</label>
+            </div>
+        </div>
 
-  <label for="price">Price</label>
-  <input type="number" name="price" required>
-
-  <label for="location">Location</label>
-  <input type="text" name="location" required>
-
-  <label for="duration">Duration</label>
-  <input type="text" name="duration" required>
-
-  <label for="contact">Contact</label>
-  <input type="text" name="contact" required>
-
-  <label for="availableSpots">Available Spots</label>
-  <input type="number" name="availableSpots" required>
-
-  <label for="tourType">Tour Type</label>
-  <select name="tourType" required>
-    <% tourTypes.forEach(tourType => { %>
-      <option value="<%= tourType._id %>"><%= tourType.name %></option>
-    <% }) %>
-  </select>
-
-  <label for="destination">Destination</label>
-  <select name="destination" required>
-    <% destinations.forEach(destination => { %>
-      <option value="<%= destination._id %>"><%= destination.name %></option>
-    <% }) %>
-  </select>
-
-  <label for="img">Image</label>
-  <input type="file" name="img" required>
-
-  <button type="submit">Create Tour</button>
-</form>
+            <button type="submit" class="btn btn-primary">Create Tour</button>
+            <a href="/tours" class="btn btn-secondary m-3" >Quay lại danh sách tour</a>
+        </form>
+    </div>
+</body>
+</html>

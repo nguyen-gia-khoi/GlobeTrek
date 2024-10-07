@@ -7,9 +7,11 @@
     <title>Edit Destination</title>
 </head>
 <body>
+    
+    <%- include('../header', { pageTitle: 'Edit Destination' }) %>
     <div class="container mt-5">
         <h1>Edit Destination</h1>
-        <form action="/destinations/<%= destination._id %>" method="POST">
+        <form action="/destinations/edit/<%= destination._id %>" method="POST">
             <div class="form-group">
                 <label for="name">Destination Name</label>
                 <input type="text" class="form-control" id="name" name="name" value="<%= destination.name %>" required>
