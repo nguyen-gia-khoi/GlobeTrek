@@ -54,7 +54,7 @@ const verfiaccount = async(req,res)=>{
 
         const user = await User.create({ email, password });
         await redis.del(`signup:${email}`);
-        
+
         const { accessToken, refreshToken } = generateToken(user._id);
 
         res.cookie("refreshToken", refreshToken, {
@@ -115,6 +115,13 @@ const logout = async( req, res ) => {
         res.status(500).json({ message: "Server Error!", error: error.message });
     }
 }
+const forgotPassword = async(req,res)=>{
+
+}
+
+const resetPassword = async(req,res)=>{
+    
+}
 
 const refreshToken = async (req, res) => {
     try {
@@ -162,6 +169,8 @@ module.exports ={
     login,
     verfiaccount,
     logout,
+    refreshToken,
+
 }
 
 
