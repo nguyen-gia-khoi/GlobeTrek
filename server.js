@@ -1,4 +1,3 @@
-
 const express = require('express');
 const path = require('path');
 require('dotenv').config();
@@ -7,38 +6,52 @@ const port = process.env.PORT || 8888;
 const hostname = process.env.HOST_NAME;
 const configViewEngine = require('./src/config/viewEngine');
 
-
 const connection = require('./src/config/database');
 const mongoose = require('mongoose');
-//Const router
+
+// Import routers
 const toursRouter = require('./src/routes/tourRouter');
 const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
 const destinationsRoutes = require('./src/routes/destinationRouter');
-const authRoutes = require("./src/routes/authRoutes")
-// Cấu hình view engine
+const authRoutes = require("./src/routes/authRoutes");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+
+// Configure view engine
 configViewEngine(app);
-// trang home 
+
+// Home route
 app.get('/', (req, res) => {
-  res.render('home', { pageTitle: 'Trang Chủ' }); // render file home.ejs từ thư mục views
+  res.render('home', { pageTitle: 'Trang Chủ' }); // Render home.ejs from views folder
 });
 
+// Middleware for parsing request bodies
+app.use(express.json()); // For JSON
+app.use(express.urlencoded({ extended: true })); // For form data
 
-// Middleware để phân tích req.body
-app.use(express.json()); // cho JSON
-app.use(express.urlencoded({ extended: true })); // cho dữ liệu từ form
-
-// Cấu hình tệp tĩnh
+// Static file configuration
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Route authen/author
+// Cookie parser middleware
+app.use(cookieParser());
 
-app.use("/api/auth",authRoutes)
+// CORS configuration
+const corsOptions = {
+  origin: "http://localhost:3000", // Removed trailing slash
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true, // Allow sending cookies
+};
+app.use(cors(corsOptions));
 
-// Định nghĩa các route
+// Auth routes
+app.use("/api/auth", authRoutes);
+
+// Define routes
 app.use('/tours', toursRouter);
 app.use('/tourtypes', tourTypeRoutes);
 app.use('/destinations', destinationsRoutes);
 
+// Database connection and server start
 (async () => {
   try {
     await connection();
