@@ -5,6 +5,7 @@ const { uploadMultiple } = require('../Middleware/cloudinary');
 
 router.get('/', tourController.getTours); // Hiển thị danh sách tour
 router.get('/api', tourController.getToursAPI); // API để lấy danh sách tour
+router.get('/api/:id', tourController.getTourById);//api get id tour
 router.get('/create', tourController.getCreateTour); // Hiển thị form tạo tour
 router.post('/create', uploadMultiple, tourController.postCreateTour); // Tạo tour mới
 router.get('/edit/:id', tourController.getUpdateTour); // Hiển thị form chỉnh sửa tour
