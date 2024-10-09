@@ -60,9 +60,24 @@ const tourSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Tour description is required'],
   },
-  price: {
+  price: { // Giá người lớn
     type: Number,
     required: [true, 'Price is required'],
+    min: [0, 'Price must be a positive number'],
+  },
+  specialAdultPrice: { // Giá ngày đặc biệt của người lớn
+    type: Number,
+    required: [true, 'Special adult price is required'],
+    min: [0, 'Price must be a positive number'],
+  },
+  childPrice: { // Giá trẻ em
+    type: Number,
+    required: [true, 'Child price is required'],
+    min: [0, 'Price must be a positive number'],
+  },
+  specialChildPrice: { // Giá ngày đặc biệt của trẻ em
+    type: Number,
+    required: [true, 'Special child price is required'],
     min: [0, 'Price must be a positive number'],
   },
   location: {

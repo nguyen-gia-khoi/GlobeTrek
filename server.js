@@ -40,7 +40,7 @@ app.use(cookieParser());
 
 // CORS configuration
 const corsOptions = {
-  origin: "http://localhost:3000", // Removed trailing slash
+  origin: "http://localhost:5173", // Removed trailing slash
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true, // Allow sending cookies
 };
