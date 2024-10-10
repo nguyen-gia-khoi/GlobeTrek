@@ -33,7 +33,7 @@ const signup = async (req, res) => {
         // Send verification email
         await sendVerificationEmail(email, verificationCode);
 
-        res.status(200).json({ message: "Check your email for the OTP" });
+        res.status(200).json({ message: "Check your email for the OTP123" });
 
     } catch (error) {
         console.log("Error in signup controller: ", error.message);
