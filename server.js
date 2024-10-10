@@ -9,13 +9,20 @@ const configViewEngine = require('./src/config/viewEngine');
 const connection = require('./src/config/database');
 const mongoose = require('mongoose');
 
-// Import routers
+
+
+// Customer routes
 const toursRouter = require('./src/routes/tourRoutes');
 const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
 const destinationsRoutes = require('./src/routes/destinationRoutes');
 const scheduleRoutes = require('./src/routes/scheduleRoutes');
-
 const authRoutes = require("./src/routes/authRoutes");
+// Admin routes
+const toursRouter = require('./src/routes/Admin/tourRoutes');
+const tourTypeRoutes = require('./src/routes/Admin/tourTypeRoutes');
+const destinationsRoutes = require('./src/routes/Admin/destinationRoutes');
+const scheduleRoutes = require('./src/routes/Admin/scheduleRoutes');
+
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
