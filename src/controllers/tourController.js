@@ -5,6 +5,10 @@ const { storage } = require('../Middleware/cloudinary');
 const multer = require('multer');
 const upload = multer({ storage });
 
+
+const SPECIAL_DAY_MULTIPLIER = 1.5; // Hệ số cho ngày đặc biệt
+const CHILD_MULTIPLIER = 0.75;      // Hệ số cho trẻ em
+
 // GET: Display list of all tours
 const getTours = async (req, res) => {
   try {
@@ -34,6 +38,23 @@ const getToursAPI = async (req, res) => {
     res.status(500).json({ error: 'Error fetching tours' });
   }
 };
+//api get id tour
+const getTourById = async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id)
+      .populate('tourType')
+      .populate('destination');
+
+    if (!tour) {
+      return res.status(404).json({ error: 'Tour not found' });
+    }
+
+    res.json(tour);
+  } catch (error) {
+    console.error('Error fetching tour by ID:', error);
+    res.status(500).json({ error: 'Error fetching tour' });
+  }
+};
 
 // GET: Display form for creating a new tour
 const getCreateTour = async (req, res) => {
@@ -57,6 +78,14 @@ const postCreateTour = async (req, res) => {
     return res.status(400).send('Invalid input: Duration must be at least 1 day, and Price/Available Spots must be non-negative.');
   }
 
+  
+  // Tính toán giá đặc biệt và giá trẻ em dựa trên hệ số cố định
+  const specialAdultPrice = price * SPECIAL_DAY_MULTIPLIER;
+  const childPrice = price * CHILD_MULTIPLIER;
+  const specialChildPrice = childPrice * SPECIAL_DAY_MULTIPLIER;
+
+
+
   // Get image paths from Cloudinary
   const images = req.files['images'] ? req.files['images'].map(file => file.path) : [];
   const videos = req.files['videos'] ? req.files['videos'].map(file => file.path) : [];
@@ -67,6 +96,9 @@ const postCreateTour = async (req, res) => {
       title,
       description,
       price,
+      specialAdultPrice,
+      childPrice,
+      specialChildPrice,
       location,
       duration,
       contact,
@@ -76,8 +108,10 @@ const postCreateTour = async (req, res) => {
       isDisabled,
       images, 
       videos, 
+
+
+  
     });
-    
 // Cập nhật trường tours trong Destination
 await Destination.findByIdAndUpdate(destination, { $addToSet: { tours: newTour._id } }); // Thêm tour vào danh sách tours
 
@@ -116,6 +150,10 @@ const postUpdateTour = async (req, res) => {
     return res.status(400).send('Invalid input: Duration must be at least 1 day, and Price/Available Spots must be non-negative.');
   }
 
+   // Tính toán giá đặc biệt và giá trẻ em dựa trên hệ số cố định
+   const specialAdultPrice = price * SPECIAL_DAY_MULTIPLIER;
+   const childPrice = price * CHILD_MULTIPLIER;
+   const specialChildPrice = childPrice * SPECIAL_DAY_MULTIPLIER;
   // Get image and video paths from Cloudinary if they were uploaded
   const images = req.files['images'] ? req.files['images'].map(file => file.path) : [];
   const videos = req.files['videos'] ? req.files['videos'].map(file => file.path) : [];
@@ -125,6 +163,9 @@ const postUpdateTour = async (req, res) => {
       title,
       description,
       price,
+      specialAdultPrice,
+      childPrice,
+      specialChildPrice,
       location,
       duration,
       contact,
@@ -196,6 +237,7 @@ const toggleScheduleStatus = async (req, res) => {
 module.exports = {
   getTours,
   getToursAPI,
+  getTourById,
   getCreateTour,
   postCreateTour,
   getUpdateTour,
