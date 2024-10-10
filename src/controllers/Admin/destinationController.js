@@ -1,4 +1,4 @@
-const { Destination } = require('../models/Tour'); // Điều chỉnh đường dẫn nếu cần
+const { Destination } = require('../../models/Tour'); // Điều chỉnh đường dẫn nếu cần
 
 // Lấy danh sách tất cả các Destination
 const getAllDestinations = async (req, res) => {

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const tourController = require('../../controllers/tourController');
+const tourController = require('../../controllers/Admin/tourController');
 const {uploadMultiple} = require('../../Middleware/cloudinary');
 const {verifyAdmin} = require('../../Middleware/authMiddleware')
 

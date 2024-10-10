@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const tourTypeController = require('../../controllers/tourTypeController');
+const tourTypeController = require('../../controllers/Admin/tourtypeController');
 const {verifyAdmin} = require('../../Middleware/authMiddleware')
 
 router.get('/create',verifyAdmin, tourTypeController.createTourTypeForm); // Hiển thị trang tạo TourType
