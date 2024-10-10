@@ -12,7 +12,7 @@
     <div class="container mt-5">
         <h1 class="mb-4">Create New Schedule for Tour ID: <%= tourId %></h1>
 
-        <form action="/schedules/tours/<%= tourId %>/schedules" method="POST">
+        <form action="/admin/schedules/tours/<%= tourId %>/schedules" method="POST">
             <div class="form-group">
                 <label for="startDate">Start Date</label>
                 <input type="date" class="form-control" id="startDate" name="startDate" required>

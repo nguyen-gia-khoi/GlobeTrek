@@ -12,7 +12,7 @@
     <div class="container mt-5">
         <h1 class="mb-4">Edit Schedule for Tour ID: <%= tourId %></h1>
 
-        <form action="/schedules/tours/<%= tourId %>/schedules/<%= schedule._id %>" method="POST">
+        <form action="/admin/schedules/tours/<%= tourId %>/schedules/<%= schedule._id %>" method="POST">
             <div class="form-group">
                 <label for="startDate">Start Date</label>
                 <input type="date" class="form-control" id="startDate" name="startDate" value="<%= schedule.startDate.toISOString().substring(0, 10) %>" required>

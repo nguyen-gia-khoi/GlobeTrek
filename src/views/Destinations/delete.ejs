@@ -12,7 +12,7 @@
     <div class="container mt-5">
         <h1>Confirm Delete Destination</h1>
         <p>Are you sure you want to delete the destination: <strong><%= destination.name %></strong>?</p>
-        <form action="/destinations/delete/<%= destination._id %>" method="POST">
+        <form action="/admin/destinations/delete/<%= destination._id %>" method="POST">
             <button type="submit" class="btn btn-danger">Delete</button>
             <a href="/destinations" class="btn btn-secondary">Cancel</a>
         </form>
