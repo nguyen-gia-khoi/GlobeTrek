@@ -10,15 +10,15 @@ const connection = require('./src/config/database');
 const mongoose = require('mongoose');
 
 // Import routers
-const toursRouter = require('./src/routes/tourRouter');
+const toursRouter = require('./src/routes/tourRoutes');
 const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
-const destinationsRoutes = require('./src/routes/destinationRouter');
+const destinationsRoutes = require('./src/routes/destinationRoutes');
 
 const authRoutes = require("./src/routes/authRoutes");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
-const scheduleRoutes = require('./src/routes/ScheduleRouter');
+const scheduleRoutes = require('./src/routes/scheduleRoutes');
 
 // Cấu hình view engine
 configViewEngine(app);
