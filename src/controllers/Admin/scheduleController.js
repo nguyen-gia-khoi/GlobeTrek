@@ -1,4 +1,4 @@
-const { Tour } = require('../models/Tour'); // Import mô hình Tour
+const { Tour } = require('../../models/Tour'); // Import mô hình Tour
 
 // Lấy tất cả lịch trình của một tour và render trang EJS
 const getSchedules = async (req, res) => {

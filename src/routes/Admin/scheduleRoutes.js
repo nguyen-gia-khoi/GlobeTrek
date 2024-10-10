@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const scheduleController = require('../../controllers/scheduleController');
+const scheduleController = require('../../controllers/Admin/scheduleController');
 const {verifyAdmin} = require('../../Middleware/authMiddleware')
 
 router.get('/tours/:tourId/schedules/new',verifyAdmin, scheduleController.renderNewSchedulePage);

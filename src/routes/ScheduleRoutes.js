@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const scheduleController = require('../controllers/scheduleController');
+const scheduleController = require('../controllers/Admin/scheduleController');
 
 router.get('/tours/:tourId/schedules', scheduleController.getSchedules);
 // router.get('/tours/:tourId/schedules/new', scheduleController.renderNewSchedulePage);

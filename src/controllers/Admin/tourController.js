@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
-const { Tour, TourType, Destination } = require('../models/Tour');
+const { Tour, TourType, Destination } = require('../../models/Tour');
 const cloudinary = require('cloudinary').v2;
-const { storage } = require('../Middleware/cloudinary');
+const { storage } = require('../../Middleware/cloudinary');
 const multer = require('multer');
 const upload = multer({ storage });
 
