@@ -15,7 +15,7 @@ const mongoose = require('mongoose');
 const toursRouter = require('./src/routes/tourRoutes');
 const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
 const destinationsRoutes = require('./src/routes/destinationRoutes');
-const scheduleRoutes = require('./src/routes/scheduleRoutes');
+const scheduleRoutes = require('./src/routes/ScheduleRoutes');
 const authRoutes = require("./src/routes/authRoutes");
 // Admin routes
 const toursRoutesAdmin = require('./src/routes/Admin/tourRoutes');
@@ -59,17 +59,17 @@ app.use(cors(corsOptions));
 app.use("/api/auth", authRoutes);
 
 // User routes
-app.use('api/tours', toursRouter);
-app.use('api/tourtypes', tourTypeRoutes);
-app.use('api/destinations', destinationsRoutes);
-app.use('api/schedules', scheduleRoutes);
+app.use('/tours', toursRouter);
+app.use('/tourtypes', tourTypeRoutes);
+app.use('/destinations', destinationsRoutes);
+app.use('/schedules', scheduleRoutes);
 
 
 // Admin routes
-app.use('api/admin/tours', toursRoutesAdmin);
-app.use('api/admin/tourtypes', tourTypeRoutesAdmin);
-app.use('api/admin/destinations', destinationsRoutesAdmin);
-app.use('api/admin/schedules', scheduleRoutesAdmin);
+app.use('/admin/tours', toursRoutesAdmin);
+app.use('/admin/tourtypes', tourTypeRoutesAdmin);
+app.use('/admin/destinations', destinationsRoutesAdmin);
+app.use('/admin/schedules', scheduleRoutesAdmin);
 // Database connection and server start
 (async () => {
   try {

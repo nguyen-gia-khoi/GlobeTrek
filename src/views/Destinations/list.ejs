@@ -11,7 +11,7 @@
     <%- include('../header', { pageTitle: 'Destination List' }) %>
     <div class="container mt-5">
         <h1>Destination List</h1>
-        <a href="/destinations/create" class="btn btn-primary mb-3">Add New Destination</a>
+        <a href="/admin/destinations/create" class="btn btn-primary mb-3">Add New Destination</a>
         <table class="table">
             <thead>
                 <tr>
@@ -24,8 +24,8 @@
                     <tr>
                         <td><%= destination.name %></td>
                         <td>
-                            <a href="/destinations/edit/<%= destination._id %>" class="btn btn-warning btn-sm">Edit</a>
-                            <a href="/destinations/delete/<%= destination._id %>" class="btn btn-danger btn-sm">Delete</a>
+                            <a href="/admin/destinations/edit/<%= destination._id %>" class="btn btn-warning btn-sm">Edit</a>
+                            <a href="/admin/destinations/delete/<%= destination._id %>" class="btn btn-danger btn-sm">Delete</a>
                         </td>
                     </tr>
                 <% }) %>

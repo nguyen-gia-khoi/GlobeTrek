@@ -1,5 +1,5 @@
 // src/controllers/tourTypeController.js
-const { TourType } = require('../../models/Tour'); // Điều chỉnh đường dẫn nếu cần
+const { TourType } = require('../../models/Tour'); 
 
 // Lấy danh sách tất cả các TourType
 const getAllTourTypes = async (req, res) => {
