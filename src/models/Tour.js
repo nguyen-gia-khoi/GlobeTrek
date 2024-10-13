@@ -21,14 +21,7 @@ const destinationSchema = new mongoose.Schema({
 
 // Schema cho mỗi lịch trình tour
 const scheduleSchema = new mongoose.Schema({
-  startDate: {
-    type: Date,
-    required: true,
-  },
-  endDate: {
-    type: Date,
-    required: true,
-  },
+
   isActive: {
     type: Boolean,
     default: true,
