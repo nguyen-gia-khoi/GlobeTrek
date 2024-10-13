@@ -48,9 +48,20 @@ const getTourById = async (req, res) => {
     res.status(500).json({ error: 'Error fetching tour' });
   }
 };
+// Tìm kiếm tour theo tiêu đề
+ const searchTours = async (req, res) => {
+  const { query } = req.query;
+  try {
+    const tours = await Tour.find({ title: { $regex: query, $options: 'i' } });
+    res.status(200).json(tours);
+  } catch (error) {
+    res.status(500).json({ message: 'Không thể tìm kiếm tour', error });
+  }
+};
 
 module.exports = {
   getTours,
   getToursAPI,
   getTourById,
+  searchTours
 };

@@ -20,8 +20,7 @@
             <table class="table table-bordered">
                 <thead class="thead-light">
                     <tr>
-                        <th scope="col">Start Date</th>
-                        <th scope="col">End Date</th>
+                     
                         <th scope="col">Active</th>
                         <th scope="col">Itinerary</th>
                         <th scope="col">Actions</th>
@@ -30,8 +29,7 @@
                 <tbody>
                     <% schedules.forEach(schedule => { %>
                         <tr>
-                            <td><%= schedule.startDate.toDateString() %></td>
-                            <td><%= schedule.endDate.toDateString() %></td>
+                         
                             <td><%= schedule.isActive ? 'Yes' : 'No' %></td>
                             <td>
                                 <ul>

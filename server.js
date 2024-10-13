@@ -64,7 +64,6 @@ app.use('/tourtypes', tourTypeRoutes);
 app.use('/destinations', destinationsRoutes);
 app.use('/schedules', scheduleRoutes);
 
-
 // Admin routes
 app.use('/admin/tours', toursRoutesAdmin);
 app.use('/admin/tourtypes', tourTypeRoutesAdmin);
