@@ -13,7 +13,7 @@ const {
   } = require("../service/tokenService")
 
 const signup = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password,  } = req.body;
 
     try {
         const userExists = await User.findOne({ email });
