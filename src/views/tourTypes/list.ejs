@@ -10,7 +10,7 @@
     <%- include('../header', { pageTitle: 'Tour Types' }) %>
     <div class="container mt-5">
         <h1>Tour Types</h1>
-        <a href="/tourtypes/create" class="btn btn-primary mb-3">Create Tour Type</a>
+        <a href="/admin/tourtypes/create" class="btn btn-primary mb-3">Create Tour Type</a>
         <table class="table">
             <thead>
                 <tr>
@@ -23,8 +23,8 @@
                     <tr>
                         <td><%= tourType.name %></td>
                         <td>
-                            <a href="/tourtypes/edit/<%= tourType._id %>" class="btn btn-warning">Edit</a>
-                            <a href="/tourtypes/delete/<%= tourType._id %>" class="btn btn-danger">Delete</a>
+                            <a href="/admin/tourtypes/edit/<%= tourType._id %>" class="btn btn-warning">Edit</a>
+                            <a href="/admin/tourtypes/delete/<%= tourType._id %>" class="btn btn-danger">Delete</a>
                         </td>
                     </tr>
                 <% }); %>

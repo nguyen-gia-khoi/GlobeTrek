@@ -11,7 +11,7 @@
     <div class="container mt-5">
         <h1>Confirm Delete Tour Type</h1>
         <p>Are you sure you want to delete the Tour Type: <strong><%= tourType.name %></strong>?</p>
-        <form action="/tourTypes/delete/<%= tourType._id %>" method="POST">
+        <form action="/admin/tourTypes/delete/<%= tourType._id %>" method="POST">
             <button type="submit" class="btn btn-danger">Delete</button>
             <a href="/tourtypes" class="btn btn-secondary">Cancel</a>
         </form>
