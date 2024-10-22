@@ -253,5 +253,3 @@ module.exports ={
     resetPassword,
     checkEmail
 }
-
-
