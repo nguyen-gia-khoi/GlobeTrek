@@ -95,7 +95,9 @@ const signin = async( req, res ) => {
               });
 
             await storeRefreshToken(user._id, refreshToken);
-            res.status(200).json({ accessToken, message: "Login success" });
+            // res.status(200).json({ accessToken, message: "Login success" });
+            const { password, ...others } = user._doc;
+            res.status(200).json({ ...others, accessToken, refreshToken });
         }
         else {
             res.status(400).json({ message: "Invalid email or password" });

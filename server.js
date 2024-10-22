@@ -17,6 +17,7 @@ const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
 const destinationsRoutes = require('./src/routes/destinationRoutes');
 const scheduleRoutes = require('./src/routes/ScheduleRoutes');
 const authRoutes = require("./src/routes/authRoutes");
+const orderRoutes = require("./src/routes/orderRoutes");
 // Admin routes
 const toursRoutesAdmin = require('./src/routes/Admin/tourRoutes');
 const tourTypeRoutesAdmin = require('./src/routes/Admin/tourTypeRoutes');
@@ -63,6 +64,7 @@ app.use('/tours', toursRouter);
 app.use('/tourtypes', tourTypeRoutes);
 app.use('/destinations', destinationsRoutes);
 app.use('/schedules', scheduleRoutes);
+app.use('/orders', orderRoutes);
 
 
 // Admin routes
