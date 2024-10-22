@@ -226,7 +226,22 @@ const refreshToken = async (req, res) => {
     }
   };
   
+const checkEmail = async(req,res)=>{
+  const { email } = req.body;
+  try {
+    // Query the database to check if the email exists
+    const user = await User.findOne({ email });  // Assuming you're using MongoDB with Mongoose
 
+    if (user) {
+        return res.json({ exists: true });  // Email is already registered
+    } else {
+        return res.json({ exists: false }); // Email is not registered
+    }
+    } catch (error) {
+        console.error("Error checking email:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+}
 
 module.exports ={
     signup,
@@ -235,7 +250,8 @@ module.exports ={
     signout,
     refreshToken,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    checkEmail
 }
 
 
