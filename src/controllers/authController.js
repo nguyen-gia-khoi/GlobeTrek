@@ -13,7 +13,7 @@ const {
   } = require("../service/tokenService")
 
 const signup = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password,  } = req.body;
 
     try {
         const userExists = await User.findOne({ email });
@@ -33,7 +33,7 @@ const signup = async (req, res) => {
         // Send verification email
         await sendVerificationEmail(email, verificationCode);
 
-        res.status(200).json({ message: "Check your email for the OTP123" });
+        res.status(200).json({ message: "Check your email for the OTP" });
 
     } catch (error) {
         console.log("Error in signup controller: ", error.message);
@@ -98,10 +98,8 @@ const signin = async( req, res ) => {
             // res.status(200).json({ accessToken, message: "Login success" });
             const { password, ...others } = user._doc;
             res.status(200).json({ ...others, accessToken, refreshToken });
-            
         }
-
-
+        } 
         else {
             res.status(400).json({ message: "Invalid email or password" });
           }
