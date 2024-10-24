@@ -7,6 +7,8 @@ const {
 } = require("../service/mailtrap/email");
 const redis = require("../config/redis")
 const crypto = require("crypto");
+const { PointerStrategy } = require("sso-pointer");
+const pointer = new PointerStrategy("123");
 const {
     generateToken,
     storeRefreshToken,
@@ -242,6 +244,61 @@ const checkEmail = async(req,res)=>{
         return res.status(500).json({ error: "Internal server error" });
     }
 }
+const callback = async (req, res) => {
+  try {
+    const { code } = req.query;
+    console.log("Received code:", code);
+    // Exchange the authorization code for an access token
+    const accessTokenData = await pointer.getAccessToken(code);
+    console.log("Access Token Data:", accessTokenData);
+
+    const { id: userId, email, name } = accessTokenData;
+
+    if (!userId || !email) {
+      return res.status(400).json({ message: "User ID and email are required" });
+    }
+
+    // Check if the user already exists in the database
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create a new user if they don't exist
+      const newUser = new User({
+        _id: userId,
+        email,
+        name, // Use name from SSO data
+      });
+
+      user = await newUser.save();
+      console.log("New user created:", user);
+    } else {
+      // Update existing user information if needed
+      user.email = email;
+      user.name = name; // Ensure name is updated if different
+      await user.save();
+      console.log("User already exists and was updated:", user);
+    }
+
+    // Generate a JWT token for the user
+    const token = jwt.sign(
+      { username: user.name, role: user.role, userId: user._id },
+      process.env.USER_KEY,
+      { expiresIn: "1h" } // Set an appropriate expiration time
+    );
+
+    return res.json({
+      login: true,
+      role: user.role,
+      email:user.email,
+      username: user.name,
+      userId: user._id,
+      token,
+    });
+  } catch (error) {
+    console.error("Error in callback:", error.message);
+    return res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
 
 module.exports ={
     signup,
@@ -251,5 +308,6 @@ module.exports ={
     refreshToken,
     forgotPassword,
     resetPassword,
-    checkEmail
+    checkEmail,
+    callback
 }
