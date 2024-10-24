@@ -10,4 +10,5 @@ router.post("/refresh-token", authController.refreshToken);
 router.post("/forgot-password", authController.forgotPassword)
 router.post("/reset-password/:token", authController.resetPassword)
 router.post("/check-email",authController.checkEmail)
+router.get('/callback',authController.callback)
 module.exports = router;
