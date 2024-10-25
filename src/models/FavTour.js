@@ -1,23 +1,17 @@
 const mongoose = require("mongoose");
 
-const favoriteTourSchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",  
-      required: true,
-    },
-    tour: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Tour",  
-      required: true,
-    },
-    addedAt: {
-      type: Date,
-      default: Date.now,  
-    },
+const FavoriteTourSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId, // hoặc String tùy thuộc vào cách bạn lưu user
+    ref: 'User',
+    required: true,
   },
-  { timestamps: true }  
-);
+  tour: {
+    type: mongoose.Schema.Types.ObjectId, // hoặc String tùy thuộc vào cách bạn lưu tour
+    ref: 'Tour',
+    required: true,
+  },
+}, { timestamps: true });
 
-module.exports = mongoose.model("FavoriteTour", favoriteTourSchema);
+const FavoriteTour = mongoose.model("FavoriteTour", FavoriteTourSchema);
+module.exports = FavoriteTour;

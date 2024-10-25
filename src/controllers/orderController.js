@@ -102,7 +102,7 @@ const getUserOrders = async (req, res) => {
   }
 };
 
-// Hàm xử lý thanh toán
+// xử lý thay đổi
 const processPayment = async (req, res) => {
   try {
     const { orderId } = req.body; // Chỉ cần orderId
@@ -131,6 +131,7 @@ const processPayment = async (req, res) => {
     res.status(500).json({ message: 'Error processing payment', error });
   }
 };
+
 
 // Hàm hủy đơn hàng
 const cancelOrder = async (req, res) => {
@@ -166,3 +167,4 @@ module.exports = {
   processPayment,
   cancelOrder,
 };
+
