@@ -18,6 +18,7 @@ const destinationsRoutes = require('./src/routes/destinationRoutes');
 const scheduleRoutes = require('./src/routes/ScheduleRoutes');
 const authRoutes = require("./src/routes/authRoutes");
 const orderRoutes = require("./src/routes/orderRoutes");
+const favoriteTourRoutes = require("./src/routes/favtoursRoutes");
 // Admin routes
 const toursRoutesAdmin = require('./src/routes/Admin/tourRoutes');
 const tourTypeRoutesAdmin = require('./src/routes/Admin/tourTypeRoutes');
@@ -50,7 +51,7 @@ app.use(cookieParser());
 
 // CORS configuration
 const corsOptions = {
-  origin: "http://localhost:5174", // Removed trailing slash
+  origin: "http://localhost:5173", 
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true, // Allow sending cookies
 };
@@ -65,6 +66,7 @@ app.use('/tourtypes', tourTypeRoutes);
 app.use('/destinations', destinationsRoutes);
 app.use('/schedules', scheduleRoutes);
 app.use('/orders', orderRoutes);
+app.use("/favorite-tours", favoriteTourRoutes);
 
 
 // Admin routes

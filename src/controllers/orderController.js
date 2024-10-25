@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
-const Order = require('../models/Order'); // Import model Order
-const User = require('../models/User'); // Import model User
+const Order = require('../models/Order');
+const User = require('../models/User'); 
 
-// Hàm tạo đơn hàng
+// Tạo đơn hàng
 const createOrder = async (req, res) => {
   try {
+    console.log(req.body); 
+
     const {
       totalValue,
       customerInfo,
@@ -28,19 +30,19 @@ const createOrder = async (req, res) => {
 
     // Tạo một đối tượng Order mới
     const newOrder = new Order({
-      orderDate: new Date(), // Đặt ngày đặt hàng là thời gian hiện tại
-      totalValue: totalValue, // Tổng giá trị đơn hàng
+      orderDate: new Date(),
+      totalValue: totalValue,
       user: req.user._id,
-      customerInfo: customerInfo, 
-      passengerInfo: passengerInfo, 
-      tour: tour, 
+      customerInfo: customerInfo,
+      passengerInfo: passengerInfo,
+      tour: tour,
       adultPrice: adultPrice,
-      childPrice: childPrice, 
-      adultCount: adultCount, 
-      childCount: childCount, 
-      bookingDate: bookingDate, 
+      childPrice: childPrice,
+      adultCount: adultCount,
+      childCount: childCount,
+      bookingDate: bookingDate,
       status: 'pending', 
-      paymentMethod: paymentMethod, 
+      paymentMethod: paymentMethod,
     });
 
     // Lưu đơn hàng mới vào cơ sở dữ liệu
@@ -52,26 +54,39 @@ const createOrder = async (req, res) => {
       { $push: { orderHistory: savedOrder._id } }
     );
 
-    // Tự động hủy đơn hàng sau 15 phút nếu vẫn trong trạng thái 'pending'
+    // Tự động chuyển trạng thái sang "processing" sau 1 phút
     setTimeout(async () => {
-      const orderToCancel = await Order.findById(savedOrder._id);
-      if (orderToCancel && orderToCancel.status === 'pending') {
-        orderToCancel.status = 'canceled';
-        await orderToCancel.save();
-        console.log(`Order ${savedOrder._id} has been automatically canceled.`);
+      try {
+        const orderToProcess = await Order.findById(savedOrder._id);
+        if (orderToProcess && orderToProcess.status === 'pending') {
+          orderToProcess.status = 'processing';
+          await orderToProcess.save();
+          console.log(`Order ${savedOrder._id} has been updated to 'processing'.`);
+
+          // chờ thêm 10 phút để kiểm tra và hủy nếu chưa thanh toán
+          setTimeout(async () => {
+            const orderToCancel = await Order.findById(savedOrder._id);
+            if (orderToCancel && orderToCancel.status === 'processing') {
+              orderToCancel.status = 'canceled';
+              await orderToCancel.save();
+              console.log(`Order ${savedOrder._id} has been automatically canceled.`);
+            }
+          }, 10 * 60 * 1000); // 10 phút
+        }
+      } catch (error) {
+        console.error(`Error while updating order ${savedOrder._id} to 'processing':`, error.message);
       }
-    }, 15 * 60 * 1000); // 15 phút
+    }, 1 * 60 * 1000); // 1 phút
 
     // Phản hồi thành công
     res.status(201).json({ message: 'Order created successfully', order: savedOrder });
   } catch (error) {
-    // Phản hồi lỗi
     console.log("Error in createOrder controller", error.message);
     res.status(500).json({ message: 'Error creating order', error: error.message });
   }
 };
 
-// Hàm lấy danh sách đơn hàng của người dùng
+// lấy danh sách đơn hàng của người dùng
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -87,7 +102,7 @@ const getUserOrders = async (req, res) => {
   }
 };
 
-// Hàm xử lý thanh toán
+// xử lý thay đổi
 const processPayment = async (req, res) => {
   try {
     const { orderId } = req.body; // Chỉ cần orderId
@@ -116,6 +131,7 @@ const processPayment = async (req, res) => {
     res.status(500).json({ message: 'Error processing payment', error });
   }
 };
+
 
 // Hàm hủy đơn hàng
 const cancelOrder = async (req, res) => {
@@ -151,3 +167,4 @@ module.exports = {
   processPayment,
   cancelOrder,
 };
+

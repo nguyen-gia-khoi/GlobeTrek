@@ -4,12 +4,11 @@ const { Schema } = mongoose;
 const OrderSchema = new Schema({
   orderDate: {
     type: Date,
-    default: Date.now, // Ngày tạo đơn hàng
+    default: Date.now, 
   },
   createdAt: {
     type: Date,
-    default: Date.now, // Thời gian tạo đơn hàng
-    expires: '1m' // Tự động hủy sau 15 phút
+    default: Date.now, 
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -47,24 +46,30 @@ const OrderSchema = new Schema({
     min: [0, 'Total value must be a positive number'],
   },
   customerInfo: { // Thông tin liên hệ
-    fullName: { type: String, required: true },
-    phone: { type: String, required: true },
-    email: { type: String, required: true },
+ 
+    fullName: { type: String, required: false },
+    phone: { type: String, required: false },
+    email: { type: String, required: false },
+
+},
+  passengerInfo: {
+    type: {
+      title: { type: String, enum: ['Ông', 'Bà', 'Cô'], required: false }, 
+      fullName: { type: String, required: false },
+      phone: { type: String, required: false },
+      email: { type: String, required: false },
+      specialRequest: { type: String, required: false } 
+    },
+    required: false 
   },
-  passengerInfo: { // Thông tin khách
-    title: { type: String, enum: ['Ông', 'Bà', 'Cô'], required: true }, 
-    fullName: { type: String, required: true },
-    phone: { type: String, required: true },
-    email: { type: String, required: true },
-    specialRequest: { type: String }, // Yêu cầu đặc biệt (nếu có)
-  },
+  
   bookingDate: { // Ngày mà người dùng đặt vé
     type: Date,
     required: true,
   },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'paid', 'cancelled'],
+    enum: ['pending', 'processing', 'paid', 'canceled'],
     default: 'pending', // Trạng thái đơn hàng
   },
   paymentMethod: {
