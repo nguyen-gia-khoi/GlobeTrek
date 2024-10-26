@@ -280,7 +280,7 @@ const callback = async (req, res) => {
     }
 
     // Generate a JWT token for the user
-    const token = jwt.sign(
+    const accesstoken = jwt.sign(
       { username: user.name, role: user.role, userId: user._id },
       process.env.USER_KEY,
       { expiresIn: "1h" } // Set an appropriate expiration time
@@ -292,7 +292,7 @@ const callback = async (req, res) => {
       email:user.email,
       username: user.name,
       userId: user._id,
-      token,
+      accesstoken,
     });
   } catch (error) {
     console.error("Error in callback:", error.message);
