@@ -86,21 +86,43 @@ const createOrder = async (req, res) => {
   }
 };
 
-// lấy danh sách đơn hàng của người dùng
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Tìm tất cả đơn hàng của người dùng
-    const orders = await Order.find({ user: userId }).populate('tour');
+    // Lấy thông tin người dùng với danh sách orderHistory
+    const user = await User.findById(userId).populate({
+      path: 'orderHistory',
+      populate: { path: 'tour' } // Populating the tour field in each order
+    });
 
-    // Trả về danh sách đơn hàng
-    res.status(200).json(orders);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const orders = user.orderHistory;
+
+    // Nhóm các đơn hàng theo tháng và năm từ bookingDate
+    const groupedOrders = orders.reduce((result, order) => {
+      const date = new Date(order.bookingDate);
+      const monthYear = `${date.getMonth() + 1}-${date.getFullYear()}`;
+
+      if (!result[monthYear]) {
+        result[monthYear] = [];
+      }
+      result[monthYear].push(order);
+
+      return result;
+    }, {});
+
+    // Trả về danh sách đơn hàng nhóm theo tháng và năm
+    res.status(200).json(groupedOrders);
   } catch (error) {
     console.log("Error fetching orders", error.message);
     res.status(500).json({ message: 'Error fetching orders', error });
   }
 };
+
 
 // xử lý thay đổi
 const processPayment = async (req, res) => {
@@ -160,6 +182,8 @@ const cancelOrder = async (req, res) => {
     res.status(500).json({ message: 'Error canceling order', error });
   }
 };
+
+
 
 module.exports = {
   createOrder,

@@ -30,16 +30,16 @@
                     <th>Title</th>
                     <th>Description</th>
                     <th>Price</th>
-                    <th>Location</th>
+                    <!-- <th>Location</th> -->
                     <th>Duration (in days)</th>
                     <th>Contact</th>
                     <th>Available Spots</th>
-                    <th>Tour Type</th>
+                    <!-- <th>Tour Type</th> -->
                     <th>Destination</th>
-                    <th>Images</th>
-                    <th>Videos</th>
-                    <th>State</th>
-                    <th>Schedule</th>
+                    <!-- <th>Images</th>
+                    <th>Videos</th> -->
+                    <th>Status</th>
+                    <!-- <th>Schedule</th> -->
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -49,37 +49,37 @@
                         <td><%= tour.title %></td>
                         <td><%= tour.description %></td>
                         <td><%= tour.price %></td>
-                        <td><%= tour.location %></td>
+                        <!-- <td><%= tour.location %></td> -->
                         <td><%= tour.duration %></td>
                         <td><%= tour.contact %></td>
                         <td><%= tour.availableSpots %></td>
-                        <td><%= tour.tourType ? tour.tourType.name : 'N/A' %></td>
+                        <!-- <td><%= tour.tourType ? tour.tourType.name : 'N/A' %></td> -->
                         <td><%= tour.destination ? tour.destination.name : 'N/A' %></td>
                         
 
 
                         <!--  -->
-                        <td>
+                        <!-- <td>
                             <% tour.images.forEach(image => { %>
                                 <img src="<%= image %>" alt="Image" style="width: 100px; height: auto; margin: 5px;">
                             <% }) %>
-                        </td>
+                        </td> -->
                         <!--  -->
-                        <td>
+                        <!-- <td>
                             <% tour.videos.forEach(video => { %>
                                 <video width="100" controls>
                                     <source src="<%= video %>" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
                             <% }) %>
-                        </td>
+                        </td> -->
                         <!--  -->
                         <td><%= tour.isDisabled %></td>
-                        <!--  -->
+                         <!-- -->
                         <td> 
                              <a href="/schedules/tours/<%= tour._id %>/schedules" class="btn btn-primary">View Schedules</a>
                         </td>
-                        <!--  -->
+                        
                         <td>
                            
                             <a href="/admin/tours/edit/<%= tour._id %>" class="btn btn-warning mt-2 btn-sm"> Edit </a>
