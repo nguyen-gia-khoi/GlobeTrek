@@ -170,22 +170,27 @@ const getCreateTour = async (req, res) => {
   };
   
   // POST: Toggle schedule status
-  const toggleScheduleStatus = async (req, res) => {
+  const toggleTourStatus = async (req, res) => {
     try {
-      const { tourID, scheduleIndex } = req.body;
-  
-      const tour = await Tour.findById(tourID);
-      if (!tour) return res.status(404).send('Tour not found');
-  
-      tour.schedules[scheduleIndex].isActive = !tour.schedules[scheduleIndex].isActive;
-      await tour.save();
-  
-      res.redirect(`/tours/${tourID}/edit`);
+        const tourId = req.params.id; 
+        const { isDisabled } = req.body; 
+
+        const updatedTour = await Tour.findByIdAndUpdate(
+            tourId,
+            { isDisabled }, 
+            { new: true } 
+        );
+
+        if (!updatedTour) {
+            return res.status(404).json({ message: 'Tour not found' });
+        }
+
+        res.json({ message: 'Tour status updated successfully', updatedTour });
     } catch (error) {
-      console.error('Error toggling schedule status:', error);
-      res.status(500).send('Error toggling schedule status');
+        console.error('Error updating tour status:', error);
+        res.status(500).json({ message: 'Error updating tour status', error });
     }
-  };
+};
   
   module.exports = {
     getCreateTour,
@@ -194,5 +199,5 @@ const getCreateTour = async (req, res) => {
     postUpdateTour,
     getDeleteTour,
     postDeleteTour,
-    toggleScheduleStatus,
+    toggleTourStatus,
   };

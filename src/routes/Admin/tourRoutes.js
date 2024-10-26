@@ -13,6 +13,6 @@ router.post('/edit/:id',uploadMultiple, tourController.postUpdateTour); // Cập
 router.get('/delete/:id', tourController.getDeleteTour); // Hiển thị trang xác nhận xóa tour
 router.post('/delete/:id', tourController.postDeleteTour); // Xóa tour
 
-router.post('/toggle-schedule', tourController.toggleScheduleStatus); // Toggle trạng thái lịch
+router.post('/toggle-status', tourController.toggleTourStatus); // Toggle trạng thái lịch
 
 module.exports = router;
