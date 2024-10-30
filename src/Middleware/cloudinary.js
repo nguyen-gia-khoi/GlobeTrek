@@ -1,12 +1,13 @@
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const { v2: cloudinary } = require('cloudinary');
+require('dotenv').config();
 
-// Cấu hình Cloudinary
+
 cloudinary.config({
-  cloud_name: 'dnapzxvmr', // Thay bằng cloud_name của bạn
-  api_key: '493981653537236', // Thay bằng API key của bạn
-  api_secret: 'DRf-iDR83p1jRBoMidEITEBjeOQ' // Thay bằng API secret của bạn
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_CLOUD_KEY,
+  api_secret: process.env.API_CLOUD_SECRET
 });
 
 // Cấu hình lưu trữ trên Cloudinary
