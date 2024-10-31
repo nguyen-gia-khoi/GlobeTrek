@@ -277,15 +277,29 @@ const callback = async (req, res) => {
       console.log("User already exists and was updated:", user);
     }
 
-    // Generate a JWT token for the user
+    // // Generate a JWT token for the user
     
+
+    // return res.json({
+    //   login: true,
+    //   role: user.role,
+    //   email:user.email,
+    //   userId: user._id,
+    //   accessToken,
+    // });
+     // Generate a JWT token for the user
+     const token = jwt.sign(
+      { role: user.role, userId: user._id,email:user.email,},
+      process.env.USER_KEY,
+      { expiresIn: "1h" } // Set an appropriate expiration time
+    );
 
     return res.json({
       login: true,
       role: user.role,
       email:user.email,
       userId: user._id,
-      accessToken,
+      token,
     });
   } catch (error) {
     console.error("Error in callback:", error.message);
