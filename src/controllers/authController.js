@@ -287,12 +287,15 @@ const callback = async (req, res) => {
     //   userId: user._id,
     //   accessToken,
     // });
-     // Generate a JWT token for the user
+     // Generate a JWT token for the user\
+
+
      const token = jwt.sign(
-      { role: user.role, userId: user._id,email:user.email,},
-      process.env.USER_KEY,
+      {userId}, process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "1h" } // Set an appropriate expiration time
     );
+
+    // const token = generateToken(user._id);
 
     return res.json({
       login: true,
