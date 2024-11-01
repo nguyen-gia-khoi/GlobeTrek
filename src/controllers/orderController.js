@@ -1,17 +1,16 @@
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
-const User = require('../models/User'); 
+const User = require('../models/User');
+const { Tour } = require('../models/Tour');
 
 // Tạo đơn hàng
 const createOrder = async (req, res) => {
   try {
-    console.log(req.body); 
-
     const {
       totalValue,
       customerInfo,
-      passengerInfo, 
-      tour,
+      passengerInfo,
+      tour, // ID của Tour
       adultPrice,
       childPrice,
       adultCount,
@@ -20,7 +19,6 @@ const createOrder = async (req, res) => {
       paymentMethod,
     } = req.body;
 
-    // Kiểm tra thông tin đơn hàng
     if (!tour) {
       return res.status(400).json({ message: "Tour is required" });
     }
@@ -28,24 +26,23 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "At least one ticket must be purchased" });
     }
 
-    // Tạo một đối tượng Order mới
+    // Tạo đơn hàng mới
     const newOrder = new Order({
       orderDate: new Date(),
-      totalValue: totalValue,
+      totalValue,
       user: req.user._id,
-      customerInfo: customerInfo,
-      passengerInfo: passengerInfo,
-      tour: tour,
-      adultPrice: adultPrice,
-      childPrice: childPrice,
-      adultCount: adultCount,
-      childCount: childCount,
-      bookingDate: bookingDate,
-      status: 'pending', 
-      paymentMethod: paymentMethod,
+      customerInfo,
+      passengerInfo,
+      tour,
+      adultPrice,
+      childPrice,
+      adultCount,
+      childCount,
+      bookingDate,
+      status: 'pending',
+      paymentMethod,
     });
 
-    // Lưu đơn hàng mới vào cơ sở dữ liệu
     const savedOrder = await newOrder.save();
 
     // Cập nhật lịch sử đơn hàng của người dùng
@@ -54,31 +51,30 @@ const createOrder = async (req, res) => {
       { $push: { orderHistory: savedOrder._id } }
     );
 
-    // Tự động chuyển trạng thái sang "processing" sau 1 phút
+    
+    await Tour.updateOne(
+      { _id: tour }, // Điều kiện tìm kiếm theo ID
+      { $inc: { availableSpots: -(adultCount + childCount) } } // Giảm số lượng availableSpots
+    );
+    // Chuyển trạng thái sau 1 phút, nếu chưa thanh toán sẽ tự động hủy sau 10 phút
     setTimeout(async () => {
-      try {
-        const orderToProcess = await Order.findById(savedOrder._id);
-        if (orderToProcess && orderToProcess.status === 'pending') {
-          orderToProcess.status = 'processing';
-          await orderToProcess.save();
-          console.log(`Order ${savedOrder._id} has been updated to 'processing'.`);
+      const orderToProcess = await Order.findById(savedOrder._id);
+      if (orderToProcess && orderToProcess.status === 'pending') {
+        orderToProcess.status = 'processing';
+        await orderToProcess.save();
+        console.log(`Order ${savedOrder._id} updated to 'processing'.`);
 
-          // chờ thêm 10 phút để kiểm tra và hủy nếu chưa thanh toán
-          setTimeout(async () => {
-            const orderToCancel = await Order.findById(savedOrder._id);
-            if (orderToCancel && orderToCancel.status === 'processing') {
-              orderToCancel.status = 'canceled';
-              await orderToCancel.save();
-              console.log(`Order ${savedOrder._id} has been automatically canceled.`);
-            }
-          }, 10 * 60 * 1000); // 10 phút
-        }
-      } catch (error) {
-        console.error(`Error while updating order ${savedOrder._id} to 'processing':`, error.message);
+        setTimeout(async () => {
+          const orderToCancel = await Order.findById(savedOrder._id);
+          if (orderToCancel && orderToCancel.status === 'processing') {
+            orderToCancel.status = 'canceled';
+            await orderToCancel.save();
+            console.log(`Order ${savedOrder._id} was automatically canceled.`);
+          }
+        }, 10 * 60 * 1000); // 10 phút
       }
     }, 1 * 60 * 1000); // 1 phút
 
-    // Phản hồi thành công
     res.status(201).json({ message: 'Order created successfully', order: savedOrder });
   } catch (error) {
     console.log("Error in createOrder controller", error.message);
@@ -86,14 +82,14 @@ const createOrder = async (req, res) => {
   }
 };
 
+// Lấy các đơn hàng của người dùng
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Lấy thông tin người dùng với danh sách orderHistory
     const user = await User.findById(userId).populate({
       path: 'orderHistory',
-      populate: { path: 'tour' } // Populating the tour field in each order
+      populate: { path: 'tour' } // Populate Tour trong mỗi đơn hàng
     });
 
     if (!user) {
@@ -102,7 +98,6 @@ const getUserOrders = async (req, res) => {
 
     const orders = user.orderHistory;
 
-    // Nhóm các đơn hàng theo tháng và năm từ bookingDate
     const groupedOrders = orders.reduce((result, order) => {
       const date = new Date(order.bookingDate);
       const monthYear = `${date.getMonth() + 1}-${date.getFullYear()}`;
@@ -115,7 +110,6 @@ const getUserOrders = async (req, res) => {
       return result;
     }, {});
 
-    // Trả về danh sách đơn hàng nhóm theo tháng và năm
     res.status(200).json(groupedOrders);
   } catch (error) {
     console.log("Error fetching orders", error.message);
@@ -123,27 +117,21 @@ const getUserOrders = async (req, res) => {
   }
 };
 
-
-// xử lý thay đổi
+// Xử lý thanh toán
 const processPayment = async (req, res) => {
   try {
-    const { orderId } = req.body; // Chỉ cần orderId
+    const { orderId } = req.body;
 
-    // Tìm đơn hàng
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Giả lập quy trình thanh toán
-    const paymentSuccessful = true; // Thay đổi điều này thành kết quả từ API thanh toán
+    const paymentSuccessful = true; 
 
     if (paymentSuccessful) {
-      // Cập nhật trạng thái đơn hàng thành 'paid'
       order.status = 'paid';
       await order.save();
-
-      // Phản hồi thành công
       res.status(200).json({ message: 'Payment successful', order });
     } else {
       res.status(400).json({ message: 'Payment failed' });
@@ -154,28 +142,27 @@ const processPayment = async (req, res) => {
   }
 };
 
-
-// Hàm hủy đơn hàng
+// Hủy đơn hàng
 const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.body;
 
-    // Tìm đơn hàng
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Kiểm tra trạng thái của đơn hàng
     if (order.status !== 'pending') {
       return res.status(400).json({ message: "Only pending orders can be canceled" });
     }
 
-    // Cập nhật trạng thái đơn hàng thành 'canceled'
+    // Tăng lại số lượng availableSpots trong Tour
+    await Tour.findByIdAndUpdate(order.tour, {
+      $inc: { availableSpots: order.adultCount + order.childCount }
+    });
+
     order.status = 'canceled';
     await order.save();
-
-    // Phản hồi thành công
     res.status(200).json({ message: 'Order canceled successfully', order });
   } catch (error) {
     console.log("Error in cancelOrder", error.message);
@@ -184,11 +171,9 @@ const cancelOrder = async (req, res) => {
 };
 
 
-
 module.exports = {
   createOrder,
   getUserOrders,
   processPayment,
   cancelOrder,
 };
-

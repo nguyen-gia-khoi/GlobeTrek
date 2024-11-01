@@ -49,9 +49,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Cookie parser middleware
 app.use(cookieParser());
 
+
+
 // CORS configuration
+
+
 const corsOptions = {
-  origin: "http://localhost:5173", 
+  origin: ["https://globetrek-six.vercel.app" ,"http://localhost:5173"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true, // Allow sending cookies
 };

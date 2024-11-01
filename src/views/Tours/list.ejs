@@ -48,12 +48,11 @@
                     <tr>
                         <td><%= tour.title %></td>
                         <td><%= tour.description %></td>
-                        <td><%= tour.price %></td>
-                        <!-- <td><%= tour.location %></td> -->
+                        <td><%= tour.price %></td>  
                         <td><%= tour.duration %></td>
                         <td><%= tour.contact %></td>
                         <td><%= tour.availableSpots %></td>
-                        <!-- <td><%= tour.tourType ? tour.tourType.name : 'N/A' %></td> -->
+                     
                         <td><%= tour.destination ? tour.destination.name : 'N/A' %></td>
                         
 
@@ -83,8 +82,12 @@
                         <td>
                            
                             <a href="/admin/tours/edit/<%= tour._id %>" class="btn btn-warning mt-2 btn-sm"> Edit </a>
-                            <a href="/admin/tours/delete/<%= tour._id %>" class="btn btn-danger mt-2 btn-sm">Disable</a>
-                           
+                            
+                           <!-- Nút Toggle Status -->
+                           <button class="btn <%= tour.isDisabled ? 'btn-success' : 'btn-danger' %> mt-2 btn-sm toggle-status" data-id="<%= tour._id %>">
+                            <%= tour.isDisabled ? 'Enable' : 'Disable' %>
+                        </button>
+   
                         </td>
                     </tr>
                 <% }) %>
@@ -93,4 +96,32 @@
     </div>
 </div>
 </body>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).on('click', '.toggle-status', function() {
+        const button = $(this);
+        const tourId = button.data('id');
+        const isDisabled = button.text().trim() === 'Disable'; 
+        window.location.reload();
+        $.ajax({
+            url: `/admin/tours/toggle-status/${tourId}`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ isDisabled: !isDisabled }), 
+            success: function(response) {
+                
+         
+                button.toggleClass('btn-success btn-danger');
+                button.text(isDisabled ? 'Enable' : 'Disable'); 
+                console.log(response.message); 
+            },
+            error: function(xhr, status, error) {
+                console.error('Tour đã được đặt không thể xóa trạng thái :', error);
+                alert('Tour đã được đặt không thể xóa trạng thái.'); 
+            }
+        });
+    });
+</script>
+
 </html>

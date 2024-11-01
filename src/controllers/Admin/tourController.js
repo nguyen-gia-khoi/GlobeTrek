@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Tour, TourType, Destination } = require('../../models/Tour');
+const Order  = require('../../models/Order');
 const cloudinary = require('cloudinary').v2;
 const { storage } = require('../../Middleware/cloudinary');
 const multer = require('multer');
@@ -158,40 +159,55 @@ const getCreateTour = async (req, res) => {
     }
   };
   
-  // POST: Delete a tour
-  const postDeleteTour = async (req, res) => {
-    try {
-      await Tour.findByIdAndDelete(req.params.id);
-      res.redirect('/Tours');
-    } catch (error) {
-      console.error('Error deleting tour:', error);
-      res.status(500).send('Error deleting tour');
+// POST: Delete a tour
+const postDeleteTour = async (req, res) => {
+  try {
+    const tourId = req.params.id;
+
+    // Kiểm tra xem tour có đơn đặt nào không
+    const hasOrders = await Order.findOne({ tour: tourId });
+    if (hasOrders) {
+      return res.status(400).json({ message: 'Cannot delete a tour that has been booked.' });
     }
-  };
-  
-  // POST: Toggle schedule status
-  const toggleTourStatus = async (req, res) => {
-    try {
-        const tourId = req.params.id; 
-        const { isDisabled } = req.body; 
 
-        const updatedTour = await Tour.findByIdAndUpdate(
-            tourId,
-            { isDisabled }, 
-            { new: true } 
-        );
-
-        if (!updatedTour) {
-            return res.status(404).json({ message: 'Tour not found' });
-        }
-
-        res.json({ message: 'Tour status updated successfully', updatedTour });
-    } catch (error) {
-        console.error('Error updating tour status:', error);
-        res.status(500).json({ message: 'Error updating tour status', error });
-    }
+    await Tour.findByIdAndDelete(tourId);
+    res.redirect('/Tours');
+  } catch (error) {
+    console.error('Error deleting tour:', error);
+    res.status(500).send('Error deleting tour');
+  }
 };
+
   
+// POST: Toggle tour status
+const toggleTourStatus = async (req, res) => {
+  try {
+    const tourId = req.params.id;
+
+    // Lấy tour hiện tại
+    const tour = await Tour.findById(tourId);
+    if (!tour) {
+      return res.status(404).json({ message: 'Tour not found' });
+    }
+
+    // Kiểm tra xem tour có đơn đặt nào không
+    const hasOrders = await Order.findOne({ tour: tourId });
+    if (hasOrders) {
+      return res.status(400).json({ message: 'Cannot change status of a tour that has been booked.' });
+    }
+
+    // Đảo ngược trạng thái isDisabled
+    tour.isDisabled = !tour.isDisabled;
+
+    const updatedTour = await tour.save(); // Lưu tour đã cập nhật
+
+    res.json({ message: 'Tour status updated successfully', updatedTour });
+  } catch (error) {
+    console.error('Error updating tour status:', error);
+    res.status(500).json({ message: 'Error updating tour status', error });
+  }
+};
+
   module.exports = {
     getCreateTour,
     postCreateTour,
