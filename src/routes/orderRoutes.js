@@ -6,6 +6,6 @@ const authController = require('../Middleware/authMiddleware'); // Đảm bảo 
 router.post('/api/create', authController.verifyToken, orderController.createOrder);
 router.get('/api/list', authController.verifyToken, orderController.getUserOrders);
 router.post('/api/process-payment', orderController.processPayment);
-router.post('/api/cancel',  authController.verifyToken, orderController.cancelOrder); 
+router.post('/api/cancel',   orderController.cancelOrder); 
 
 module.exports = router;
