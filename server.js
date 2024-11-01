@@ -8,6 +8,7 @@ const configViewEngine = require('./src/config/viewEngine');
 
 const connection = require('./src/config/database');
 const mongoose = require('mongoose');
+mongoose.set('strictQuery', false);
 
 
 
@@ -82,7 +83,7 @@ app.use('/admin/schedules', scheduleRoutesAdmin);
 (async () => {
   try {
     await connection();
-    app.listen(port, hostname, () => {
+    app.listen(port, () => {
       console.log(`Ứng dụng mẫu đang nghe trên cổng http://localhost:${port}`);
     });
   } catch (error) {
