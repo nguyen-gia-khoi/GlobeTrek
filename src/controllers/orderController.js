@@ -120,16 +120,17 @@ const getUserOrders = async (req, res) => {
 // Xử lý thanh toán
 const processPayment = async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { orderID, status } = req.body;
 
-    const order = await Order.findById(orderId);
+
+    const order = await Order.findById(orderID);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    const paymentSuccessful = true; 
 
-    if (paymentSuccessful) {
+
+    if (status === 200) {
       order.status = 'paid';
       await order.save();
       res.status(200).json({ message: 'Payment successful', order });
