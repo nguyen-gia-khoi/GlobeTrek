@@ -55,12 +55,7 @@ app.use(cookieParser());
 // CORS configuration
 
 
-const corsOptions = {
-  origin: ["https://globetrek-six.vercel.app" ,"http://localhost:5173"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true, // Allow sending cookies
-};
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Auth routes
 app.use("/api/auth", authRoutes);
