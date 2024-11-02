@@ -3,6 +3,7 @@ const { Schema } = mongoose;
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const { type } = require('os');
 
 
 const UserSchema = new Schema({
@@ -38,8 +39,13 @@ const UserSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ["user", "admin"],
+    enum: ["user", "admin","partner"],
     default: "user",
+  },
+  status :{
+    type: String,
+    enum: ["verified","unverify"],
+    default: "unverify"
   },
   orderHistory: [
     {

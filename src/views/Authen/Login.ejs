@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    .login-container {
+      display: flex;
+      max-width: 800px;
+      margin: 50px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      height: 400px; /* Set height for vertical alignment */
+    }
+    .left-section {
+      background-color: #4caf50;
+      color: #fff;
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .right-section {
+      padding: 2rem;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center; /* Center the form vertically */
+    }
+    .form-container {
+      width: 100%; /* Full width for responsiveness */
+      max-width: 400px; /* Limit the form width */
+    }
+    .btn-green {
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+    }
+    .btn-green:hover {
+      background-color: #45a049;
+    }
+    .error-message {
+      color: #f44336;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="login-container">
+    <!-- Left Section for Logo or Branding -->
+    <div class="left-section col-5 text-center">
+      <h2>Your Logo Here</h2>
+    </div>
+
+    <!-- Right Section for Login Form -->
+    <div class="right-section col-8">
+      <div class="form-container">
+        <h2 class="mb-4 text-center" style="color: #4caf50;">Login</h2>
+        <form action="/api/auth/signin" method="POST">
+          <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-green btn-block mt-4">Đăng nhập</button>
+        </form>
+        <!-- Change type to button and add an onclick event -->
+        <button type="button" class="btn btn-green btn-block mt-4" onclick="window.location.href='/api/auth/register'">Đăng ký</button>
+
+        <% if (message) { %>
+          <p class="error-message mt-3 text-center"><%= message %></p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
