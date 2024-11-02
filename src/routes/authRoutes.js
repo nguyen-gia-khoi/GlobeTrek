@@ -11,4 +11,7 @@ router.post("/forgot-password", authController.forgotPassword)
 router.post("/reset-password/:token", authController.resetPassword)
 router.post("/check-email",authController.checkEmail)
 router.get('/callback',authController.callback)
+router.get('/login', authController.getLoginPage);
+router.get('/register', authController.getRegisterPage);
+
 module.exports = router;

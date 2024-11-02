@@ -15,14 +15,13 @@ const {
   } = require("../service/tokenService")
 
 const signup = async (req, res) => {
-    const { email, password,  } = req.body;
+    const { email, password} = req.body;
 
     try {
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(400).json({ message: "User already exists" });
         }
-
         const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
         // Corrected redis.set syntax for ioredis
@@ -82,33 +81,72 @@ const verfiaccount = async(req,res)=>{
     }
 }
 
-const signin = async( req, res ) => {
-    const { email, password } = req.body;
-    try {
-        const user = await User.findOne({email});
-        if(user && (await user.comparePassword(password))){
-            const { accessToken, refreshToken } = generateToken(user._id);
-           
-            res.cookie("refreshToken", refreshToken, {
-                httpOnly: true,
-                sameSite: "strict",
-                maxAge: 7 * 24 * 60 * 60 * 1000,
-                secure: process.env.NODE_ENV === "production",
-              });
+const signin = async (req, res) => {
+  const { email, password } = req.body;
+  const isClient = req.query.client === "true";
 
-            await storeRefreshToken(user._id, refreshToken);
-            // res.status(200).json({ accessToken, message: "Login success" });
-            const { password, ...others } = user._doc;
-            res.status(200).json({ ...others, accessToken, refreshToken });
-        } 
-        else {
-            res.status(400).json({ message: "Invalid email or password" });
-          }
-    } catch (error) {
-        console.log("Error in login controller: ", error.message);
-        res.status(500).json({ message: "Server Error!", error: error.message });
+  try {
+    const user = await User.findOne({ email });
+    if (user && (await user.comparePassword(password))) {
+      const { accessToken, refreshToken } = generateToken(user._id);
+      if (isClient) {
+        res.status(200).json({ ...others, accessToken, refreshToken });
+        // Set refresh token in HTTP-only cookie
+        res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === "production",
+      });
+      await storeRefreshToken(user._id, refreshToken);
+
+      const { password, ...others } = user._doc;
+      } else {
+        
+        if(user.role == "admin"){
+          // // Set access token in a cookie and render a protected page
+          // const AdminaccessToken = jwt.sign({ userId: user._id, email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+          // console.log(AdminaccessToken)
+          //   res.cookie("AdminaccessToken", AdminaccessToken, {
+          //   httpOnly: true,
+          //   sameSite: "strict",
+          //   maxAge: 1 * 60 * 60 * 1000,
+          //   secure: process.env.NODE_ENV === "production",
+          // });
+          const AdminaccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: "1d",
+          })
+          res.cookie("AdminaccessToken", AdminaccessToken, {
+              httpOnly: true,
+              sameSite: "strict",
+              maxAge: 1 * 60 * 60 * 1000,
+              secure: process.env.NODE_ENV === "production",
+            });
+          
+          res.redirect('/');  // Change to your protected page route
+          
+        }
+        else if(user.role == "partner"){
+          console.log("hello")
+        }
+      }
+    } else {
+      // Handle invalid credentials
+      if (isClient) {
+        res.status(400).json({ message: "Invalid email or password" });
+      } else {
+        res.redirect("/login?message=Invalid email or password");
+      }
     }
-}
+  } catch (error) {
+    if (isClient) {
+      res.status(500).json({ message: "Server Error!", error: error.message });
+    } else {
+      res.redirect("/login?message=Server Error!");
+    }
+  }
+};
+
 
 const signout = async( req, res ) => {
     try {
@@ -309,7 +347,14 @@ const callback = async (req, res) => {
     return res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-
+const getLoginPage = (req, res) => {
+  const message = req.query.message || ''; // Retrieve any error message from the query params
+  res.render('Authen/login', { message });
+};
+const getRegisterPage = (req, res) => {
+  const message = req.query.message || ''; // Retrieve any error message from the query params
+  res.render('Authen/Register', { message });
+};
 module.exports ={
     signup,
     signin,
@@ -319,5 +364,7 @@ module.exports ={
     forgotPassword,
     resetPassword,
     checkEmail,
-    callback
+    callback,
+    getLoginPage, 
+    getRegisterPage
 }
