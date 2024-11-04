@@ -37,9 +37,10 @@ const cors = require("cors");
 configViewEngine(app);
 
 // Home route
-// app.get('/', (req, res) => {
-//   res.render('home', { pageTitle: 'Trang Chủ' }); // Render home.ejs from views folder
-// });
+app.get('/home', (req, res) => {
+  // Redirect to the login route by default
+  res.redirect('/api/auth/home');
+});
 
 app.get('/', (req, res) => {
   // Redirect to the login route by default
