@@ -94,8 +94,41 @@ const PASSWORD_RESET_REQUEST_TEMPLATE = `
 </html>
 `;
 
+const ORDER_CONFIRMATION_TEMPLATE = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmation</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(to right, #A3AAAE, #E0E0E0); padding: 20px; text-align: center;">
+    <h1 style="color: #333; margin: 0;">Order Confirmation</h1>
+  </div>
+  <div style="background-color: #F2F2F5; padding: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <p>Hello,</p>
+    <p>Thank you for your order! Your order with ID <strong>{orderId}</strong> has been successfully paid.</p>
+    <p><strong>Order Details:</strong></p>
+    <ul>
+      <li>Total Value: <strong>{totalValue} VND</strong></li>
+      <li>Booking Date: <strong>{bookingDate}</strong></li>
+      <li>Tour: <strong>{tourTitle}</strong></li>
+      <li>Status: <strong>{status}</strong></li>
+    </ul>
+    <p>We appreciate your business and hope you enjoy your tour!</p>
+    <p>Best regards,<br>GlobeTrek Team</p>
+  </div>
+  <div style="text-align: center; margin-top: 20px; color: #888; font-size: 0.8em;">
+    <p>This is an automated message, please do not reply to this email.</p>
+  </div>
+</body>
+</html>
+`;
+
 module.exports = {
   VERIFICATION_EMAIL_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
   PASSWORD_RESET_REQUEST_TEMPLATE,
+  ORDER_CONFIRMATION_TEMPLATE,
 };

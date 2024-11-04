@@ -25,6 +25,7 @@ const toursRoutesAdmin = require('./src/routes/Admin/tourRoutes');
 const tourTypeRoutesAdmin = require('./src/routes/Admin/tourTypeRoutes');
 const destinationsRoutesAdmin = require('./src/routes/Admin/destinationRoutes');
 const scheduleRoutesAdmin = require('./src/routes/Admin/scheduleRoutes');
+const orderRoutesAdmin = require('./src/routes/Admin/orderRoutes');
 
 
 const cookieParser = require("cookie-parser");
@@ -79,6 +80,8 @@ app.use('/admin/tours', toursRoutesAdmin);
 app.use('/admin/tourtypes', tourTypeRoutesAdmin);
 app.use('/admin/destinations', destinationsRoutesAdmin);
 app.use('/admin/schedules', scheduleRoutesAdmin);
+app.use('/admin/orders', orderRoutesAdmin );
+
 // Database connection and server start
 (async () => {
   try {

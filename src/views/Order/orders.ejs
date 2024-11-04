@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách Đơn hàng</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Danh sách Đơn hàng</h1>
+        <% if (orders.length === 0) { %>
+            <div class="alert alert-warning" role="alert">Không có đơn hàng nào được tìm thấy.</div>
+        <% } else { %>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID Đơn hàng</th>
+                        <th>Tên người dùng</th>
+                        <th>Sản phẩm</th>
+                        <th>Tổng giá trị</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày đặt</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% orders.forEach(order => { %>
+                        <tr>
+                            <td><%= order.id %></td>
+                            <td><%= order.user.email %></td>
+                            <td>
+                                <% if (order.tour) { %>
+                                    <span class="badge bg-primary"><%= order.tour.title %></span>
+                                <% } else { %>
+                                    <span class="text-muted">Không có sản phẩm</span>
+                                <% } %>
+                            </td>
+                            <td><%= order.totalValue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></td>
+                            <td>
+                              
+                                    <span class="badge <%= order.status === 'pending' ? 'bg-warning' : order.status === 'processing' ? 'bg-primary' : order.status === 'paid' ? 'bg-success' : order.status === 'canceled' ? 'bg-danger' : '' %>">
+                                        <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                                    </span>
+                                
+                                
+                            </td>
+                            <td><%= new Date(order.bookingDate).toLocaleDateString('vi-VN') %></td>
+                            <td>
+                                <a href="/orders/edit/<%= order.orderId %>" class="btn btn-warning btn-sm">Sửa</a>
+                                <!-- <form action="/orders/delete/<%= order.orderId %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                                </form> -->
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } %>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
