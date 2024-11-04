@@ -90,7 +90,6 @@ const signin = async (req, res) => {
     if (user && (await user.comparePassword(password))) {
       const { accessToken, refreshToken } = generateToken(user._id);
       if (isClient) {
-        res.status(200).json({ ...others, accessToken, refreshToken });
         // Set refresh token in HTTP-only cookie
         res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -99,8 +98,9 @@ const signin = async (req, res) => {
         secure: process.env.NODE_ENV === "production",
       });
       await storeRefreshToken(user._id, refreshToken);
-
       const { password, ...others } = user._doc;
+      res.status(200).json({ ...others, accessToken, refreshToken });
+      
       } else {
         
         if(user.role == "admin"){
@@ -141,6 +141,7 @@ const signin = async (req, res) => {
   } catch (error) {
     if (isClient) {
       res.status(500).json({ message: "Server Error!", error: error.message });
+      console.log(error)
     } else {
       res.redirect("/login?message=Server Error!");
     }

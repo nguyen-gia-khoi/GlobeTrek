@@ -37,10 +37,13 @@ const cors = require("cors");
 configViewEngine(app);
 
 // Home route
+// app.get('/', (req, res) => {
+//   res.render('home', { pageTitle: 'Trang Chủ' }); // Render home.ejs from views folder
+// });
 app.get('/', (req, res) => {
-  res.render('home', { pageTitle: 'Trang Chủ' }); // Render home.ejs from views folder
+  // Redirect to the login route by default
+  res.redirect('/api/auth/login');
 });
-
 // Middleware for parsing request bodies
 app.use(express.json()); // For JSON
 app.use(express.urlencoded({ extended: true })); // For form data
