@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const { Tour } = require('../models/Tour');
+const { sendOrderConfirmationEmail } = require('../service/mailtrap/email');
 
 // Tạo đơn hàng
 const createOrder = async (req, res) => {
@@ -51,11 +52,11 @@ const createOrder = async (req, res) => {
       { $push: { orderHistory: savedOrder._id } }
     );
 
-    
     await Tour.updateOne(
       { _id: tour }, // Điều kiện tìm kiếm theo ID
       { $inc: { availableSpots: -(adultCount + childCount) } } // Giảm số lượng availableSpots
     );
+
     // Chuyển trạng thái sau 1 phút, nếu chưa thanh toán sẽ tự động hủy sau 10 phút
     setTimeout(async () => {
       const orderToProcess = await Order.findById(savedOrder._id);
@@ -73,7 +74,7 @@ const createOrder = async (req, res) => {
           }
         }, 10 * 60 * 1000); // 10 phút
       }
-    }, 1 * 60 * 1000); // 1 phút
+    }, 1 * 15 * 1000); // 1 phút
 
     res.status(201).json({ message: 'Order created successfully', order: savedOrder });
   } catch (error) {
@@ -122,26 +123,44 @@ const processPayment = async (req, res) => {
   try {
     const { orderID, status } = req.body;
 
-
-    const order = await Order.findById(orderID);
+    const order = await Order.findById(orderID).populate('user'); // Populate để lấy đầy đủ thông tin người dùng
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-
-
     if (status === 200) {
       order.status = 'paid';
       await order.save();
+    
+      // Gửi email xác nhận
+      const tour = await Tour.findById(order.tour);
+      const email = order.user.email ; // Lấy email từ đối tượng user đã populate
+    
+      const emailContent = {
+        orderId: order._id,
+        totalValue: order.totalValue.toLocaleString(),
+        bookingDate: order.bookingDate,
+        tour: tour,
+        status: order.status,
+      };
+    
+      try {
+        await sendOrderConfirmationEmail(email, emailContent);
+        console.log("Email confirmation sent to:", order.user.email);
+      } catch (emailError) {
+        console.error("Error sending email:", emailError.message);
+      }
+    
       res.status(200).json({ message: 'Payment successful', order });
     } else {
       res.status(400).json({ message: 'Payment failed' });
-    }
+    }    
   } catch (error) {
     console.log("Error in processPayment", error.message);
     res.status(500).json({ message: 'Error processing payment', error });
   }
 };
+
 
 // Hủy đơn hàng
 const cancelOrder = async (req, res) => {
@@ -170,7 +189,6 @@ const cancelOrder = async (req, res) => {
     res.status(500).json({ message: 'Error canceling order', error });
   }
 };
-
 
 module.exports = {
   createOrder,
