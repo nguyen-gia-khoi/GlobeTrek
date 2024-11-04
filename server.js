@@ -36,14 +36,17 @@ const cors = require("cors");
 // Cấu hình view engine
 configViewEngine(app);
 
-// Home route
-// app.get('/', (req, res) => {
-//   res.render('home', { pageTitle: 'Trang Chủ' }); // Render home.ejs from views folder
-// });
 app.get('/', (req, res) => {
   // Redirect to the login route by default
   res.redirect('/api/auth/login');
 });
+// Home route
+
+app.get('/home', (req, res) => {
+  // Redirect to the login route by default
+  res.redirect('/api/auth/home');
+});
+
 // Middleware for parsing request bodies
 app.use(express.json()); // For JSON
 app.use(express.urlencoded({ extended: true })); // For form data

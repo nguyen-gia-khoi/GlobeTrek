@@ -92,58 +92,49 @@ const signin = async (req, res) => {
       if (isClient) {
         // Set refresh token in HTTP-only cookie
         res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === "production",
-      });
-      await storeRefreshToken(user._id, refreshToken);
-      const { password, ...others } = user._doc;
-      res.status(200).json({ ...others, accessToken, refreshToken });
-      
+          httpOnly: true,
+          sameSite: "strict",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          secure: process.env.NODE_ENV === "production",
+        });
+        await storeRefreshToken(user._id, refreshToken);
+        const { password, ...others } = user._doc;
+        res.status(200).json({ ...others, accessToken, refreshToken });
       } else {
-        
-        if(user.role == "admin"){
-          // // Set access token in a cookie and render a protected page
-          // const AdminaccessToken = jwt.sign({ userId: user._id, email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-          // console.log(AdminaccessToken)
-          //   res.cookie("AdminaccessToken", AdminaccessToken, {
-          //   httpOnly: true,
-          //   sameSite: "strict",
-          //   maxAge: 1 * 60 * 60 * 1000,
-          //   secure: process.env.NODE_ENV === "production",
-          // });
+        if (user.role === "admin") {
+          // Set access token in a cookie
           const AdminaccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, {
             expiresIn: "1d",
-          })
+          });
           res.cookie("AdminaccessToken", AdminaccessToken, {
-              httpOnly: true,
-              sameSite: "strict",
-              maxAge: 1 * 60 * 60 * 1000,
-              secure: process.env.NODE_ENV === "production",
-            });
+            httpOnly: true,
+            sameSite: "strict",
+            maxAge: 1 * 60 * 60 * 1000,
+            secure: process.env.NODE_ENV === "production",
+          });
           
-          res.redirect('/');  // Change to your protected page route
-          
-        }
-        else if(user.role == "partner"){
+          // Redirect to home page after successful login
+          return res.redirect('/home'); // Use redirect instead of render
+        } 
+        else if(user.role === "partner"){
           console.log("hello")
         }
       }
     } else {
       // Handle invalid credentials
+      const message = "Invalid email or password";
       if (isClient) {
-        res.status(400).json({ message: "Invalid email or password" });
+        res.status(400).json({ message });
       } else {
-        res.redirect("/login?message=Invalid email or password");
+        res.render('Authen/login', { message }); // Show alert on the EJS login page
       }
     }
   } catch (error) {
+    const message = "Server Error!";
     if (isClient) {
-      res.status(500).json({ message: "Server Error!", error: error.message });
-      console.log(error)
+      res.status(500).json({ message, error: error.message });
     } else {
-      res.redirect("/login?message=Server Error!");
+      res.render('Authen/login', { message });
     }
   }
 };
@@ -356,6 +347,12 @@ const getRegisterPage = (req, res) => {
   const message = req.query.message || ''; // Retrieve any error message from the query params
   res.render('Authen/Register', { message });
 };
+const getHomePage = (req, res) => {
+  const message = req.query.message || ''; // Retrieve any error message from the query params
+  const pageTitle = 'Home'; // Set a default page title
+  res.render('home', { message, pageTitle }); // Pass the pageTitle to the view
+};
+
 module.exports ={
     signup,
     signin,
@@ -367,5 +364,6 @@ module.exports ={
     checkEmail,
     callback,
     getLoginPage, 
-    getRegisterPage
+    getRegisterPage,
+    getHomePage
 }
