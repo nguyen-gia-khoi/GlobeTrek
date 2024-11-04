@@ -26,7 +26,7 @@ const tourTypeRoutesAdmin = require('./src/routes/Admin/tourTypeRoutes');
 const destinationsRoutesAdmin = require('./src/routes/Admin/destinationRoutes');
 const scheduleRoutesAdmin = require('./src/routes/Admin/scheduleRoutes');
 const orderRoutesAdmin = require('./src/routes/Admin/orderRoutes');
-
+const revenueRoutes = require("./src/routes/Admin/revenueRoutes"); 
 
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -40,10 +40,13 @@ configViewEngine(app);
 // app.get('/', (req, res) => {
 //   res.render('home', { pageTitle: 'Trang Chủ' }); // Render home.ejs from views folder
 // });
+
 app.get('/', (req, res) => {
   // Redirect to the login route by default
   res.redirect('/api/auth/login');
 });
+
+
 // Middleware for parsing request bodies
 app.use(express.json()); // For JSON
 app.use(express.urlencoded({ extended: true })); // For form data
@@ -84,6 +87,7 @@ app.use('/admin/tourtypes', tourTypeRoutesAdmin);
 app.use('/admin/destinations', destinationsRoutesAdmin);
 app.use('/admin/schedules', scheduleRoutesAdmin);
 app.use('/admin/orders', orderRoutesAdmin );
+app.use("/admin/revenue", revenueRoutes);
 
 // Database connection and server start
 (async () => {

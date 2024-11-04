@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doanh thu hàng ngày</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Doanh thu hàng ngày trong tuần</h2>
+
+        <canvas id="revenueChart" width="400" height="200"></canvas> <!-- Khung vẽ biểu đồ -->
+
+        <script>
+            const revenueData = <%- JSON.stringify(revenueData) %>; // Chuyển đổi dữ liệu sang định dạng JSON
+            
+            // Dữ liệu cho biểu đồ
+            const labels = revenueData.map(data => data.date); // Nhãn cho trục x
+            const dataValues = revenueData.map(data => data.total); // Giá trị cho biểu đồ
+
+            // Biểu đồ doanh thu
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const revenueChart = new Chart(ctx, {
+                type: 'bar', 
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu hàng ngày (VNĐ)', 
+                        data: dataValues,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // Màu nền của cột
+                        borderColor: 'rgba(75, 192, 192, 1)', // Màu viền của cột
+                        borderWidth: 1 
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>
