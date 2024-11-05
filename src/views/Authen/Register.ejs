@@ -59,7 +59,7 @@
     <div class="right-section col-8">
       <div class="form-container">
         <h2 class="mb-4 text-center" style="color: #4caf50;">Register</h2>
-        <form action="/api/auth/register" method="POST"> <!-- Change action to your registration route -->
+        <form action="/api/auth/signup" method="POST"><!-- Change action to your registration route -->
           <div class="form-group">
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" class="form-control" required>
@@ -72,7 +72,7 @@
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" class="form-control" required>
           </div>
-          <button type="submit" class="btn btn-green btn-block mt-4">Register</button>
+          <button type="submit" class="btn btn-green btn-block mt-4">Sign Up</button>
         </form>
         
         <% if (message) { %>
