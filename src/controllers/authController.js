@@ -15,14 +15,16 @@ const {
   } = require("../service/tokenService")
 
 const signup = async (req, res) => {
-    const { email, password} = req.body;
+    const { email, password,name} = req.body;
+    const isClient = req.query.client === "true";
 
     try {
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(400).json({ message: "User already exists" });
         }
-        const verificationCode = Math.floor(100000 + Math.random() * 900000);
+        if(isClient){
+           const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
         // Corrected redis.set syntax for ioredis
         await redis.set(
@@ -35,7 +37,28 @@ const signup = async (req, res) => {
         await sendVerificationEmail(email, verificationCode);
 
         res.status(200).json({ message: "Check your email for the OTP" });
+        }
+        else {
+          try {
+            const user = await User.create({ email, password,name});
 
+          const PartneraccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: "1d",
+          });
+          res.cookie("PartneraccessToken", PartneraccessToken, {
+            httpOnly: true,
+            sameSite: "strict",
+            maxAge: 1 * 60 * 60 * 1000,
+            secure: process.env.NODE_ENV === "production",
+          });
+
+          return res.redirect('/home'); // Use redirect instead of render
+          } catch (error) {
+            console.log("Error in signup controller: ", error.message);
+
+          }
+          
+        }
     } catch (error) {
         console.log("Error in signup controller: ", error.message);
         res.status(500).json({ message: "Server Error!", error: error.message });
@@ -81,16 +104,102 @@ const verfiaccount = async(req,res)=>{
     }
 }
 
+// const signin = async (req, res) => {
+//   const { email, password } = req.body;
+//   const isClient = req.query.client === "true";
+
+//   try {
+//     const user = await User.findOne({ email });
+//     if (user && (await user.comparePassword(password))) {
+//       const { accessToken, refreshToken } = generateToken(user._id);
+//       if (isClient) {
+//         // Set refresh token in HTTP-only cookie
+//         res.cookie("refreshToken", refreshToken, {
+//           httpOnly: true,
+//           sameSite: "strict",
+//           maxAge: 7 * 24 * 60 * 60 * 1000,
+//           secure: process.env.NODE_ENV === "production",
+//         });
+//         await storeRefreshToken(user._id, refreshToken);
+//         const { password, ...others } = user._doc;
+//         res.status(200).json({ ...others, accessToken });
+//       } else {
+//         if (user.role === "admin") {
+//           // Set access token in a cookie
+//           const AdminaccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, {
+//             expiresIn: "1d",
+//           });
+//           res.cookie("AdminaccessToken", AdminaccessToken, {
+//             httpOnly: true,
+//             sameSite: "strict",
+//             maxAge: 1 * 60 * 60 * 1000,
+//             secure: process.env.NODE_ENV === "production",
+//           });
+          
+//           // Redirect to home page after successful login
+//           return res.redirect('/home'); // Use redirect instead of render
+//         } 
+//         else if(user.role === "partner"){
+
+//           const PartnerccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, {
+//             expiresIn: "1d",
+//           });
+//           res.cookie("PartnerccessToken", PartnerccessToken, {
+//             httpOnly: true,
+//             sameSite: "strict",
+//             maxAge: 1 * 60 * 60 * 1000,
+//             secure: process.env.NODE_ENV === "production",
+//           });
+          
+//           return res.redirect('/home'); // Use redirect instead of render
+
+//         }
+//       }
+//     } else {
+//       // Handle invalid credentials
+//       const message = "Invalid email or password";
+//       if (isClient) {
+//         res.status(400).json({ message });
+//       } else {
+//         res.render('Authen/login', { message }); // Show alert on the EJS login page
+//       }
+//     }
+//   } catch (error) {
+//     const message = "Server Error!";
+//     if (isClient) {
+//       res.status(500).json({ message, error: error.message });
+//     } else {
+//       res.render('Authen/login', { message });
+//     }
+//   }
+// };
+
 const signin = async (req, res) => {
   const { email, password } = req.body;
-  const isClient = req.query.client === "true";
+  const isClient = req.query.client === "true"; // Determines if the request is client-rendered
 
   try {
     const user = await User.findOne({ email });
+
     if (user && (await user.comparePassword(password))) {
+      // Check if user is a partner and not verified&& !user.verified
+      // if (user.role === "partner" ) {
+      //   const message = "Tài khoản của bạn chưa được xác minh bởi admin vui lòng đợi duyệt.";
+
+      //   // For client-rendered requests, send a JSON response
+      //   if (isClient) {
+      //     return res.status(403).json({ message });
+      //   }
+
+      //   // For server-rendered requests, render the login page with the message
+      //   return res.render('Authen/login', { message });
+      // }
+
+      // Generate tokens for verified users
       const { accessToken, refreshToken } = generateToken(user._id);
+
       if (isClient) {
-        // Set refresh token in HTTP-only cookie
+        // For client-rendered (e.g., SPA) requests
         res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
           sameSite: "strict",
@@ -98,43 +207,47 @@ const signin = async (req, res) => {
           secure: process.env.NODE_ENV === "production",
         });
         await storeRefreshToken(user._id, refreshToken);
-        const { password, ...others } = user._doc;
-        res.status(200).json({ ...others, accessToken, refreshToken });
+
+        const { password, ...userDetails } = user._doc; // Exclude password from response
+        return res.status(200).json({ ...userDetails, accessToken });
       } else {
+        // For server-rendered (admin or verified partner) requests
         if (user.role === "admin") {
-          // Set access token in a cookie
-          const AdminaccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: "1d",
-          });
+          const AdminaccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
           res.cookie("AdminaccessToken", AdminaccessToken, {
             httpOnly: true,
             sameSite: "strict",
             maxAge: 1 * 60 * 60 * 1000,
             secure: process.env.NODE_ENV === "production",
           });
-          
-          // Redirect to home page after successful login
-          return res.redirect('/home'); // Use redirect instead of render
-        } 
-        else if(user.role === "partner"){
-          console.log("hello")
+          return res.redirect('/home');
+        } else if (user.role === "partner" ) {
+          const PartneraccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
+          res.cookie("PartneraccessToken", PartneraccessToken, {
+            httpOnly: true,
+            sameSite: "strict",
+            maxAge: 1 * 60 * 60 * 1000,
+            secure: process.env.NODE_ENV === "production",
+          });
+          return res.redirect('/home');
         }
       }
     } else {
-      // Handle invalid credentials
+      // Invalid email or password
       const message = "Invalid email or password";
+
       if (isClient) {
-        res.status(400).json({ message });
+        return res.status(400).json({ message });
       } else {
-        res.render('Authen/login', { message }); // Show alert on the EJS login page
+        return res.render('Authen/login', { message });
       }
     }
   } catch (error) {
     const message = "Server Error!";
     if (isClient) {
-      res.status(500).json({ message, error: error.message });
+      return res.status(500).json({ message, error: error.message });
     } else {
-      res.render('Authen/login', { message });
+      return res.render('Authen/login', { message });
     }
   }
 };
