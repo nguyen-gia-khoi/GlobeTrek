@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Tour Mới</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <%- include('../../DashboardPN', { pageTitle: '' }) %>  
+    <div class="container mt-5">
+        <h1>Tạo Tour Mới</h1>
+        <form action="/admin/tours/partner/create" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="title">Tiêu đề</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Mô tả</label>
+                <textarea class="form-control" id="description" name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="price">Giá</label>
+                <input type="number" class="form-control" id="price" name="price" required min="0">
+            </div>
+            <div class="form-group">
+                <label for="location">Địa điểm</label>
+                <input type="text" class="form-control" id="location" name="location" required>
+            </div>
+            <div class="form-group">
+                <label for="duration">Thời gian</label>
+                <input type="text" class="form-control" id="duration" name="duration" required>
+            </div>
+            <div class="form-group">
+                <label for="availableSpots">Số chỗ còn trống</label>
+                <input type="number" class="form-control" id="availableSpots" name="availableSpots" required min="0">
+            </div>
+            <div class="form-group">
+                <label for="tourType">Loại Tour</label>
+                <select class="form-control" id="tourType" name="tourType" required>
+                    <option value="">Chọn loại tour</option>
+                    <!-- Thêm các loại tour từ cơ sở dữ liệu -->
+                    <% tourTypes.forEach(function(tourType) { %>
+                        <option value="<%= tourType._id %>"><%= tourType.name %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="destination">Điểm đến</label>
+                <select class="form-control" id="destination" name="destination" required>
+                    <option value="">Chọn điểm đến</option>
+                    <!-- Thêm các điểm đến từ cơ sở dữ liệu -->
+                    <% destinations.forEach(function(destination) { %>
+                        <option value="<%= destination._id %>"><%= destination.name %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="images">Hình ảnh (nhiều hình ảnh)</label>
+                <input type="file" class="form-control" id="images" name="images" multiple>
+            </div>
+            <div class="form-group">
+                <label for="videos">Video (nhiều video)</label>
+                <input type="file" class="form-control" id="videos" name="videos" multiple>
+            </div>
+            <button type="submit" class="btn btn-primary">Tạo Tour</button>
+        </form>
+    </div>
+</body>
+</html>

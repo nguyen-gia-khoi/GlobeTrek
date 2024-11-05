@@ -14,4 +14,6 @@ router.get('/callback',authController.callback)
 router.get('/login', authController.getLoginPage);
 router.get('/register', authController.getRegisterPage);
 router.get('/home',authController.getHomePage)
+router.get('/homePartner',authController.getHomePartnerPage)
 module.exports = router;
+    

@@ -229,7 +229,7 @@ const signin = async (req, res) => {
             maxAge: 1 * 60 * 60 * 1000,
             secure: process.env.NODE_ENV === "production",
           });
-          return res.redirect('/home');
+          return res.redirect('/homePartner');
         }
       }
     } else {
@@ -465,6 +465,11 @@ const getHomePage = (req, res) => {
   const pageTitle = 'Home'; // Set a default page title
   res.render('home', { message, pageTitle }); // Pass the pageTitle to the view
 };
+const getHomePartnerPage = (req, res) => {
+  const message = req.query.message || ''; // Retrieve any error message from the query params
+  const pageTitle = 'homePartner'; // Set a default page title
+  res.render('homePartner', { message, pageTitle }); // Pass the pageTitle to the view
+};
 
 module.exports ={
     signup,
@@ -478,5 +483,6 @@ module.exports ={
     callback,
     getLoginPage, 
     getRegisterPage,
-    getHomePage
+    getHomePage,
+    getHomePartnerPage
 }

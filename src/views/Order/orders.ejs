@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
 </head>
 <body>
+    <%- include('../header', { pageTitle: ' ' }) %>
+
     <div class="container mt-5">
         <h1>Danh sách Đơn hàng</h1>
         <% if (orders.length === 0) { %>
@@ -28,7 +30,7 @@
                     <% orders.forEach(order => { %>
                         <tr>
                             <td><%= order.id %></td>
-                            <td><%= order.user.email %></td>
+                            <td><%= order.user.email  %></td>
                             <td>
                                 <% if (order.tour) { %>
                                     <span class="badge bg-primary"><%= order.tour.title %></span>
