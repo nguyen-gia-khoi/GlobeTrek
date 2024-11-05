@@ -16,12 +16,11 @@ const destinationSchema = new mongoose.Schema({
     required: [true, 'Destination name is required'],
     unique: true, // Đảm bảo không có tên trùng lặp
   },
-  tours: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tour' }], 
+  tours: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tour' }],
 });
 
 // Schema cho mỗi lịch trình tour
 const scheduleSchema = new mongoose.Schema({
-
   isActive: {
     type: Boolean,
     default: true,
@@ -81,25 +80,28 @@ const tourSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  contact: {
-    type: String,
-    required: true,
-  },
+  partner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   availableSpots: {
     type: Number,
     required: true,
     default: 0,
-    min: 0 
+    min: 0,
   },
   isDisabled: {
     type: Boolean,
     default: false,
   },
+  isApproved: {
+    type: Boolean,
+    default: false, 
+  },
+  isDeleted: { type: Boolean, default: false }, 
+  deletionRequested: { type: Boolean, default: false }, 
   schedules: [scheduleSchema],
   tourType: { type: mongoose.Schema.Types.ObjectId, ref: 'TourType', required: true }, // Mối quan hệ với tourType
   destination: { type: mongoose.Schema.Types.ObjectId, ref: 'Destination', required: true }, // Mối quan hệ với destination
-  images: { type: [String], default: [] }, 
-  videos: { type: [String], default: [] }, 
+  images: { type: [String], default: [] },
+  videos: { type: [String], default: [] },
 }, { timestamps: true });
 
 module.exports = {

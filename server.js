@@ -41,6 +41,11 @@ app.get('/home', (req, res) => {
   // Redirect to the login route by default
   res.redirect('/api/auth/home');
 });
+// Home route
+app.get('/homePartner', (req, res) => {
+  // Redirect to the login route by default
+  res.redirect('/api/auth/homePartner');
+});
 
 app.get('/', (req, res) => {
   // Redirect to the login route by default

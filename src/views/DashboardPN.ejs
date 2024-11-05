@@ -15,7 +15,7 @@
     }
     .sidebar {
       min-height: 100vh;
-      background-color: #e9f5e9; /* Màu nền sidebar nhẹ nhàng */
+      background-color: #e9f5e9; 
       padding: 15px;
       position: fixed;
       width: 250px;
@@ -44,11 +44,13 @@
     <h2 class="active">Dashboard</h2>
     <ul class="nav flex-column">
       <li class="nav-item">
-        <a class="nav-link " href="/home">Home</a>
+        <a class="nav-link " href="/homePartner">Home</a>
       </li>
+
       <li class="nav-item">
-        <a class="nav-link " href="/admin/orders/view">Orders</a>
+        <a class="nav-link " href="">Orders</a>
       </li>
+
       <li class="nav-item">
         <a class="nav-link" data-toggle="collapse" href="#tourMenu" role="button" aria-expanded="false" aria-controls="tourMenu">
             Tours
@@ -56,48 +58,16 @@
         <div class="collapse" id="tourMenu">
             <ul class="nav flex-column ml-3">
                 <li class="nav-item">
-                    <a class="nav-link" href="/admin/tours/list">Xem Tour</a>
+                    <a class="nav-link" href="/admin/tours/partner/list">Xem Tour</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/admin/tours/add-requests">Duyệt Tour</a> 
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/tours/delete-requests">Duyệt Xóa Tour</a> 
-                </li>
+                    <a class="nav-link" href="/admin/tours/partner/create">Tạo Tour</a> 
+                </li>            
             </ul>
         </div>
     </li>
     
-      <li class="nav-item">
-        <a class="nav-link" data-toggle="collapse" href="#tourTypesMenu" role="button" aria-expanded="false" aria-controls="tourTypesMenu">
-          Tour Types
-        </a>
-        <div class="collapse" id="tourTypesMenu">
-          <ul class="nav flex-column ml-3">
-            <li class="nav-item">
-              <a class="nav-link" href="/tourTypes">View Tour Types</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/admin/tourTypes/create">Create Tour Type</a>
-            </li>
-          </ul>
-        </div>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" data-toggle="collapse" href="#destinationsMenu" role="button" aria-expanded="false" aria-controls="destinationsMenu">
-          Destinations
-        </a>
-        <div class="collapse" id="destinationsMenu">
-          <ul class="nav flex-column ml-3">
-            <li class="nav-item">
-              <a class="nav-link" href="/destinations">View Destinations</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/admin/destinations/create">Create Destination</a>
-            </li>
-          </ul>
-        </div>
-      </li>
+
       <li class="nav-item">
         <a class="nav-link" data-toggle="collapse" href="#revenueMenu" role="button" aria-expanded="false" aria-controls="revenueMenu">
           Revenue

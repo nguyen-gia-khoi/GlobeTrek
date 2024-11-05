@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách yêu cầu thêm Tour - Admin</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <%- include('../../header', { pageTitle: ' ' }) %>
+    <div class="container mt-4">
+        <h2>Danh sách yêu cầu thêm Tour</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên Tour</th>
+                    <th>Partner</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% addRequests.forEach(request => { %>
+                    <tr>
+                        <td><%= request.id %></td> <!-- Sửa từ tourId thành id -->
+                        <td><%= request.title %></td> <!-- Sửa từ tourTitle thành title -->
+                        <td><%= request.partnerName %></td> <!-- Thêm tên partner -->
+                        <td>
+                            <form action="/admin/tours/confirm-add/<%= request.id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-success">Xác nhận</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>    
+        </table>
+    </div>
+</body>
+</html>

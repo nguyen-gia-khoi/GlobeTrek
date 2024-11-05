@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa Tour - Partner</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <%- include('../../DashboardPN', { pageTitle: '' }) %>
+    <div class="container mt-4">
+        <h2>Chỉnh sửa Tour: <%= tour.title %></h2>
+        <form action="/partner/tours/edit/<%= tour._id %>" method="POST">
+            <div class="form-group">
+                <label for="title">Tên Tour:</label>
+                <input type="text" class="form-control" id="title" name="title" value="<%= tour.title %>" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Mô tả:</label>
+                <textarea class="form-control" id="description" name="description" required><%= tour.description %></textarea>
+            </div>
+            <div class="form-group">
+                <label for="price">Giá:</label>
+                <input type="number" class="form-control" id="price" name="price" value="<%= tour.price %>" required>
+            </div>
+            <div class="form-group">
+                <label for="location">Địa điểm:</label>
+                <input type="text" class="form-control" id="location" name="location" value="<%= tour.location %>" required>
+            </div>
+            <div class="form-group">
+                <label for="duration">Thời gian (ngày):</label>
+                <input type="number" class="form-control" id="duration" name="duration" value="<%= tour.duration %>" required>
+            </div>
+            <div class="form-group">
+                <label for="contact">Liên hệ:</label>
+                <input type="text" class="form-control" id="contact" name="contact" value="<%= tour.contact %>" required>
+            </div>
+            <div class="form-group">
+                <label for="availableSpots">Số chỗ còn trống:</label>
+                <input type="number" class="form-control" id="availableSpots" name="availableSpots" value="<%= tour.availableSpots %>" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Yêu cầu Cập nhật Tour</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -217,7 +217,7 @@ const signin = async (req, res) => {
             maxAge: 1 * 60 * 60 * 1000,
             secure: process.env.NODE_ENV === "production",
           });
-          return res.redirect('/home');
+          return res.redirect('/homePartner');
         }else {
           const message = "Your account has not been verified by an admin. Please wait for approval.";
           return res.render('Authen/login', { message }); // Render login page with message
@@ -478,6 +478,11 @@ const getUnverifiedPartners = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+const getHomePartnerPage = (req, res) => {
+  const message = req.query.message || ''; // Retrieve any error message from the query params
+  const pageTitle = 'homePartner'; // Set a default page title
+  res.render('homePartner', { message, pageTitle }); // Pass the pageTitle to the view
+};
 
 // const getUnverifiedPartners = async (req, res) => {
 //   const page = parseInt(req.query.page) || 1;
@@ -532,6 +537,7 @@ module.exports ={
     getLoginPage, 
     getRegisterPage,
     getHomePage,
+    getHomePartnerPage,
     getUnverifiedPartners,
     verifyPartner
 }

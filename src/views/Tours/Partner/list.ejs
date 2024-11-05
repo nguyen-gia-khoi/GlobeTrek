@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách Tour của Partner</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <%- include('../../DashboardPN', { pageTitle: '' }) %>
+    <div class="container">
+        <h1 class="mt-4">Danh sách Tour của Partner</h1>
+     
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Tiêu đề</th>
+                    <th>Mô tả</th>
+                    <th>Giá</th>
+                    <th>Địa điểm</th>
+                    <th>Thời gian</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (tours.length === 0) { %>
+                    <tr>
+                        <td colspan="7" class="text-center">Không có tour nào.</td>
+                    </tr>
+                <% } else { %>
+                    <% tours.forEach(tour => { %>
+                        <tr>
+                            <td><%= tour.title %></td>
+                            <td><%= tour.description %></td>
+                            <td><%= tour.price %> VNĐ</td>
+                            <td><%= tour.location %></td>
+                            <td><%= tour.duration %> ngày</td>
+                            <td><%= tour.isDisabled ? 'Bật' : 'Tắt' %></td>
+                            <td>
+                                <a href="/admin/tours/partner/edit/<%= tour._id %>" class="btn btn-warning btn-sm">Chỉnh sửa</a>
+                                <form action="/admin/tours/partner/requestDeleteTour/<%= tour._id %>" method="POST" style="display:inline;">
+                                    <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn gửi yêu cầu xóa tour này không?');" class="btn btn-danger">
+                                      Yêu cầu xóa
+                                    </button>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
