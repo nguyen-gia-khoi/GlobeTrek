@@ -14,4 +14,6 @@ router.get('/callback',authController.callback)
 router.get('/login', authController.getLoginPage);
 router.get('/register', authController.getRegisterPage);
 router.get('/home',authController.getHomePage)
+router.get('/unverified-partners',authController.getUnverifiedPartners);
+router.post('/partner/verify',authController.verifyPartner)
 module.exports = router;
