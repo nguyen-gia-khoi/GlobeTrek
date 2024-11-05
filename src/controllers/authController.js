@@ -40,7 +40,7 @@ const signup = async (req, res) => {
         }
         else {
           try {
-            const user = await User.create({ email, password,name});
+            const user = await User.create({ email, password,name,role:"partner"});
 
           const PartneraccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, {
             expiresIn: "1d",
@@ -183,19 +183,7 @@ const signin = async (req, res) => {
 
     if (user && (await user.comparePassword(password))) {
       // Check if user is a partner and not verified&& !user.verified
-      // if (user.role === "partner" ) {
-      //   const message = "Tài khoản của bạn chưa được xác minh bởi admin vui lòng đợi duyệt.";
 
-      //   // For client-rendered requests, send a JSON response
-      //   if (isClient) {
-      //     return res.status(403).json({ message });
-      //   }
-
-      //   // For server-rendered requests, render the login page with the message
-      //   return res.render('Authen/login', { message });
-      // }
-
-      // Generate tokens for verified users
       const { accessToken, refreshToken } = generateToken(user._id);
 
       if (isClient) {
@@ -221,7 +209,7 @@ const signin = async (req, res) => {
             secure: process.env.NODE_ENV === "production",
           });
           return res.redirect('/home');
-        } else if (user.role === "partner" ) {
+        } else if (user.role === "partner"&&user.status ==="verified" ) {
           const PartneraccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
           res.cookie("PartneraccessToken", PartneraccessToken, {
             httpOnly: true,
@@ -230,7 +218,11 @@ const signin = async (req, res) => {
             secure: process.env.NODE_ENV === "production",
           });
           return res.redirect('/homePartner');
+        }else {
+          const message = "Your account has not been verified by an admin. Please wait for approval.";
+          return res.render('Authen/login', { message }); // Render login page with message
         }
+        
       }
     } else {
       // Invalid email or password
@@ -460,10 +452,31 @@ const getRegisterPage = (req, res) => {
   const message = req.query.message || ''; // Retrieve any error message from the query params
   res.render('Authen/Register', { message });
 };
-const getHomePage = (req, res) => {
-  const message = req.query.message || ''; // Retrieve any error message from the query params
-  const pageTitle = 'Home'; // Set a default page title
-  res.render('home', { message, pageTitle }); // Pass the pageTitle to the view
+// const getHomePage = (req, res) => {
+//   const message = req.query.message || ''; // Retrieve any error message from the query params
+//   const pageTitle = 'Home'; // Set a default page title
+//   res.render('home', { message, pageTitle }); // Pass the pageTitle to the view
+// };
+const getHomePage = async (req, res) => {
+  try {
+    const unverifiedPartners = await User.find({ role: 'partner', status: 'unverify' });
+    res.render('home', {
+      pageTitle: 'Home',
+      unverifiedPartners
+    });
+  } catch (error) {
+    console.error("Error fetching unverified partners:", error);
+    res.status(500).send("Server error");
+  }
+};
+const getUnverifiedPartners = async (req, res) => {
+  try {
+    const unverifiedPartners = await User.find({ role: 'partner', status: 'unverify' });
+    res.render('home', { unverifiedPartners });
+  } catch (error) {
+    console.error("Error fetching unverified partners:", error);
+    res.status(500).send("Server Error");
+  }
 };
 const getHomePartnerPage = (req, res) => {
   const message = req.query.message || ''; // Retrieve any error message from the query params
@@ -471,6 +484,46 @@ const getHomePartnerPage = (req, res) => {
   res.render('homePartner', { message, pageTitle }); // Pass the pageTitle to the view
 };
 
+// const getUnverifiedPartners = async (req, res) => {
+//   const page = parseInt(req.query.page) || 1;
+//   const limit = parseInt(req.query.limit) || 10;
+
+//   try {
+//     const unverifiedPartners = await Partner.find({ status: 'unverified' })
+//       .skip((page - 1) * limit)
+//       .limit(limit);
+
+//     const totalUnverified = await Partner.countDocuments({ status: 'unverified' });
+//     const totalPages = Math.ceil(totalUnverified / limit);
+
+//     res.render('unverified-partners', { // Make sure the right EJS file is referenced
+//       unverifiedPartners,
+//       currentPage: page,
+//       totalPages,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send('Server error');
+//   }
+// };
+
+// Verify or decline a partner
+const verifyPartner = async (req, res) => {
+  const { partnerId, action } = req.body;
+  
+  console.log(action)
+  try {
+    if (action === "accept") {
+      await User.findByIdAndUpdate(partnerId, { status: 'verified' });
+    } else if (action === "decline") {
+      await User.findByIdAndDelete(partnerId);
+    }
+    res.redirect('/home'); // Redirect to refresh the list
+  } catch (error) {
+    console.error("Error updating partner status:", error);
+    res.status(500).send("Server Error");
+  }
+};
 module.exports ={
     signup,
     signin,
@@ -484,5 +537,7 @@ module.exports ={
     getLoginPage, 
     getRegisterPage,
     getHomePage,
-    getHomePartnerPage
+    getHomePartnerPage,
+    getUnverifiedPartners,
+    verifyPartner
 }
