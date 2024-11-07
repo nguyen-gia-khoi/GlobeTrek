@@ -439,7 +439,7 @@ const callback = async (req, res) => {
 };
 const getLoginPage = (req, res) => {
   const message = req.query.message || ''; // Retrieve any error message from the query params
-  res.render('Authen/login', { message });
+  res.render('Authen/Login', { message });
 };
 const getRegisterPage = (req, res) => {
   const message = req.query.message || ''; // Retrieve any error message from the query params
