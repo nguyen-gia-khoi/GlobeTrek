@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh sách đơn hàng của đối tác</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa; 
+    }
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    .table {
+      background-color: #ffffff;
+      border: 1px solid #dee2e6;
+    }
+
+    .table tbody tr:nth-child(even) {
+      background-color: #f2f2f2; 
+    }
+
+    .table tbody tr:hover {
+      background-color: #e9ecef;
+    }
+
+    .alert-warning {
+      background-color: #fff3cd;
+      color: #856404;
+      border-color: #ffeeba;
+    }
+  </style>
+</head>
+<body>
+  <%- include('../DashboardPN', { pageTitle: '' }) %>
+  <div class="container mt-5">
+    <h2 class="text-center">Danh sách đơn hàng của bạn</h2>
+
+    <% if (orders.length === 0) { %>
+      <div class="alert alert-warning" role="alert">
+        Không có đơn hàng nào cho đối tác.
+      </div>
+    <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Mã đơn hàng</th>
+            <th>Email khách hàng</th>
+            <th>Tour</th>
+            <th>Số lượng người lớn</th>
+            <th>Số lượng trẻ em</th>
+            <th>Tổng giá trị</th>
+            <th>Trạng thái</th>
+            <th>Ngày đặt</th>
+            <th>Ngày tạo</th>
+            <th>Ngày cập nhật</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(order => { %>
+            <tr>
+              <td><%= order._id %></td>
+              <td><%= order.user.email %></td>
+              <td>
+                <% if (order.tour) { %>
+                    <span class="badge bg-primary"><%= order.tour.title %></span>
+                <% } else { %>
+                    <span class="text-muted">Không có sản phẩm</span>
+                <% } %>
+            </td>
+              <td><%= order.adultCount %></td>
+              <td><%= order.childCount %></td>
+              <td><%= order.totalValue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></td>
+              <td class="badge <%= order.status === 'pending' ? 'bg-warning' : order.status === 'processing' ? 'bg-primary' : order.status === 'paid' ? 'bg-success' : order.status === 'canceled' ? 'bg-danger' : '' %> mt-1 "><%= order.status %></td>
+              <td><%= new Date(order.bookingDate).toLocaleDateString('vi-VN') %></td>
+              <td><%= new Date(order.createdAt).toLocaleDateString('vi-VN') %></td>
+              <td><%= new Date(order.updatedAt).toLocaleDateString('vi-VN') %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

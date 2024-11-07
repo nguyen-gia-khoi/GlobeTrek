@@ -1,4 +1,3 @@
-// src/controllers/tourTypeController.js
 const { TourType } = require('../../models/Tour'); 
 
 // Lấy danh sách tất cả các TourType
@@ -6,23 +5,30 @@ const getAllTourTypes = async (req, res) => {
   try {
     const tourTypes = await TourType.find();
     res.render('tourTypes/list', { tourTypes });
+    // res.json({tourTypes});
   } catch (error) {
     res.status(500).send('Error retrieving tour types');
   }
 };
-
+const getAllTourTypesAPI = async (req, res) => {
+  try {
+    const tourTypes = await TourType.find();
+    res.json({tourTypes});
+  } catch (error) {
+    res.status(500).send('Error retrieving tour types');
+  }
+};
 // Hiển thị trang tạo TourType mới
 const createTourTypeForm = (req, res) => {
   res.render('tourTypes/create');
 };
 
-// Tạo một TourType mới
 const createTourType = async (req, res) => {
   const { name } = req.body;
   try {
     const newTourType = new TourType({ name });
     await newTourType.save();
-    res.redirect('/tourtypes'); // Điều chỉnh đường dẫn sau khi tạo thành công
+    res.redirect('/tourtypes'); 
   } catch (error) {
     res.status(400).send('Error creating tour type: ' + error.message);
   }
@@ -78,6 +84,7 @@ const confirmDeleteTourType = async (req, res) => {
 
 module.exports = {
   getAllTourTypes,
+  getAllTourTypesAPI,
   createTourTypeForm,
   createTourType,
   editTourTypeForm,

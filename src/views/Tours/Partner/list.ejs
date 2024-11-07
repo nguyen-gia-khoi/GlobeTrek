@@ -36,13 +36,15 @@
                             <td><%= tour.price %> VNĐ</td>
                             <td><%= tour.location %></td>
                             <td><%= tour.duration %> ngày</td>
-                            <td><%= tour.isDisabled ? 'Bật' : 'Tắt' %></td>
+                            <td><%= tour.isDisabled ? 'tắt' : 'bật' %></td>
                             <td>
-                                <a href="/admin/tours/partner/edit/<%= tour._id %>" class="btn btn-warning btn-sm">Chỉnh sửa</a>
-                                <form action="/admin/tours/partner/requestDeleteTour/<%= tour._id %>" method="POST" style="display:inline;">
+                                <a href="/partner/tours/edit/<%= tour._id %>" class="btn btn-warning btn-sm">Chỉnh sửa</a>
+                                <form action="/partner/tours/requestDeleteTour/<%= tour._id %>" method="POST" style="display:inline;">
                                     <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn gửi yêu cầu xóa tour này không?');" class="btn btn-danger">
-                                      Yêu cầu xóa
+                                        Yêu cầu xóa
                                     </button>
+                                </form>
+                                
                             </td>
                         </tr>
                     <% }); %>

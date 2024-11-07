@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 const { Tour, TourType, Destination } = require('../models/Tour');
-const multer = require('multer');
 
-// GET: Display list of all tours
+// GET: list of all tours (dành cho user)
 const getTours = async (req, res) => {
   try {
-    const tours = await Tour.find()
+    const tours = await Tour.find({ isApproved: true }) // Chỉ lấy tour đã được phê duyệt
       .populate('tourType')
       .populate('destination')
       .sort({ createdAt: -1 });
@@ -17,11 +16,10 @@ const getTours = async (req, res) => {
   }
 };
 
-// API: Get all tours in JSON format
+// API: Get all tours  (dành cho user)
 const getToursAPI = async (req, res) => {
   try {
-    const tours = await Tour.find()
-      .populate('tourType')
+    const tours = await Tour.find({ isApproved: true }) 
       .populate('destination')
       .sort({ createdAt: -1 });
 
@@ -31,10 +29,11 @@ const getToursAPI = async (req, res) => {
     res.status(500).json({ error: 'Error fetching tours' });
   }
 };
-//api get id tour
+
+// API: Get a single tour by ID (dành cho user)
 const getTourById = async (req, res) => {
   try {
-    const tour = await Tour.findById(req.params.id)
+    const tour = await Tour.findOne({ _id: req.params.id, isApproved: true }) 
       .populate('tourType')
       .populate('destination');
 
@@ -48,11 +47,16 @@ const getTourById = async (req, res) => {
     res.status(500).json({ error: 'Error fetching tour' });
   }
 };
-// Tìm kiếm tour theo tiêu đề
- const searchTours = async (req, res) => {
+
+// API: Search tours by title (dành cho user)
+const searchTours = async (req, res) => {
   const { query } = req.query;
   try {
-    const tours = await Tour.find({ title: { $regex: query, $options: 'i' } });
+    const tours = await Tour.find({ 
+      title: { $regex: query, $options: 'i' },
+      isApproved: true 
+    });
+
     res.status(200).json(tours);
   } catch (error) {
     res.status(500).json({ message: 'Không thể tìm kiếm tour', error });

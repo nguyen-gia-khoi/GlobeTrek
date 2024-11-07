@@ -23,7 +23,6 @@
                         <th>Tổng giá trị</th>
                         <th>Trạng thái</th>
                         <th>Ngày đặt</th>
-                        <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,10 +48,6 @@
                             </td>
                             <td><%= new Date(order.bookingDate).toLocaleDateString('vi-VN') %></td>
                             <td>
-                                <a href="/orders/edit/<%= order.orderId %>" class="btn btn-warning btn-sm">Sửa</a>
-                                <!-- <form action="/orders/delete/<%= order.orderId %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
-                                </form> -->
                             </td>
                         </tr>
                     <% }) %>

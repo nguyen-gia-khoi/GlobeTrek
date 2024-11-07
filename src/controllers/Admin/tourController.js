@@ -5,7 +5,7 @@ const Order = require('../../models/Order');
 // GET: Hiển thị danh sách tour (Admin)
 const getTours = async (req, res) => {
   try {
-    const tours = await Tour.find().populate('partner'); // Thêm populate để hiển thị thông tin partner
+    const tours = await Tour.find().populate('partner'); 
     res.render('Tours/Admin/list', { tours });
   } catch (error) {
     console.error('Lỗi khi lấy danh sách tour:', error);
@@ -13,17 +13,27 @@ const getTours = async (req, res) => {
   }
 };
 
+// GET: API để lấy danh sách tour (Admin)
+const getToursAPI = async (req, res) => {
+  try {
+    const tours = await Tour.find().populate('partner'); 
+    res.json({ tours });
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách tour:', error);
+    res.status(500).json({ message: 'Lỗi khi lấy danh sách tour' });
+  }
+};
+
 
 // GET: Hiển thị danh sách yêu cầu thêm tour từ partner (Admin)
 const getAddRequests = async (req, res) => {
   try {
-    const addRequests = await Tour.find({ isApproved: false }).populate('partner', 'name'); // Chỉ lấy tên partner
-    // Chuyển đổi danh sách yêu cầu thành dạng mà bạn muốn hiển thị
+    const addRequests = await Tour.find({ isApproved: false }).populate('partner', 'name'); 
+
     const formattedRequests = addRequests.map(tour => ({
       id: tour._id,
       title: tour.title,
-      partnerName: tour.partner ? tour.partner._id : 'N/A', // Lấy tên partner
-      // Thêm các thông tin khác nếu cần
+      partnerName: tour.partner ? tour.partner._id : 'N/A', 
     }));
     res.render('Tours/Admin/addRequests', { addRequests: formattedRequests });
   } catch (error) {
@@ -38,8 +48,8 @@ const getDeleteRequests = async (req, res) => {
   try {
     const deleteRequests = await Tour.find({ 
       deletionRequested: true, 
-      isDeleted: false // Chỉ lấy tour chưa bị xóa
-    }).populate('partner'); // Nếu cần thêm thông tin về partner
+      isDeleted: false 
+    }).populate('partner'); 
     res.render('Tours/Admin/deleteRequests', { deleteRequests });
   } catch (error) {
     console.error('Lỗi khi lấy danh sách yêu cầu xóa tour:', error);
@@ -51,8 +61,6 @@ const getDeleteRequests = async (req, res) => {
 const confirmDeleteTour = async (req, res) => {
   try {
     const tourId = req.params.id;
-
-    // Kiểm tra xem ID có phải là ObjectId hợp lệ không
     if (!mongoose.Types.ObjectId.isValid(tourId)) {
       return res.status(400).json({ message: 'ID không hợp lệ' });
     }
@@ -62,12 +70,10 @@ const confirmDeleteTour = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy tour' });
     }
 
-    // Kiểm tra xem có đơn hàng nào liên quan đến tour này không
-    const existingOrders = await Order.find({ tourId: tourId }); // Tìm các đơn hàng liên quan đến tour
+    const existingOrders = await Order.find({ tourId: tourId });
     if (existingOrders.length > 0) {
       return res.status(400).json({ message: 'Không thể xóa tour đã được đặt' });
     }
-
     // Xóa tour
     await Tour.findByIdAndDelete(tourId);
     res.redirect('/admin/tours/delete-requests');
@@ -88,9 +94,9 @@ const confirmAddTour = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy tour' });
     }
 
-    tour.isApproved = true; // Xác nhận thêm tour
+    tour.isApproved = true; 
     await tour.save();
-    res.redirect('Tours/Admin/add-requests');
+    res.status(200).json({ message: 'xác nhận tour thành công ' });
   } catch (error) {
     console.error('Lỗi khi xác nhận thêm tour:', error);
     res.status(500).json({ message: 'Lỗi khi xác nhận thêm tour', error });
@@ -105,8 +111,6 @@ const toggleTourStatus = async (req, res) => {
     if (!tour) {
       return res.status(404).json({ message: 'Không tìm thấy tour' });
     }
-
-    // Kiểm tra xem có đơn hàng nào liên quan đến tour này không
     const existingOrders = await Order.find({ tourId: tourId });
     if (existingOrders.length > 0) {
       return res.status(400).json({ message: 'Không thể tắt tour đã được đặt' });
@@ -114,7 +118,7 @@ const toggleTourStatus = async (req, res) => {
 
     tour.isDisabled = !tour.isDisabled;
     await tour.save();
-    res.redirect('/admin/tours/list'); // Sử dụng đường dẫn tuyệt đối
+    res.redirect('/admin/tours/list'); 
   } catch (error) {
     console.error('Lỗi khi xác nhận bật/tắt tour:', error);
     res.status(500).json({ message: 'Lỗi khi xác nhận bật/tắt tour', error });
@@ -124,6 +128,7 @@ const toggleTourStatus = async (req, res) => {
 
 module.exports = {
   getTours,
+  getToursAPI,
   getDeleteRequests,
   getAddRequests,
   confirmDeleteTour,
