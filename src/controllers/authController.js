@@ -185,8 +185,13 @@ const signin = async (req, res) => {
       // Check if user is a partner and not verified&& !user.verified
 
       const { accessToken, refreshToken } = generateToken(user._id);
-
-      if (isClient) {
+      
+      if(user.UserStatus === "ban"){
+       
+        return res.status(400).json({ message:"Your account has been banned. Please contact support." }); // Send error message to client
+        
+      }
+      else if (isClient && user.UserStatus === "unban") {
         // For client-rendered (e.g., SPA) requests
         res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
@@ -198,7 +203,9 @@ const signin = async (req, res) => {
 
         const { password, ...userDetails } = user._doc; // Exclude password from response
         return res.status(200).json({ ...userDetails, accessToken });
-      } else {
+      } 
+      
+      else {
         // For server-rendered (admin or verified partner) requests
         if (user.role === "admin") {
           const AdminaccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
@@ -411,20 +418,6 @@ const callback = async (req, res) => {
       await user.save();
       console.log("User already exists and was updated:", user);
     }
-
-    // // Generate a JWT token for the user
-    
-
-    // return res.json({
-    //   login: true,
-    //   role: user.role,
-    //   email:user.email,
-    //   userId: user._id,
-    //   accessToken,
-    // });
-     // Generate a JWT token for the user\
-
-
      const token = jwt.sign(
       {userId}, process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "1h" } // Set an appropriate expiration time
@@ -452,11 +445,7 @@ const getRegisterPage = (req, res) => {
   const message = req.query.message || ''; // Retrieve any error message from the query params
   res.render('Authen/Register', { message });
 };
-// const getHomePage = (req, res) => {
-//   const message = req.query.message || ''; // Retrieve any error message from the query params
-//   const pageTitle = 'Home'; // Set a default page title
-//   res.render('home', { message, pageTitle }); // Pass the pageTitle to the view
-// };
+
 const getHomePage = async (req, res) => {
   try {
     const unverifiedPartners = await User.find({ role: 'partner', status: 'unverify' });
@@ -478,34 +467,14 @@ const getUnverifiedPartners = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
 const getHomePartnerPage = (req, res) => {
   const message = req.query.message || ''; // Retrieve any error message from the query params
   const pageTitle = 'homePartner'; // Set a default page title
   res.render('homePartner', { message, pageTitle }); // Pass the pageTitle to the view
 };
 
-// const getUnverifiedPartners = async (req, res) => {
-//   const page = parseInt(req.query.page) || 1;
-//   const limit = parseInt(req.query.limit) || 10;
 
-//   try {
-//     const unverifiedPartners = await Partner.find({ status: 'unverified' })
-//       .skip((page - 1) * limit)
-//       .limit(limit);
-
-//     const totalUnverified = await Partner.countDocuments({ status: 'unverified' });
-//     const totalPages = Math.ceil(totalUnverified / limit);
-
-//     res.render('unverified-partners', { // Make sure the right EJS file is referenced
-//       unverifiedPartners,
-//       currentPage: page,
-//       totalPages,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send('Server error');
-//   }
-// };
 
 // Verify or decline a partner
 const verifyPartner = async (req, res) => {
@@ -524,6 +493,49 @@ const verifyPartner = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+const gePartners = async (req, res) => {
+  try {
+    const verifiedPartners = await User.find({ role: 'partner', status: 'verified' });
+    res.render('User/viewPartner', {pageTitle: 'viewPartner', verifiedPartners });
+  } catch (error) {
+    console.error("Error fetching unverified partners:", error);
+    res.status(500).send("Server Error");
+  }
+};
+const getUser = async (req, res) => {
+  try {
+    const user = await User.find({ role: 'user'});
+    res.render('User/viewUser', { pageTitle: 'viewUser',user });
+  } catch (error) {
+    console.error("Error fetching unverified partners:", error);
+    res.status(500).send("Server Error");
+  }
+};
+const banPartner = async(req,res)=>{
+  const { partnerId, action } = req.body;
+  try {
+    await User.findByIdAndUpdate(partnerId, { status: 'unverify' });
+    res.redirect('/admin/partners');
+  } catch (error) {
+    console.error("Error banning partners:", error);
+    res.status(500).send("Server Error");
+  }
+}
+const banAndUnbanUser = async(req,res)=>{
+  const { userId, action } = req.body;
+  try {
+    if (action === "ban") {
+      await User.findByIdAndUpdate(userId, { UserStatus: 'ban' });
+    } else if (action === "unban") {
+      await User.findByIdAndUpdate(userId, { UserStatus: 'unban' });
+    }
+    res.redirect('/admin/users'); // Redirect to refresh the list
+  } catch (error) {
+    console.error("Error updating partner status:", error);
+    res.status(500).send("Server Error");
+  }
+}
+
 module.exports ={
     signup,
     signin,
@@ -539,5 +551,9 @@ module.exports ={
     getHomePage,
     getHomePartnerPage,
     getUnverifiedPartners,
-    verifyPartner
+    verifyPartner,
+    gePartners,
+    getUser,
+    banPartner,
+    banAndUnbanUser,
 }
