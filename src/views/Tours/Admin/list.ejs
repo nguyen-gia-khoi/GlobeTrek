@@ -51,12 +51,12 @@
                             <td><%= tour.price %> VNĐ</td>
                             <td><%= tour.location %></td>
                             <td><%= tour.duration %> ngày</td>
-                            <td><%= tour.isDisabled ? 'Bật' : 'Tắt' %></td>
+                            <td><%= tour.isDisabled ? 'Tắt' : 'Bật' %></td>
                             <td><%= tour.partner ? tour.partner._id : 'Không có' %></td> 
                             <td>
 
                                 <form action="/admin/tours/toggle-status/<%= tour._id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-secondary btn-sm"><%= tour.isDisabled ? 'Tắt' : 'Bật' %></button>
+                                    <button type="submit" class="btn btn-secondary btn-sm"><%= tour.isDisabled ? 'Bật' : 'Tắt' %></button>
                                 </form>
                             </td>
                         </tr>
