@@ -52,7 +52,7 @@ const signup = async (req, res) => {
             secure: process.env.NODE_ENV === "production",
           });
 
-          return res.redirect('/home'); // Use redirect instead of render
+          return res.redirect('/api/auth/login'); // Use redirect instead of render
           } catch (error) {
             console.log("Error in signup controller: ", error.message);
 

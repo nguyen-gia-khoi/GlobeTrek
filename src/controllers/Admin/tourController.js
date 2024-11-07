@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+ const mongoose = require('mongoose');
 const { Tour } = require('../../models/Tour');
 const Order = require('../../models/Order');
 
