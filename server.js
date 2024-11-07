@@ -27,7 +27,7 @@ const destinationsRoutesAdmin = require('./src/routes/Admin/destinationRoutes');
 const scheduleRoutesAdmin = require('./src/routes/Admin/scheduleRoutes');
 const orderRoutesAdmin = require('./src/routes/Admin/orderRoutes');
 const revenueRoutes = require("./src/routes/Admin/revenueRoutes"); 
-
+const userRoute = require('./src/routes/Admin/userRoutes')
 const partnertourroutes = require("./src/routes/Partner/partnerToursRoutes"); 
 const partnerOrderRoutes = require("./src/routes/Partner/partnerOrderRoutes"); 
 
@@ -89,7 +89,6 @@ app.use('/schedules', scheduleRoutes);
 app.use('/orders', orderRoutes);
 app.use("/favorite-tours", favoriteTourRoutes);
 
-
 // Admin routes
 app.use('/admin/tours', toursRoutesAdmin);
 app.use('/admin/tourtypes', tourTypeRoutesAdmin);
@@ -97,6 +96,7 @@ app.use('/admin/destinations', destinationsRoutesAdmin);
 app.use('/admin/schedules', scheduleRoutesAdmin);
 app.use('/admin/orders', orderRoutesAdmin );
 app.use("/admin/revenue", revenueRoutes);
+app.use('/admin',userRoute)
 
 
 //partner

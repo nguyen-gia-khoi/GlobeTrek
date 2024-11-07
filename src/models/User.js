@@ -42,6 +42,11 @@ const UserSchema = new Schema({
     enum: ["user", "admin","partner"],
     default: "user",
   },
+  UserStatus: {
+    type: String,
+    enum: ["ban","unban"],
+    default: "unban"
+  },
   status :{
     type: String,
     enum: ["verified","unverify"],

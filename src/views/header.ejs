@@ -26,7 +26,12 @@
       padding: 15px;
       flex-grow: 1;
     }
+    .active{
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      color: #3c763d;
+    }
     .nav-link {
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
       color: #3c763d;
     }
     .nav-link:hover {
@@ -112,6 +117,21 @@
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/admin/revenue/yearly">Yearly Revenue</a>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="collapse" href="#userMenu" role="button" aria-expanded="false" aria-controls="userMenu">
+          View User
+        </a>
+        <div class="collapse" id="userMenu">
+          <ul class="nav flex-column ml-3">
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/users">View pustomer account </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/partners">View partner account</a>
             </li>
           </ul>
         </div>
