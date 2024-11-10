@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const moment = require('moment');
 // Schema cho TourType
 const tourTypeSchema = new mongoose.Schema({
   name: {
@@ -19,30 +19,7 @@ const destinationSchema = new mongoose.Schema({
   tours: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tour' }],
 });
 
-// Schema cho mỗi lịch trình tour
-const scheduleSchema = new mongoose.Schema({
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-  itinerary: [
-    {
-      time: {
-        type: String,
-        required: true,
-      },
-      activity: {
-        type: String,
-        required: true,
-      },
-      location: {
-        type: String,
-      },
-    },
-  ],
-});
-
-// Schema chính cho Tour
+// Schema cho Tour
 const tourSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -52,24 +29,22 @@ const tourSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Tour description is required'],
   },
-  price: { // Giá người lớn
+  price: {
     type: Number,
     required: [true, 'Price is required'],
     min: [0, 'Price must be a positive number'],
   },
-  specialAdultPrice: { // Giá ngày đặc biệt của người lớn
+  specialAdultPrice: {
     type: Number,
-    required: [true, 'Special adult price is required'],
     min: [0, 'Price must be a positive number'],
   },
-  childPrice: { // Giá trẻ em
+  childPrice: {
     type: Number,
     required: [true, 'Child price is required'],
     min: [0, 'Price must be a positive number'],
   },
-  specialChildPrice: { // Giá ngày đặc biệt của trẻ em
+  specialChildPrice: {
     type: Number,
-    required: [true, 'Special child price is required'],
     min: [0, 'Price must be a positive number'],
   },
   location: {
@@ -77,15 +52,13 @@ const tourSchema = new mongoose.Schema({
     required: [true, 'Location is required'],
   },
   duration: {
-    type: String,
+    type: Number, // Duration là số ngày của tour
     required: true,
   },
-  partner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  availableSpots: {
-    type: Number,
-    required: true,
-    default: 0,
-    min: 0,
+  partner: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
   },
   isDisabled: {
     type: Boolean,
@@ -93,16 +66,110 @@ const tourSchema = new mongoose.Schema({
   },
   isApproved: {
     type: Boolean,
-    default: false, 
+    default: false,
   },
-  isDeleted: { type: Boolean, default: false }, 
-  deletionRequested: { type: Boolean, default: false }, 
-  schedules: [scheduleSchema],
-  tourType: { type: mongoose.Schema.Types.ObjectId, ref: 'TourType', required: true }, // Mối quan hệ với tourType
-  destination: { type: mongoose.Schema.Types.ObjectId, ref: 'Destination', required: true }, // Mối quan hệ với destination
-  images: { type: [String], default: [] },
-  videos: { type: [String], default: [] },
+  isDeleted: { 
+    type: Boolean, 
+    default: false 
+  },
+  deletionRequested: { 
+    type: Boolean, 
+    default: false 
+  },
+  tourType: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'TourType', 
+    required: true 
+  },
+  destination: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Destination', 
+    required: true 
+  },
+  images: { 
+    type: [String], 
+    default: [] 
+  },
+  videos: { 
+    type: [String], 
+    default: [] 
+  },
+
+  schedules: [
+    {
+      day: { 
+        type: Number, 
+        required: true 
+      },
+      activity: { 
+        type: String, 
+        required: true 
+      }
+    }
+  ],
+  availabilities: [
+    {
+      date: { 
+        type: Date, 
+        required: true, 
+      },
+      availableSeats: { 
+        type: Number, 
+        required: true, 
+        min: [0, 'Available seats must be a positive number'] 
+      } 
+    }
+  ]
 }, { timestamps: true });
+
+
+tourSchema.pre('save', function (next) {
+  if (this.isModified('duration') && this.duration > 0) {
+    if (!this.schedules || this.schedules.length === 0) {  // Chỉ tạo mới lịch trình nếu chưa có lịch trình
+      const schedules = [];
+      for (let i = 1; i <= this.duration; i++) {
+        const description = this.schedules && this.schedules[i - 1] && this.schedules[i - 1].description
+                            ? this.schedules[i - 1].description 
+                            : `Ngày ${i}: Mô tả hoạt động trong ngày ${i}`; 
+        schedules.push({
+          day: i,
+          activity: description,  // Đảm bảo sử dụng tên trường trong schema
+        });
+      }
+      this.schedules = schedules;
+    }
+  }
+  next();
+});
+
+tourSchema.methods.addAvailabilityForNext30Days = function(availableSeats) {
+  const tour = this;
+  const today = moment(); 
+
+  const availabilities = [];
+  for (let i = 0; i < 30; i++) {
+    const nextDay = today.clone().add(i, 'days'); 
+    const dateString = nextDay.format('YYYY-MM-DD'); 
+
+    availabilities.push({
+      date: dateString,
+      availableSeats: availableSeats, 
+    });
+  }
+
+
+  tour.availabilities = [...tour.availabilities, ...availabilities];
+  
+  return tour.save();
+};
+
+
+tourSchema.methods.createTourWithAvailability = async function(tourData, availableSeats) {
+
+  const newTour = new this(tourData);
+  await newTour.addAvailabilityForNext30Days(availableSeats); 
+  return newTour.save();
+};
 
 module.exports = {
   Tour: mongoose.model('Tour', tourSchema),
