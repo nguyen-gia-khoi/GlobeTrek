@@ -20,6 +20,8 @@
                         <th>ID Đơn hàng</th>
                         <th>Tên người dùng</th>
                         <th>Sản phẩm</th>
+                        <th>Số lượng người lớn</th>
+                        <th>Số lượng trẻ em</th>
                         <th>Tổng giá trị</th>
                         <th>Trạng thái</th>
                         <th>Ngày đặt</th>
@@ -29,7 +31,7 @@
                     <% orders.forEach(order => { %>
                         <tr>
                             <td><%= order.id %></td>
-                            <td><%= order.user.email  %></td>
+                            <td><%= order.user.email %></td>
                             <td>
                                 <% if (order.tour) { %>
                                     <span class="badge bg-primary"><%= order.tour.title %></span>
@@ -37,18 +39,15 @@
                                     <span class="text-muted">Không có sản phẩm</span>
                                 <% } %>
                             </td>
+                            <td><%= order.adultCount || 0 %></td> <!-- Số lượng người lớn -->
+                            <td><%= order.childCount || 0 %></td> <!-- Số lượng trẻ em -->
                             <td><%= order.totalValue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></td>
                             <td>
-                              
-                                    <span class="badge <%= order.status === 'pending' ? 'bg-warning' : order.status === 'processing' ? 'bg-primary' : order.status === 'paid' ? 'bg-success' : order.status === 'canceled' ? 'bg-danger' : '' %>">
-                                        <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
-                                    </span>
-                                
-                                
+                                <span class="badge <%= order.status === 'pending' ? 'bg-warning' : order.status === 'processing' ? 'bg-primary' : order.status === 'paid' ? 'bg-success' : order.status === 'canceled' ? 'bg-danger' : '' %>">
+                                    <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                                </span>
                             </td>
                             <td><%= new Date(order.bookingDate).toLocaleDateString('vi-VN') %></td>
-                            <td>
-                            </td>
                         </tr>
                     <% }) %>
                 </tbody>

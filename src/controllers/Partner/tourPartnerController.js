@@ -5,6 +5,8 @@ const cloudinary = require('cloudinary').v2;
 const { storage } = require('../../Middleware/cloudinary');
 const multer = require('multer');
 const upload = multer({ storage });
+const moment = require('moment');
+
 
 const SPECIAL_DAY_MULTIPLIER = 1.5;
 const CHILD_MULTIPLIER = 0.75;
@@ -24,14 +26,18 @@ const getTourList = async (req, res) => {
   try {
     const token = req.cookies.PartneraccessToken;
     const partnerId = getUserIdFromToken(token);
+    if (!partnerId) {
+      return res.status(401).send('Unauthorized');
+    }
+
     const tours = await Tour.find({ partner: partnerId })
       .populate('tourType')
       .populate('destination');
-      
+
     if (!tours || tours.length === 0) {
-      return res.render('Tours/Partner/list', { message: 'Không có tour nào.' });
+      return res.render('Tours/Partner/list', { tours: [] });
     }
-    
+
     res.render('Tours/Partner/list', { tours });
   } catch (error) {
     console.error('Error fetching tour list:', error);
@@ -52,53 +58,88 @@ const getCreateTour = async (req, res) => {
 };
 
 const postCreateTour = async (req, res) => {
-  const { title, description, price, location, duration, availableSpots, tourType, destination } = req.body;
+  const { title, description, price, location, duration, tourType, destination, schedules, totalSpots } = req.body;
   const token = req.cookies.PartneraccessToken;
   const partnerId = getUserIdFromToken(token);
-  const isDisabled = req.body.isDisabled ? true : false;
 
-  if (duration < 1 || price < 0 || availableSpots < 0) {
-    return res.status(400).send('Invalid input: Duration must be at least 1 day, and Price/Available Spots must be non-negative.');
+  // Kiểm tra các trường bắt buộc
+  if (!title || !description || !price || !location || !duration || !tourType || !destination || !totalSpots) {
+    return res.status(400).send('Thiếu thông tin bắt buộc.');
   }
 
-  const specialAdultPrice = price * SPECIAL_DAY_MULTIPLIER;
-  const childPrice = price * CHILD_MULTIPLIER;
-  const specialChildPrice = childPrice * SPECIAL_DAY_MULTIPLIER;
+  // Kiểm tra giá và thời gian hợp lệ
+  if (price <= 0 || duration < 1) {
+    return res.status(400).send('Giá hoặc thời gian không hợp lệ.');
+  }
 
   const images = req.files?.['images'] ? req.files['images'].map(file => file.path) : [];
   const videos = req.files?.['videos'] ? req.files['videos'].map(file => file.path) : [];
 
+  const isDisabled = req.body.isDisabled ? true : false;
+  const specialAdultPrice = price * SPECIAL_DAY_MULTIPLIER;
+  const childPrice = price * CHILD_MULTIPLIER;
+  const specialChildPrice = childPrice * SPECIAL_DAY_MULTIPLIER;
+
+  // Xử lý lịch trình (schedules)
+  const tourSchedules = [];
+  for (let i = 0; i < duration; i++) {
+    const activity = schedules[i] || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
+    tourSchedules.push({
+      day: i + 1,
+      activity: activity,
+    });
+  }
+
+  // Tạo availability cho 30 ngày (hoặc tùy chọn theo số ngày được nhập)
+  const availabilityData = [];
+  const totalDays = 30; // Hoặc bạn có thể thay đổi theo `duration` nếu muốn linh hoạt hơn
+
+  for (let i = 0; i < totalDays; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() + i); // Cộng thêm ngày vào hiện tại
+    const formattedDate = date.toISOString().split('T')[0]; // Định dạng ngày theo 'YYYY-MM-DD'
+    const availableSeats = Number(totalSpots);
+
+    availabilityData.push({
+      date: formattedDate, // Lưu dưới dạng chuỗi 'YYYY-MM-DD'
+      availableSeats: availableSeats,
+    });
+  }
+
   try {
+    // Tạo tour mới và lưu vào DB
     const newTour = await Tour.create({
       title,
       description,
       price,
-      specialAdultPrice,
-      childPrice,
-      specialChildPrice,
       location,
       duration,
-      availableSpots,
       partner: partnerId,
       tourType,
       destination,
       isDisabled,
-      isApproved: false, // Mặc định là chưa được phê duyệt
+      specialAdultPrice,
+      childPrice,
+      specialChildPrice,
       images,
       videos,
+      isApproved: false,
+      schedules: tourSchedules, // Gắn lịch trình vào tour
+      availabilities: availabilityData, // Gắn availability vào tour
     });
 
+    // Chuyển hướng về danh sách tour của partner
     res.redirect('/partner/tours/list');
   } catch (error) {
-    console.error('Error creating tour:', error);
-    res.status(500).send('Error creating tour');
+    console.error('Lỗi khi tạo tour:', error);
+    res.status(500).send('Lỗi khi tạo tour.');
   }
 };
 
-
+// Cập nhật tour
 const getUpdateTour = async (req, res) => {
   const token = req.cookies.PartneraccessToken;
-  const partnerId = getUserIdFromToken(token); 
+  const partnerId = getUserIdFromToken(token);
 
   if (!partnerId) {
     return res.status(401).send('Unauthorized: Invalid token');
@@ -125,63 +166,81 @@ const getUpdateTour = async (req, res) => {
   }
 };
 
-// Cập nhật tour
 const postUpdateTour = async (req, res) => {
-  const { title, description, price, location, duration, availableSpots, tourType, destination } = req.body;
-  const tourID = req.params.id;
+  const { title, description, price, location, duration, tourType, destination, schedules, isDisabled } = req.body;
   const token = req.cookies.PartneraccessToken;
   const partnerId = getUserIdFromToken(token);
+  const tourID = req.params.id; // Correctly use tourID here
 
-  if (duration < 1 || price < 0 || availableSpots < 0) {
-    return res.status(400).send('Invalid input: Duration must be at least 1 day, and Price/Available Spots must be non-negative.');
+  // Kiểm tra xem partnerId có hợp lệ không
+  if (!partnerId) {
+    console.log("Invalid token or partnerId.");
+    return res.status(401).send('Unauthorized: Invalid token');
   }
 
-  // Tính toán giá cho người lớn đặc biệt, trẻ em, và trẻ em đặc biệt
+  // Kiểm tra các trường bắt buộc
+  if (!title || !description || !price || !location || !duration || !tourType || !destination) {
+    return res.status(400).send('Missing required fields.');
+  }
+
+  // Kiểm tra giá và thời gian hợp lệ
+  if (price <= 0 || duration < 1) {
+    return res.status(400).send('Invalid price or duration.');
+  }
+
   const specialAdultPrice = price * SPECIAL_DAY_MULTIPLIER;
   const childPrice = price * CHILD_MULTIPLIER;
   const specialChildPrice = childPrice * SPECIAL_DAY_MULTIPLIER;
 
-  // Lưu trữ hình ảnh và video 
-  const images = req.files?.['images'] ? req.files['images'].map(file => file.path) : [];
-  const videos = req.files?.['videos'] ? req.files['videos'].map(file => file.path) : [];
+  // Xử lý lịch trình (schedules)
+  const tourSchedules = [];
+  for (let i = 0; i < duration; i++) {
+    const activity = schedules[i] || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
+    tourSchedules.push({
+      day: i + 1,
+      activity: activity,
+    });
+  }
 
   try {
-    const tour = await Tour.findById(tourID);
-    if (!tour) {
-      return res.status(404).send('Tour not found.');
-    }
-    // Kiểm tra quyền truy cập của partner
-    if (tour.partner.toString() !== partnerId.toString()) {
-      return res.status(403).send('You are not authorized to update this tour.');
-    }
-    // Cập nhật thông tin tour
-    tour.title = title;
-    tour.description = description;
-    tour.price = price;
-    tour.specialAdultPrice = specialAdultPrice;
-    tour.childPrice = childPrice;
-    tour.specialChildPrice = specialChildPrice;
-    tour.location = location;
-    tour.duration = duration;
-    tour.availableSpots = availableSpots;
-    tour.tourType = tourType;
-    tour.destination = destination;
-    tour.partner = partnerId;
-    tour.isDisabled = req.body.isDisabled ? true : false;
+    // Log để kiểm tra ID tour và partner ID
+    console.log("tourID:", tourID); // Correct the variable name
+    console.log("partnerId:", partnerId);
 
-    if (images.length > 0) {
-      tour.images = images;
+    // Tìm và cập nhật tour nếu tồn tại và thuộc về partner
+    const updatedTour = await Tour.findOneAndUpdate(
+      { _id: tourID, partner: partnerId },  // Kiểm tra ID và partner
+      {
+        title,
+        description,
+        price,
+        location,
+        duration,
+        partner: partnerId,
+        tourType,
+        destination,
+        isDisabled: isDisabled ? true : false,
+        specialAdultPrice,
+        childPrice,
+        specialChildPrice,
+        schedules: tourSchedules, // Cập nhật lịch trình  
+      },
+      { new: true } // Trả về document đã cập nhật
+    );
+
+    // Nếu không tìm thấy tour hoặc không thuộc partner này
+    if (!updatedTour) {
+      console.log("Tour not found or not owned by this partner.");
+      return res.status(404).send('Tour not found or you are not authorized to update this tour.');
     }
-    if (videos.length > 0) {
-      tour.videos = videos;
-    }
-    await tour.save();
+
     res.redirect('/partner/tours/list');
   } catch (error) {
     console.error('Error updating tour:', error);
     res.status(500).send('Error updating tour');
   }
 };
+
 
 // Gửi yêu cầu phê duyệt cho admin
 const requestApproval = async (req, res) => {
@@ -195,8 +254,8 @@ const requestApproval = async (req, res) => {
       return res.status(403).send('You are not authorized to request approval for this tour.');
     }
 
-    tour.isApproved = false; // Mặc định là chưa được phê duyệt
-    tour.approvalRequested = true; // Đánh dấu yêu cầu phê duyệt
+    tour.isApproved = false;
+    tour.approvalRequested = true;
     await tour.save();
 
     res.render('Tours/Partner/requestTour', { tour });
@@ -216,7 +275,7 @@ const requestDeleteTour = async (req, res) => {
     }
 
     tour.isDeleted = true;
-    tour.deletionRequested = true; 
+    tour.deletionRequested = true;
     await tour.save();
 
     res.render('Tours/Partner/requestTour', { tour });
@@ -236,17 +295,13 @@ const toggleTourStatus = async (req, res) => {
     }
 
     if (tour.partner.toString() !== req.user._id.toString()) {
-      return res.status(403).send('You are not authorized to change the status of this tour.');
+      return res.status(403).send('You are not authorized to change this tour\'s status.');
     }
 
-    // Thêm kiểm tra xem tour đã được phê duyệt chưa
-    if (!tour.isApproved) {
-      return res.status(403).send('You cannot change the status of an unapproved tour.');
-    }
-
-    tour.isDisabled = !tour.isDisabled; 
+    tour.isDisabled = !tour.isDisabled;
     await tour.save();
-    res.render('Tours/Partner/requestTour', { tour });
+
+    res.redirect('/partner/tours/list');
   } catch (error) {
     console.error('Error toggling tour status:', error);
     res.status(500).send('Error toggling tour status');
@@ -256,12 +311,10 @@ const toggleTourStatus = async (req, res) => {
 module.exports = {
   getTourList,
   getCreateTour,
-  getUpdateTour,
   postCreateTour,
+  getUpdateTour,
   postUpdateTour,
   requestApproval,
   requestDeleteTour,
   toggleTourStatus,
 };
-
-

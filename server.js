@@ -16,7 +16,6 @@ mongoose.set('strictQuery', false);
 const toursRouter = require('./src/routes/tourRoutes');
 const tourTypeRoutes = require('./src/routes/tourTypeRoutes');
 const destinationsRoutes = require('./src/routes/destinationRoutes');
-const scheduleRoutes = require('./src/routes/ScheduleRoutes');
 const authRoutes = require("./src/routes/authRoutes");
 const orderRoutes = require("./src/routes/orderRoutes");
 const favoriteTourRoutes = require("./src/routes/favtoursRoutes");
@@ -24,10 +23,11 @@ const favoriteTourRoutes = require("./src/routes/favtoursRoutes");
 const toursRoutesAdmin = require('./src/routes/Admin/tourRoutes');
 const tourTypeRoutesAdmin = require('./src/routes/Admin/tourTypeRoutes');
 const destinationsRoutesAdmin = require('./src/routes/Admin/destinationRoutes');
-const scheduleRoutesAdmin = require('./src/routes/Admin/scheduleRoutes');
 const orderRoutesAdmin = require('./src/routes/Admin/orderRoutes');
 const revenueRoutes = require("./src/routes/Admin/revenueRoutes"); 
 const userRoute = require('./src/routes/Admin/userRoutes')
+
+
 const partnertourroutes = require("./src/routes/Partner/partnerToursRoutes"); 
 const partnerOrderRoutes = require("./src/routes/Partner/partnerOrderRoutes"); 
 
@@ -85,7 +85,6 @@ app.use("/api/auth", authRoutes);
 app.use('/tours', toursRouter);
 app.use('/tourtypes', tourTypeRoutes);
 app.use('/destinations', destinationsRoutes);
-app.use('/schedules', scheduleRoutes);
 app.use('/orders', orderRoutes);
 app.use("/favorite-tours", favoriteTourRoutes);
 
@@ -93,7 +92,6 @@ app.use("/favorite-tours", favoriteTourRoutes);
 app.use('/admin/tours', toursRoutesAdmin);
 app.use('/admin/tourtypes', tourTypeRoutesAdmin);
 app.use('/admin/destinations', destinationsRoutesAdmin);
-app.use('/admin/schedules', scheduleRoutesAdmin);
 app.use('/admin/orders', orderRoutesAdmin );
 app.use("/admin/revenue", revenueRoutes);
 app.use('/admin',userRoute)

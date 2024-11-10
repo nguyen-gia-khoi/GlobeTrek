@@ -63,7 +63,7 @@
         <tbody>
           <% orders.forEach(order => { %>
             <tr>
-              <td><%= order._id %></td>
+              <td><%= order.id %></td>
               <td><%= order.user.email %></td>
               <td>
                 <% if (order.tour) { %>

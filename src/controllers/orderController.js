@@ -4,14 +4,54 @@ const User = require('../models/User');
 const { Tour } = require('../models/Tour');
 const { sendOrderConfirmationEmail } = require('../service/mailtrap/email');
 
-// Tạo đơn hàng
+const updateAvailabilityOnCreateOrder = async (tourId, bookingDate, adultCount, childCount) => {
+  const tour = await Tour.findById(tourId);
+
+  if (!tour) {
+    throw new Error("Tour not found");
+  }
+  const bookingDateISO = new Date(bookingDate).toISOString().slice(0, 10);
+  const selectedAvailability = tour.availabilities.find(avail => {
+    const availDateISO = new Date(avail.date).toISOString().slice(0, 10);
+    return availDateISO === bookingDateISO; 
+  });
+  if (!selectedAvailability) {
+    throw new Error("No availability found for the selected date");
+  }
+  const totalSeatsRequested = adultCount + childCount;
+  if (selectedAvailability.availableSeats < totalSeatsRequested) {
+    throw new Error("Not enough available spots for the selected date");
+  }
+
+  // giảm số lượng chỗ trống cho ngày đã chọn
+  selectedAvailability.availableSeats -= totalSeatsRequested;
+  await tour.save();
+};
+
+const updateAvailabilityOnCancelOrder = async (tourId, bookingDate, adultCount, childCount) => {
+  const tour = await Tour.findById(tourId);
+
+  if (!tour) {
+    throw new Error("Tour not found");
+  }
+
+  const availability = tour.availabilities.find(avail => 
+    new Date(avail.date).toLocaleDateString() === new Date(bookingDate).toLocaleDateString()
+  );
+  if (!availability) {
+    throw new Error("No availability found for the selected date");
+  }
+  // Tăng số lượng chỗ trống khi hủy đơn hàng
+  availability.availableSeats += adultCount + childCount;
+  await tour.save();
+};
 const createOrder = async (req, res) => {
   try {
     const {
       totalValue,
       customerInfo,
       passengerInfo,
-      tour, // ID của Tour
+      tour, 
       adultPrice,
       childPrice,
       adultCount,
@@ -27,6 +67,7 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "At least one ticket must be purchased" });
     }
 
+    await updateAvailabilityOnCreateOrder(tour, bookingDate, adultCount, childCount);
     // Tạo đơn hàng mới
     const newOrder = new Order({
       orderDate: new Date(),
@@ -43,20 +84,12 @@ const createOrder = async (req, res) => {
       status: 'pending',
       paymentMethod,
     });
-
     const savedOrder = await newOrder.save();
-
     // Cập nhật lịch sử đơn hàng của người dùng
     await User.updateOne(
       { _id: req.user._id },
       { $push: { orderHistory: savedOrder._id } }
     );
-
-    await Tour.updateOne(
-      { _id: tour }, // Điều kiện tìm kiếm theo ID
-      { $inc: { availableSpots: -(adultCount + childCount) } } // Giảm số lượng availableSpots
-    );
-
     // Chuyển trạng thái sau 1 phút, nếu chưa thanh toán sẽ tự động hủy sau 10 phút
     setTimeout(async () => {
       const orderToProcess = await Order.findById(savedOrder._id);
@@ -70,11 +103,15 @@ const createOrder = async (req, res) => {
           if (orderToCancel && orderToCancel.status === 'processing') {
             orderToCancel.status = 'canceled';
             await orderToCancel.save();
+            
+            // Tăng lại số lượng chỗ trống trong Tour nếu đơn hàng bị hủy
+            await updateAvailabilityOnCancelOrder(tour, orderToCancel.bookingDate, orderToCancel.adultCount, orderToCancel.childCount);
+
             console.log(`Order ${savedOrder._id} was automatically canceled.`);
           }
         }, 10 * 60 * 1000); // 10 phút
       }
-    }, 1 * 15 * 1000); // 1 phút
+    }, 1 * 60 * 1000); // 1 phút
 
     res.status(201).json({ message: 'Order created successfully', order: savedOrder });
   } catch (error) {
@@ -90,7 +127,7 @@ const getUserOrders = async (req, res) => {
 
     const user = await User.findById(userId).populate({
       path: 'orderHistory',
-      populate: { path: 'tour' } // Populate Tour trong mỗi đơn hàng
+      populate: { path: 'tour' }
     });
 
     if (!user) {
@@ -123,7 +160,7 @@ const processPayment = async (req, res) => {
   try {
     const { orderID, status } = req.body;
 
-    const order = await Order.findById(orderID).populate('user'); // Populate để lấy đầy đủ thông tin người dùng
+    const order = await Order.findById(orderID).populate('user');
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -134,7 +171,7 @@ const processPayment = async (req, res) => {
     
       // Gửi email xác nhận
       const tour = await Tour.findById(order.tour);
-      const email = order.user.email ; // Lấy email từ đối tượng user đã populate
+      const email = order.user.email;
     
       const emailContent = {
         orderId: order._id,
@@ -153,16 +190,20 @@ const processPayment = async (req, res) => {
     
       res.status(200).json({ message: 'Payment successful', order });
     } else {
+      // Hoàn lại số lượng chỗ trống nếu thanh toán thất bại
+      await Tour.updateOne(
+        { _id: order.tour },
+        { $inc: { availableSpots: order.adultCount + order.childCount } }
+      );
+
       res.status(400).json({ message: 'Payment failed' });
-    }    
+    }
   } catch (error) {
     console.log("Error in processPayment", error.message);
     res.status(500).json({ message: 'Error processing payment', error });
   }
 };
 
-
-// Hủy đơn hàng
 const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.body;
@@ -176,11 +217,10 @@ const cancelOrder = async (req, res) => {
       return res.status(400).json({ message: "Only pending orders can be canceled" });
     }
 
-    // Tăng lại số lượng availableSpots trong Tour
-    await Tour.findByIdAndUpdate(order.tour, {
-      $inc: { availableSpots: order.adultCount + order.childCount }
-    });
+    // Cập nhật lại số lượng chỗ trống trong Tour khi hủy đơn hàng
+    await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
 
+    // Cập nhật trạng thái đơn hàng thành "canceled"
     order.status = 'canceled';
     await order.save();
     res.status(200).json({ message: 'Order canceled successfully', order });
@@ -189,7 +229,6 @@ const cancelOrder = async (req, res) => {
     res.status(500).json({ message: 'Error canceling order', error });
   }
 };
-
 module.exports = {
   createOrder,
   getUserOrders,

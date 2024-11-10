@@ -7,33 +7,27 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     .login-container {
-      display: flex;
       max-width: 800px;
-      margin: 50px auto;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      height: 400px; /* Set height for vertical alignment */
     }
     .left-section {
-      background-color: #4caf50;
       color: #fff;
-      padding: 2rem;
       display: flex;
       align-items: center;
       justify-content: center;
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+    .left-section img {
+      max-width: 80%;
+      height: auto;
+      object-fit: contain;
+      border-radius: 8px;
     }
     .right-section {
       padding: 2rem;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center; /* Center the form vertically */
-    }
-    .form-container {
-      width: 100%; /* Full width for responsiveness */
-      max-width: 400px; /* Limit the form width */
     }
     .btn-green {
       background-color: #4caf50;
@@ -48,34 +42,51 @@
     }
   </style>
 </head>
-<body class="bg-light">
-  <div class="login-container">
-    <!-- Left Section for Logo or Branding -->
-    <div class="left-section col-5 text-center">
-      <h2>Your Logo Here</h2>
-    </div>
-
-    <!-- Right Section for Login Form -->
-    <div class="right-section col-8">
-      <div class="form-container">
-        <h2 class="mb-4 text-center" style="color: #4caf50;">Login</h2>
-        <form action="/api/auth/signin" method="POST">
-          <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" class="form-control" required>
+<body class="bg-light d-flex justify-content-center align-items-center vh-100">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        <div class="login-container row">
+          <!-- Left Section for Logo or Branding -->
+          <div class="left-section col-md-5 d-none d-md-flex">
+            <img src="/images/logo.jpg" alt="Logo" />
           </div>
-          <div class="form-group">
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" class="form-control" required>
-          </div>
-          <button type="submit" class="btn btn-green btn-block mt-4">Đăng nhập</button>
-        </form>
-        <!-- Change type to button and add an onclick event -->
-        <button type="button" class="btn btn-green btn-block mt-4" onclick="window.location.href='/api/auth/register'">Đăng ký</button>
 
-        <% if (message) { %>
-          <p class="error-message mt-3 text-center"><%= message %></p>
-        <% } %>
+          <!-- Right Section for Login Form -->
+          <div class="right-section col-md-7 col-12">
+            <div class="form-container">
+              <h2 class="mb-4 text-center" style="
+              font-family: 'Poppins', sans-serif;
+              color: #4caf50;
+              font-size: 2.5rem;
+              font-weight: bold;
+              letter-spacing: 1px;
+              background: linear-gradient(45deg, #baf1bc, #81c784);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+            ">
+          Login
+        </h2>
+              <form action="/api/auth/signin" method="POST">
+                <div class="form-group">
+                  <label for="email">Email:</label>
+                  <input type="email" id="email" name="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label for="password">Password:</label>
+                  <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-green btn-block mt-4">Đăng nhập</button>
+              </form>
+              <button type="button" class="btn btn-green btn-block mt-4" onclick="window.location.href='/api/auth/register'">Đăng ký</button>
+
+              <% if (message) { %>
+                <p class="error-message mt-3 text-center"><%= message %></p>
+              <% } %>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
