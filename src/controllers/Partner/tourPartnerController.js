@@ -30,20 +30,35 @@ const getTourList = async (req, res) => {
       return res.status(401).send('Unauthorized');
     }
 
+    // Pagination logic
+    const page = parseInt(req.query.page) || 1; // Get the current page from query or default to 1
+    const limit = 4; // Number of tours per page
+    const skip = (page - 1) * limit;
+
     const tours = await Tour.find({ partner: partnerId })
       .populate('tourType')
-      .populate('destination');
+      .populate('destination')
+      .skip(skip)
+      .limit(limit);
+
+    const totalTours = await Tour.countDocuments({ partner: partnerId }); // Get the total number of tours for pagination
+    const totalPages = Math.ceil(totalTours / limit); // Calculate the total number of pages
 
     if (!tours || tours.length === 0) {
-      return res.render('Tours/Partner/list', { tours: [] });
+      return res.render('Tours/Partner/list', { tours: [], currentPage: page, totalPages: totalPages });
     }
 
-    res.render('Tours/Partner/list', { tours });
+    res.render('Tours/Partner/list', {
+      tours,
+      currentPage: page,
+      totalPages: totalPages
+    });
   } catch (error) {
     console.error('Error fetching tour list:', error);
     res.status(500).send('Error fetching tour list');
   }
 };
+
 
 // Tạo tour mới
 const getCreateTour = async (req, res) => {

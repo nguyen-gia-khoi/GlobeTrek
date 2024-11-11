@@ -13,10 +13,6 @@ router.get('/view', renderOrdersPage);
 
 // Lấy tất cả đơn hàng
 router.get('/', getAllOrders);
-
-// Lấy đơn hàng theo trang (phân trang)
-router.get('/paginated', getPaginatedOrder);
-
 // Cập nhật trạng thái đơn hàng
 router.put('/:orderId/status', updateOrderStatus);
 
