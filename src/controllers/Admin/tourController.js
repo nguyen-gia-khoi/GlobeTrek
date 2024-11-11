@@ -5,8 +5,19 @@ const Order = require('../../models/Order');
 // GET: Hiển thị danh sách tour (Admin)
 const getTours = async (req, res) => {
   try {
-    const tours = await Tour.find().populate('partner', 'name email')
-    res.render('Tours/Admin/list', { tours });
+    const page = parseInt(req.query.page) || 1;  // Trang hiện tại (mặc định là trang 1)
+    const limit = 10;  // Số lượng tour hiển thị mỗi trang
+    const skip = (page - 1) * limit;  // Tính số lượng tour cần bỏ qua
+
+    const tours = await Tour.find().skip(skip).limit(limit).populate('partner', 'name email');
+    const totalTours = await Tour.countDocuments();  // Tổng số tour trong DB
+    const totalPages = Math.ceil(totalTours / limit);  // Tổng số trang
+
+    res.render('Tours/Admin/list', {
+      tours,
+      currentPage: page,
+      totalPages,
+    });
   } catch (error) {
     console.error('Lỗi khi lấy danh sách tour:', error);
     res.status(500).send('Lỗi khi lấy danh sách tour');

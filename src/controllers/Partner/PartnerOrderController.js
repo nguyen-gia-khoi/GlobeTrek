@@ -48,7 +48,9 @@ const renderPartnerOrdersPage = async (req, res) => {
     if (!token) {
       return res.redirect('/login'); 
     }
-
+    const page = parseInt(req.query.page) || 1; // Mặc định là trang 1
+    const limit = parseInt(req.query.limit) || 10; // Mặc định là 10 đơn hàng mỗi trang
+    const skip = (page - 1) * limit;
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const partnerId = decoded.userId;
 
@@ -60,13 +62,26 @@ const renderPartnerOrdersPage = async (req, res) => {
     const partnerTours = await Tour.find({ partner: partnerId }).select('_id');
     const tourIds = partnerTours.map(tour => tour._id);
 
+ // Tính tổng số đơn hàng của đối tác
+ const totalOrders = await Order.countDocuments({
+  tour: { $in: tourIds }
+});
+
+// Tính số trang
+const totalPages = Math.ceil(totalOrders / limit);
+
+
     const orders = await Order.find({
       tour: { $in: tourIds }
     })
+    .skip(skip)
+    .limit(limit)
     .populate('tour', 'title')
     .populate('user', 'email')
     .exec();  
-    res.render('Order/partnerOrders', { orders });
+    res.render('Order/partnerOrders', {  orders,
+      totalPages,
+      currentPage: page });
   } catch (error) {
     console.error("Error in renderPartnerOrdersPage:", error);
     res.status(500).send('Server error');
