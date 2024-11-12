@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken"); // Add this import
+const axios = require("axios");
+
 const {
         sendVerificationEmail,
         sendPasswordResetEmail,
@@ -8,7 +10,7 @@ const {
 const redis = require("../config/redis")
 const crypto = require("crypto");
 const { PointerStrategy } = require("sso-pointer");
-const pointer = new PointerStrategy("123");
+const pointer = new PointerStrategy({clientId : process.env.POINTER_CLIENT_ID,clientSecret : process.env.POINTER_CLIENT_SECRET});
 const {
     generateToken,
     storeRefreshToken,
@@ -103,76 +105,6 @@ const verfiaccount = async(req,res)=>{
         res.status(500).json({ message: "Server Error!", error: error.message });
     }
 }
-
-// const signin = async (req, res) => {
-//   const { email, password } = req.body;
-//   const isClient = req.query.client === "true";
-
-//   try {
-//     const user = await User.findOne({ email });
-//     if (user && (await user.comparePassword(password))) {
-//       const { accessToken, refreshToken } = generateToken(user._id);
-//       if (isClient) {
-//         // Set refresh token in HTTP-only cookie
-//         res.cookie("refreshToken", refreshToken, {
-//           httpOnly: true,
-//           sameSite: "strict",
-//           maxAge: 7 * 24 * 60 * 60 * 1000,
-//           secure: process.env.NODE_ENV === "production",
-//         });
-//         await storeRefreshToken(user._id, refreshToken);
-//         const { password, ...others } = user._doc;
-//         res.status(200).json({ ...others, accessToken });
-//       } else {
-//         if (user.role === "admin") {
-//           // Set access token in a cookie
-//           const AdminaccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, {
-//             expiresIn: "1d",
-//           });
-//           res.cookie("AdminaccessToken", AdminaccessToken, {
-//             httpOnly: true,
-//             sameSite: "strict",
-//             maxAge: 1 * 60 * 60 * 1000,
-//             secure: process.env.NODE_ENV === "production",
-//           });
-          
-//           // Redirect to home page after successful login
-//           return res.redirect('/home'); // Use redirect instead of render
-//         } 
-//         else if(user.role === "partner"){
-
-//           const PartnerccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, {
-//             expiresIn: "1d",
-//           });
-//           res.cookie("PartnerccessToken", PartnerccessToken, {
-//             httpOnly: true,
-//             sameSite: "strict",
-//             maxAge: 1 * 60 * 60 * 1000,
-//             secure: process.env.NODE_ENV === "production",
-//           });
-          
-//           return res.redirect('/home'); // Use redirect instead of render
-
-//         }
-//       }
-//     } else {
-//       // Handle invalid credentials
-//       const message = "Invalid email or password";
-//       if (isClient) {
-//         res.status(400).json({ message });
-//       } else {
-//         res.render('Authen/login', { message }); // Show alert on the EJS login page
-//       }
-//     }
-//   } catch (error) {
-//     const message = "Server Error!";
-//     if (isClient) {
-//       res.status(500).json({ message, error: error.message });
-//     } else {
-//       res.render('Authen/login', { message });
-//     }
-//   }
-// };
 
 const signin = async (req, res) => {
   const { email, password } = req.body;
@@ -394,7 +326,7 @@ const callback = async (req, res) => {
     const accessTokenData = await pointer.getAccessToken(code);
     console.log("Access Token Data:", accessTokenData);
 
-    const { id: userId, email, accessToken } = accessTokenData;
+    const { id: userId, email } = accessTokenData;
 
     if (!userId || !email) {
       return res.status(400).json({ message: "User ID and email are required" });
@@ -437,6 +369,8 @@ const callback = async (req, res) => {
     return res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
+
 const getLoginPage = (req, res) => {
   const message = req.query.message || ''; // Retrieve any error message from the query params
   res.render('Authen/Login', { message });
