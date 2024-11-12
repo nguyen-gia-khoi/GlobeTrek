@@ -126,8 +126,10 @@ const createOrder = async (req, res) => {
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.user._id;
+    const currentDate = new Date().toISOString().slice(0, 10); 
 
     const user = await User.findById(userId).populate({
+      match: { bookingDate: { $gte: currentDate } }, 
       path: 'orderHistory',
       populate: { path: 'tour' }
     });

@@ -46,18 +46,6 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-const renderOrdersPage = async (req, res) => {
-  try {
-    const orders = await Order.find()
-      .populate("user", "email")  // Chỉ lấy email
-      .populate("tour", "title");  // Chỉ lấy tiêu đề
-
-    res.render('Order/orders', { orders });
-  } catch (error) {
-    console.log("Error fetching orders for EJS", error.message);
-    res.status(500).send("Server Error");
-  }
-};
 // Cập nhật trạng thái đơn hàng
 const updateOrderStatus = async (req, res) => {
   try {
@@ -100,25 +88,36 @@ const deleteOrder = async (req, res) => {
   }
 };
 
-// Lấy danh sách đơn hàng phân trang
-const getPaginatedOrder = async (req, res) => {
+const renderOrdersPage = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
     
+    // Tính tổng số đơn hàng
+    const totalOrders = await Order.countDocuments();
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    // Lấy danh sách đơn hàng phân trang
     const orders = await Order.find()
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .populate("user", "email")
+      .populate("tour", "title");
 
-    res.status(200).json({ orders });
+    res.status(200).json({
+      orders,
+      totalPages,
+      totalOrders,
+      currentPage: parseInt(page),
+    });
   } catch (error) {
     console.log("Error in getPaginatedOrder controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+
 module.exports = {
   renderOrdersPage,
-  getPaginatedOrder,
   getAllOrders,
   updateOrderStatus,
   deleteOrder,

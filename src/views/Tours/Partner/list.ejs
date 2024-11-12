@@ -84,7 +84,24 @@
                 <% } %>
             </tbody>
         </table>
-    </div>
+
+   <!-- Pagination Controls -->
+<div class="pagination d-flex justify-content-center align-items-center mt-4">
+    <% if (currentPage > 1) { %>
+        <a href="?page=1" class="btn btn-outline-primary mx-2">Đầu</a>
+        <a href="?page=<%= currentPage - 1 %>" class="btn btn-outline-primary mx-2">Trước</a>
+    <% } %>
+
+    <span class="d-flex align-items-center">
+        <span class="font-weight-bold">Trang <%= currentPage %> / <%= totalPages %></span>
+    </span>
+
+    <% if (currentPage < totalPages) { %>
+        <a href="?page=<%= currentPage + 1 %>" class="btn btn-outline-primary mx-2">Tiếp theo</a>
+        <a href="?page=<%= totalPages %>" class="btn btn-outline-primary mx-2">Cuối</a>
+    <% } %>
+</div>
+
 
     <script>
         // Hàm để hiển thị thêm lịch trình
