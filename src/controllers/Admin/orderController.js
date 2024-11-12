@@ -116,7 +116,6 @@ const renderOrdersPage = async (req, res) => {
   }
 };
 
-
 module.exports = {
   renderOrdersPage,
   getAllOrders,

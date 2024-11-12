@@ -504,8 +504,16 @@ const gePartners = async (req, res) => {
 };
 const getUser = async (req, res) => {
   try {
-    const user = await User.find({ role: 'user'});
-    res.render('User/viewUser', { pageTitle: 'viewUser',user });
+    const users = await User.find({ role: 'user' });
+    const BAN_THRESHOLD = 100; // Set the cancellation count threshold for auto-ban
+    for (let currentUser of users) {
+      // Check if the user meets the ban threshold and is not already banned
+      if (currentUser.cancellationCount >= BAN_THRESHOLD && currentUser.UserStatus == 'ban') {
+        // If not banned, automatically ban the user
+        await User.findByIdAndUpdate(currentUser._id, { UserStatus: 'ban' });
+      }
+    }
+    res.render('User/viewUser', { pageTitle: 'viewUser',users });
   } catch (error) {
     console.error("Error fetching unverified partners:", error);
     res.status(500).send("Server Error");

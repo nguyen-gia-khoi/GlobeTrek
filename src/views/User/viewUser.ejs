@@ -17,29 +17,29 @@
           <th>User Name</th>
           <th>User Email</th>
           <th>Status</th>
+          <th>Cancellation Count</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody>
-        <% user.forEach(user => { %>
+        <% users.forEach(user => { %>
           <tr>
             <td><%= user.name %></td>
             <td><%= user.email %></td>
             <td><span class="badge badge-success"><%= user.UserStatus %></span></td>
+            <td><%= user.cancellationCount || 0 %></td> <!-- Display cancellationCount, defaulting to 0 if undefined -->
             <td>
               <% if (user.UserStatus === 'ban') { %>
-                <!-- If the user is banned, show the Unban button -->
                 <form action="/admin/banAndUnban" method="POST" class="d-inline">
-                    <input type="hidden" name="userId" value="<%= user._id %>">
-                    <input type="hidden" name="action" value="unban">
-                    <button type="submit" class="btn btn-success btn-sm">Unban</button>
+                  <input type="hidden" name="userId" value="<%= user._id %>">
+                  <input type="hidden" name="action" value="unban">
+                  <button type="submit" class="btn btn-success btn-sm">Unban</button>
                 </form>
               <% } else { %>
-                <!-- If the user is unbanned, show the Ban button -->
                 <form action="/admin/banAndUnban" method="POST" class="d-inline">
-                    <input type="hidden" name="userId" value="<%= user._id %>">
-                    <input type="hidden" name="action" value="ban">
-                    <button type="submit" class="btn btn-danger btn-sm">Ban</button>
+                  <input type="hidden" name="userId" value="<%= user._id %>">
+                  <input type="hidden" name="action" value="ban">
+                  <button type="submit" class="btn btn-danger btn-sm">Ban</button>
                 </form>
               <% } %>
             </td>
