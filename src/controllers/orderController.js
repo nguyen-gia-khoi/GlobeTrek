@@ -108,11 +108,13 @@ const createOrder = async (req, res) => {
             await updateAvailabilityOnCancelOrder(tour, orderToCancel.bookingDate, orderToCancel.adultCount, orderToCancel.childCount);
 
             console.log(`Order ${savedOrder._id} was automatically canceled.`);
+            await User.findByIdAndUpdate(orderToCancel.user, { $inc: { cancellationCount: 1 } }, { new: true });
+            console.log(`Order ${savedOrder._id} was automatically canceled and cancellation count updated.`);
           }
-        }, 10 * 60 * 1000); // 10 phút
+        }, 1 * 60 * 1000); // 10 phút
       }
     }, 1 * 60 * 1000); // 1 phút
-
+   
     res.status(201).json({ message: 'Order created successfully', order: savedOrder });
   } catch (error) {
     console.log("Error in createOrder controller", error.message);
@@ -220,9 +222,12 @@ const cancelOrder = async (req, res) => {
     // Cập nhật lại số lượng chỗ trống trong Tour khi hủy đơn hàng
     await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
 
+    await User.findByIdAndUpdate(order.user, { $inc: { cancellationCount: 1 } }, { new: true });
+
     // Cập nhật trạng thái đơn hàng thành "canceled"
     order.status = 'canceled';
     await order.save();
+   
     res.status(200).json({ message: 'Order canceled successfully', order });
   } catch (error) {
     console.log("Error in cancelOrder", error.message);

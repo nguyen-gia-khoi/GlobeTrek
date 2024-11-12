@@ -58,6 +58,10 @@ const UserSchema = new Schema({
       ref: "Order",
     },
   ],
+  cancellationCount: {
+    type: Number,
+    default: 0,
+  },
   resetPasswordTOken: String,
   resetPasswordExpireAt: Date,
   verificationToken: String,
