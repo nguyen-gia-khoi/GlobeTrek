@@ -505,7 +505,7 @@ const gePartners = async (req, res) => {
 const getUser = async (req, res) => {
   try {
     const users = await User.find({ role: 'user' });
-    const BAN_THRESHOLD = 2; // Set the cancellation count threshold for auto-ban
+    const BAN_THRESHOLD = 100; // Set the cancellation count threshold for auto-ban
     for (let currentUser of users) {
       // Check if the user meets the ban threshold and is not already banned
       if (currentUser.cancellationCount >= BAN_THRESHOLD && currentUser.UserStatus == 'ban') {
