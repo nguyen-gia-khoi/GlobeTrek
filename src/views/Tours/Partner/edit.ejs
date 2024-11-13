@@ -9,92 +9,92 @@
 <body>
     <%- include('../../DashboardPN', { pageTitle: 'Cập Nhật Tour' }) %>  
 
-<div class="container mt-4">
-    <h2 class="text-center">Cập Nhật Tour</h2>
+    <div class="container mt-4">
+        <h2 class="text-center">Cập Nhật Tour</h2>
 
-    <form action="/partner/tours/edit/<%= tour._id %>" method="POST" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="title" class="form-label">Tiêu đề Tour</label>
-            <input type="text" class="form-control" id="title" name="title" value="<%= tour.title %>" required>
-        </div>
+        <form action="/partner/tours/edit/<%= tour._id %>" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="title" class="form-label">Tiêu đề Tour</label>
+                <input type="text" class="form-control" id="title" name="title" value="<%= tour.title %>" required>
+            </div>
 
-        <div class="mb-3">
-            <label for="description" class="form-label">Mô tả Tour</label>
-            <textarea class="form-control" id="description" name="description" rows="4" required><%= tour.description %></textarea>
-        </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Mô tả Tour</label>
+                <textarea class="form-control" id="description" name="description" rows="4" required><%= tour.description %></textarea>
+            </div>
 
-        <div class="mb-3">
-            <label for="price" class="form-label">Giá Tour (VND)</label>
-            <input type="number" class="form-control" id="price" name="price" value="<%= tour.price %>" required>
-        </div>
+            <div class="mb-3">
+                <label for="price" class="form-label">Giá Tour (VND)</label>
+                <input type="number" class="form-control" id="price" name="price" value="<%= tour.price %>" required>
+            </div>
 
-        <div class="mb-3">
-            <label for="location" class="form-label">Địa điểm</label>
-            <input type="text" class="form-control" id="location" name="location" value="<%= tour.location %>" required>
-        </div>
+            <div class="mb-3">
+                <label for="location" class="form-label">Địa điểm</label>
+                <input type="text" class="form-control" id="location" name="location" value="<%= tour.location %>" required>
+            </div>
 
-        <div class="mb-3">
-            <label for="duration" class="form-label">Thời gian (Số ngày)</label>
-            <input type="number" class="form-control" id="duration" name="duration" value="<%= tour.duration %>" required min="1" oninput="generateScheduleFields()">
-        </div>
+            <div class="mb-3">
+                <label for="duration" class="form-label">Thời gian (Số ngày)</label>
+                <input type="number" class="form-control" id="duration" name="duration" value="<%= tour.duration %>" required min="1" oninput="generateScheduleFields()">
+            </div>
 
-        <div class="mb-3">
-            <label for="tourType" class="form-label">Loại Tour</label>
-            <select class="form-control" id="tourType" name="tourType" required>
-                <% tourTypes.forEach(function(type) { %>
-                    <option value="<%= type._id %>" <%= type._id == tour.tourType ? 'selected' : '' %>><%= type.name %></option>
-                <% }) %>
-            </select>
-        </div>
+            <div class="mb-3">
+                <label for="tourType" class="form-label">Loại Tour</label>
+                <select class="form-control" id="tourType" name="tourType" required>
+                    <% tourTypes.forEach(function(type) { %>
+                        <option value="<%= type._id %>" <%= type._id == tour.tourType ? 'selected' : '' %>><%= type.name %></option>
+                    <% }) %>
+                </select>
+            </div>
 
-        <div class="mb-3">
-            <label for="destination" class="form-label">Địa điểm Tour</label>
-            <select class="form-control" id="destination" name="destination" required>
-                <% destinations.forEach(function(dest) { %>
-                    <option value="<%= dest._id %>" <%= dest._id == tour.destination ? 'selected' : '' %>><%= dest.name %></option>
-                <% }) %>
-            </select>
-        </div>
+            <div class="mb-3">
+                <label for="destination" class="form-label">Địa điểm Tour</label>
+                <select class="form-control" id="destination" name="destination" required>
+                    <% destinations.forEach(function(dest) { %>
+                        <option value="<%= dest._id %>" <%= dest._id == tour.destination ? 'selected' : '' %>><%= dest.name %></option>
+                    <% }) %>
+                </select>
+            </div>
 
-        <div class="mb-3" id="scheduleFields"></div>
+            <div class="mb-3" id="scheduleFields"></div>
 
-        <div class="mb-3">
-            <label for="images" class="form-label">Hình ảnh (Chọn nhiều ảnh nếu cần)</label>
-            <input type="file" class="form-control" id="images" name="images" multiple>
-        </div>
+            <div class="mb-3">
+                <label for="images" class="form-label">Hình ảnh (Chọn nhiều ảnh nếu cần)</label>
+                <input type="file" class="form-control" id="images" name="images" multiple>
+            </div>
 
-        <div class="mb-3">
-            <label for="videos" class="form-label">Video</label>
-            <input type="file" class="form-control" id="videos" name="videos" multiple>
-        </div>
+            <div class="mb-3">
+                <label for="videos" class="form-label">Video</label>
+                <input type="file" class="form-control" id="videos" name="videos" multiple>
+            </div>
 
-        <button type="submit" class="btn btn-primary">Cập Nhật Tour</button>
-    </form>
-</div>
+            <button type="submit" class="btn btn-primary">Cập Nhật Tour</button>
+        </form>
+    </div>
 
-<script>
-    function generateScheduleFields() {
-        let duration = document.getElementById('duration').value;
-        let scheduleFieldsContainer = document.getElementById('scheduleFields');
-        scheduleFieldsContainer.innerHTML = '';
+    <script>
+        function generateScheduleFields() {
+            let duration = document.getElementById('duration').value;
+            let scheduleFieldsContainer = document.getElementById('scheduleFields');
+            scheduleFieldsContainer.innerHTML = '';
 
-        // Get schedules from EJS passed to the template
-        const schedules = <%- JSON.stringify(tour.schedules) %>;
+            // Get schedules from EJS passed to the template
+            const schedules = <%- JSON.stringify(tour.schedules) %>;
 
-        for (let i = 1; i <= duration; i++) {
-            let activity = schedules[i - 1] ? schedules[i - 1].activity : '';
-            let inputGroup = document.createElement('div');
-            inputGroup.classList.add('mb-3');
-            inputGroup.innerHTML = `
-                <label for="schedules_${i}" class="form-label">Ngày ${i}: Mô tả hoạt động</label>
-                <input type="text" class="form-control" name="schedules[]" value="${activity}" placeholder="Mô tả cho ngày ${i}">
-            `;
-            scheduleFieldsContainer.appendChild(inputGroup);
+            for (let i = 1; i <= duration; i++) {
+                let activity = schedules[i - 1] ? schedules[i - 1].activity : '';
+                let inputGroup = document.createElement('div');
+                inputGroup.classList.add('mb-3');
+                inputGroup.innerHTML = `
+                    <label for="schedules_${i}" class="form-label">Ngày ${i}: Mô tả hoạt động</label>
+                    <textarea class="form-control" name="schedules[${i}]" id="schedules_${i}">${activity}</textarea>
+                `;
+                scheduleFieldsContainer.appendChild(inputGroup);
+            }
         }
-    }
 
-    // Initialize schedule fields on page load
-    generateScheduleFields();
-</script>
+        // Initialize schedule fields on page load
+        generateScheduleFields();
+    </script>
 </body>
 </html>

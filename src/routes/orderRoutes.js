@@ -7,6 +7,7 @@ router.post('/api/create', authController.verifyToken, orderController.createOrd
 router.get('/api/list', authController.verifyToken, orderController.getUserOrders);
 router.post('/api/process-payment', orderController.processPayment);
 router.post('/api/cancel',   orderController.cancelOrder); 
+router.post('/api/cancel-paid-order', orderController.cancelPaidOrder);
 
 
 module.exports = router;

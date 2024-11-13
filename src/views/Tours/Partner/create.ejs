@@ -88,8 +88,9 @@
             let inputGroup = document.createElement('div');
             inputGroup.classList.add('mb-3');
             inputGroup.innerHTML = `
-                <label for="schedules_${i}" class="form-label">Ngày ${i}: Mô tả hoạt động</label>
-                <input type="text" class="form-control" name="schedules[${i}]" placeholder="Mô tả cho ngày ${i}">
+               <label for="schedules_${i}" class="form-label">Ngày ${i}: Mô tả hoạt động</label>
+<textarea class="form-control" name="schedules[${i}]" placeholder="Mô tả cho ngày ${i}"></textarea>
+
                
             `;
             scheduleFieldsContainer.appendChild(inputGroup);

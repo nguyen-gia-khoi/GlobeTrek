@@ -51,13 +51,13 @@ const getAddRequests = async (req, res) => {
   }
 };
 
-// GET: Hiển thị danh sách yêu cầu xóa tour từ partner (Admin)
 const getDeleteRequests = async (req, res) => {
   try {
     const deleteRequests = await Tour.find({ 
       deletionRequested: true, 
       isDeleted: false 
     }).populate('partner', 'name email'); 
+    console.log(deleteRequests); // Kiểm tra xem dữ liệu có trả về không
     res.render('Tours/Admin/deleteRequests', { deleteRequests });
   } catch (error) {
     console.error('Lỗi khi lấy danh sách yêu cầu xóa tour:', error);
