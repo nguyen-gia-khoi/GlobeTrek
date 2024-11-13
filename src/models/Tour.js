@@ -32,7 +32,7 @@ const tourSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: [true, 'Price is required'],
-    min: [0, 'Price must be a positive number'],
+    min: [100000, 'Price must be a positive number'],
   },
   specialAdultPrice: {
     type: Number,
@@ -116,7 +116,7 @@ const tourSchema = new mongoose.Schema({
       availableSeats: { 
         type: Number, 
         required: true, 
-        min: [0, 'Available seats must be a positive number'] 
+        min: [30, 'Available seats must be a positive number'] 
       } 
     }
   ]
@@ -125,7 +125,7 @@ const tourSchema = new mongoose.Schema({
 
 tourSchema.pre('save', function (next) {
   if (this.isModified('duration') && this.duration > 0) {
-    if (!this.schedules || this.schedules.length === 0) {  // Chỉ tạo mới lịch trình nếu chưa có lịch trình
+    if (!this.schedules || this.schedules.length === 0) {
       const schedules = [];
       for (let i = 1; i <= this.duration; i++) {
         const description = this.schedules && this.schedules[i - 1] && this.schedules[i - 1].description
@@ -133,7 +133,7 @@ tourSchema.pre('save', function (next) {
                             : `Ngày ${i}: Mô tả hoạt động trong ngày ${i}`; 
         schedules.push({
           day: i,
-          activity: description,  // Đảm bảo sử dụng tên trường trong schema
+          activity: description,  
         });
       }
       this.schedules = schedules;

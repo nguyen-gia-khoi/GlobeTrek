@@ -45,15 +45,16 @@
                                 %>
                                     <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
                                 <% }) %>
-                                <% if (tour.schedules.length > 5) { %>
+                                <% if (tour.schedules.length > 2) { %>
                                     <div id="schedules-<%= tour._id %>" class="additional-schedules" style="display:none;">
-                                        <% tour.schedules.slice(5).forEach((schedule) => { %>
+                                        <% tour.schedules.slice(2).forEach((schedule) => { %>
                                             <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
                                         <% }) %>
                                     </div>
                                     <div><a href="javascript:void(0);" onclick="toggleSchedules('<%= tour._id %>')">Xem thêm...</a></div>
                                 <% } %>
                             </td>
+                            
                             <td>
                                 <% 
                                     let displayedAvailabilities = tour.availabilities.slice(0, 2);

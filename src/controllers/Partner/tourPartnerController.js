@@ -97,7 +97,7 @@ const postCreateTour = async (req, res) => {
 
   // Xử lý lịch trình (schedules)
   const tourSchedules = [];
-  for (let i = 0; i < duration; i++) {
+  for (let i = 1; i <= duration; i++) {
     const activity = schedules[i] || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
     tourSchedules.push({
       day: i + 1,
@@ -210,7 +210,8 @@ const postUpdateTour = async (req, res) => {
   // Xử lý lịch trình (schedules)
   const tourSchedules = [];
   for (let i = 0; i < duration; i++) {
-    const activity = schedules[i] || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
+    const activity = (schedules && schedules[i]) || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
+
     tourSchedules.push({
       day: i + 1,
       activity: activity,
@@ -271,7 +272,7 @@ const requestApproval = async (req, res) => {
 
     tour.isApproved = false;
     tour.approvalRequested = true;
-    await tour.save();
+    await tour.save();  
 
     res.render('Tours/Partner/requestTour', { tour });
   } catch (error) {
@@ -286,7 +287,7 @@ const requestDeleteTour = async (req, res) => {
   try {
     const tour = await Tour.findById(tourID);
     if (!tour) {
-      return res.status(404).send('Tour not found.');
+      return res.status(404).send('Tour not found.'); 
     }
 
     tour.isDeleted = true;

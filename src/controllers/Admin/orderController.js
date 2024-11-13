@@ -104,14 +104,15 @@ const renderOrdersPage = async (req, res) => {
       .populate("user", "email")
       .populate("tour", "title");
 
-    res.status(200).json({
+    // Render the 'orders.ejs' template and pass the data correctly
+    res.render('Order/orders', {
       orders,
       totalPages,
       totalOrders,
       currentPage: parseInt(page),
     });
   } catch (error) {
-    console.log("Error in getPaginatedOrder controller", error.message);
+    console.log("Error in renderOrdersPage controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };

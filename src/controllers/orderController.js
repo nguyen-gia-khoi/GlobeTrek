@@ -236,9 +236,37 @@ const cancelOrder = async (req, res) => {
     res.status(500).json({ message: 'Error canceling order', error });
   }
 };
+const cancelPaidOrder = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== 'paid') {
+      return res.status(400).json({ message: "Only paid orders can be canceled with this function" });
+    }
+
+    // Cập nhật lại số lượng chỗ trống trong Tour khi hủy đơn hàng
+    await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
+
+    // Cập nhật trạng thái đơn hàng thành "canceled"
+    order.status = 'canceled';
+    await order.save();
+
+    res.status(200).json({ message: 'Paid order canceled successfully', order });
+  } catch (error) {
+    console.log("Error in cancelPaidOrder", error.message);
+    res.status(500).json({ message: 'Error canceling paid order', error });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
   processPayment,
   cancelOrder,
+  cancelPaidOrder
 };
