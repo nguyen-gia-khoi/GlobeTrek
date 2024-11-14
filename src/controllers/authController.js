@@ -10,8 +10,10 @@ const {
 const redis = require("../config/redis")
 const crypto = require("crypto");
 const { PointerStrategy } = require("sso-pointer");
-const pointer = new PointerStrategy({clientId : process.env.POINTER_CLIENT_ID,clientSecret : process.env.POINTER_CLIENT_SECRET});
-const {
+const pointer = new PointerStrategy(
+  process.env.POINTER_CLIENT_ID,
+  process.env.POINTER_CLIENT_SECRET
+);const {
     generateToken,
     storeRefreshToken,
   } = require("../service/tokenService")
@@ -322,53 +324,49 @@ const callback = async (req, res) => {
   try {
     const { code } = req.query;
     console.log("Received code:", code);
+
     // Exchange the authorization code for an access token
     const accessTokenData = await pointer.getAccessToken(code);
     console.log("Access Token Data:", accessTokenData);
 
-    const { id: userId, email } = accessTokenData;
+    const {user: { _id: userId, email } } = accessTokenData;
 
-    if (!userId || !email) {
+    console.log(accessTokenData)
+
+    if (!email) {
       return res.status(400).json({ message: "User ID and email are required" });
     }
 
-    // Check if the user already exists in the database
+    // Find or create user
     let user = await User.findOne({ email });
-
     if (!user) {
-      // Create a new user if they don't exist
-      const newUser = new User({
-        _id: userId,
-        email,
-      });
-
-      user = await newUser.save();
+      user = await new User({ email }).save();
       console.log("New user created:", user);
     } else {
-      // Update existing user information if needed
       user.email = email;
       await user.save();
       console.log("User already exists and was updated:", user);
     }
-     const token = jwt.sign(
-      {userId}, process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "1h" } // Set an appropriate expiration time
-    );
 
-    // const token = generateToken(user._id);
+    // Generate JWT
+    const token = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: "1h",
+    });
 
+    // Respond with user data
     return res.json({
       login: true,
       role: user.role,
-      email:user.email,
+      email: user.email,
       userId: user._id,
       token,
     });
   } catch (error) {
-    console.error("Error in callback:", error.message);
+    console.error("Error in callback:", error);  // Log full error object
     return res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 
 
 const getLoginPage = (req, res) => {
