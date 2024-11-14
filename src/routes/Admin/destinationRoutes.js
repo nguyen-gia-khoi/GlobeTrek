@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const destinationController = require('../../controllers/Admin/destinationController');
-const {verifyAdmin} = require('../../Middleware/authMiddleware')
+const {verifyAdmin} = require('../../Middleware/authMiddleware');
 
 
 router.get('/create', destinationController.createDestinationForm); // Hiển thị trang tạo Destination

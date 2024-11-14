@@ -27,11 +27,12 @@ const orderRoutesAdmin = require('./src/routes/Admin/orderRoutes');
 const revenueRoutes = require("./src/routes/Admin/revenueRoutes"); 
 const userRoute = require('./src/routes/Admin/userRoutes')
 
-
+//partner
 const partnertourroutes = require("./src/routes/Partner/partnerToursRoutes"); 
-const partnerOrderRoutes = require("./src/routes/Partner/partnerOrderRoutes"); 
+const partnerOrderRoutes = require("./src/routes/Partner/partnerOrderRoutes");
+ const partneRevenueRoutes = require("./src/routes/Partner/PartnerrevenueRoutes"); 
 
-const cookieParser = require("cookie-parser");
+const cookieParser = require("cookie-parser");  
 const cors = require("cors");
 
 
@@ -100,6 +101,7 @@ app.use('/admin',userRoute)
 //partner
 app.use("/partner/tours", partnertourroutes);
 app.use("/partner/orders", partnerOrderRoutes);
+app.use("/partner/revenue", partneRevenueRoutes);
 
 // Database connection and server start
 (async () => {

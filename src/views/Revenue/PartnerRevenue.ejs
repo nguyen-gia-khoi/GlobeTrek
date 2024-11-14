@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doanh thu hàng năm</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Thêm Chart.js -->
+    <style>
+        .card {
+            margin-bottom: 30px;
+        }
+
+        .table th,
+        .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../DashboardPN', { pageTitle: 'Doanh Thu Hàng Năm' }) %>  
+
+    <div class="container mt-5">
+        <h1 class="text-center">Doanh Thu của Các Tour</h1>
+        <p class="text-center">Xem doanh thu hàng năm của các tour mà bạn đã tạo</p>
+
+        <!-- Bảng Doanh Thu -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Danh sách Tour và Doanh Thu</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Tổng Doanh Thu:</strong> <%= totalRevenue.toLocaleString() %> VND</p>
+
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Tên Tour</th>
+                                    <th>Số Đơn Hàng</th>
+                                    <th>Doanh Thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (revenueData && revenueData.length > 0) { %>
+                                    <% revenueData.forEach(data => { %>
+                                        <tr>
+                                            <td><%= data.tourName %></td>
+                                            <td><%= data.ordersCount %></td>
+                                            <td><%= data.revenue %> VND</td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="3">Không có dữ liệu doanh thu</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ Doanh Thu
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Biểu đồ Doanh Thu của Các Tour</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> -->
+
+    <!-- <script>
+        // Dữ liệu cho biểu đồ
+        const revenueData = <%- JSON.stringify(revenueData) %>;  // Lấy dữ liệu từ backend
+
+        // Lấy tên tour và doanh thu từ revenueData
+        const tourNames = revenueData.map(data => data.tourName);
+        const revenues = revenueData.map(data => data.revenue);
+
+        // Tạo màu ngẫu nhiên cho mỗi tour
+        const getRandomColor = () => {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        };
+
+        // Tạo mảng màu sắc ngẫu nhiên cho mỗi tour
+        const colors = revenueData.map(() => getRandomColor());
+
+        // Tạo biểu đồ
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(ctx, {
+            type: 'bar',  // Loại biểu đồ là bar
+            data: {
+                labels: tourNames,  // Trục X: tên các tour
+                datasets: [{
+                    label: 'Doanh Thu (VND)',
+                    data: revenues,  // Trục Y: doanh thu của mỗi tour
+                    backgroundColor: colors,  // Màu sắc cho mỗi tour
+                    borderColor: colors.map(color => color), // Màu viền cho mỗi tour
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,  // Đảm bảo trục Y bắt đầu từ 0
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();  // Định dạng số liệu với dấu phân cách hàng nghìn
+                            }
+                        }
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',  // Vị trí của chú thích
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.raw.toLocaleString() + ' VND';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script> -->
+
+</body>
+
+</html>
