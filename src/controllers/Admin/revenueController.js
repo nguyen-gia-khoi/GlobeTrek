@@ -1,5 +1,7 @@
-const Revenue = require("../../models/Revenue");
-const Order = require("../../models/Order"); // Import model Order
+const mongoose = require("mongoose");
+const {Revenue} = require("../../models/Revenue");
+const Order = require("../../models/Order"); 
+const {Tour} = require("../../models/Tour"); 
 
 // Lấy doanh thu hàng ngày cho admin trong một tuần
 const getDailyRevenue = async (req, res) => {
@@ -90,8 +92,6 @@ const getYearlyRevenue = async (req, res) => {
 
       yearlyRevenues[year] = orders.reduce((acc, order) => acc + order.totalValue, 0);
     }
-
-  
     const labels = Object.keys(yearlyRevenues); 
     const revenues = Object.values(yearlyRevenues); 
     res.render('Revenue/yearlyRevenue', { labels, revenues });
@@ -99,74 +99,85 @@ const getYearlyRevenue = async (req, res) => {
     res.status(500).json({ message: "Error retrieving yearly revenue", error });
   }
 };
-
-
-// Lấy doanh thu của từng đối tác cho từng tour
-const getRevenueByTourAndPartner = async (req, res) => {
+// Lấy doanh thu hàng tuần của tất cả partner
+const getWeeklyRevenueForAllPartners = async (req, res) => {
   try {
-    const { tourId, partnerId } = req.params;
+    const today = new Date();
+    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay())); 
+    const endOfWeek = new Date(today.setDate(today.getDate() + 6 - today.getDay())); 
 
-    const revenue = await Revenue.findOne({ "tourRevenue.tourId": tourId, "tourRevenue.partnerId": partnerId });
-
-    if (!revenue) {
-      return res.status(404).json({ message: "No revenue data found for this tour and partner." });
-    }
-
-    const tourRevenueData = revenue.tourRevenue.find(
-      (entry) => entry.tourId.toString() === tourId && entry.partnerId.toString() === partnerId
-    );
-
-    // Render file EJS và truyền dữ liệu
-    res.render('Revenue/revenueByTourAndPartner', { tourRevenueData });
-  } catch (error) {
-    res.status(500).json({ message: "Error retrieving revenue by tour and partner", error });
-  }
-};
-
-// Lấy doanh thu của tất cả các tour thuộc một partner
-const getAllTourRevenueByPartner = async (req, res) => {
-  try {
-    const { partnerId } = req.params; // Lấy partnerId từ URL params
-
-    // Lấy tất cả các đơn hàng với trạng thái là "paid"
-    const orders = await Order.find({ status: "paid" }).populate("tour");
-
-    // Lọc doanh thu cho từng tour của partner
-    const tourRevenues = orders
-      .filter(order => order.tour.partnerId.toString() === partnerId)
-      .map(order => ({
-        tourId: order.tour._id,
-        sales: order.totalValue, // Giả sử totalValue là tổng doanh thu của đơn hàng
-        orders: 1, // Mỗi đơn hàng tính là một order
-      }));
-
-    // Nếu có nhiều đơn hàng cho cùng một tour, bạn có thể nhóm lại
-    const groupedRevenues = tourRevenues.reduce((acc, curr) => {
-      const existing = acc.find(item => item.tourId.toString() === curr.tourId.toString());
-      if (existing) {
-        existing.sales += curr.sales; // Cộng dồn doanh thu
-        existing.orders += curr.orders; // Cộng dồn số đơn hàng
-      } else {
-        acc.push(curr);
+    // Lấy tất cả các đơn hàng đã thanh toán trong tuần
+    const orders = await Order.find({
+      status: "paid",
+      createdAt: { $gte: startOfWeek, $lte: endOfWeek },
+    }).populate({
+      path: 'tour', 
+      select: 'partner',  // Đảm bảo lấy trường 'partner' từ đối tượng 'tour'
+      populate: {
+        path: 'partner',  // Thêm populate cho 'partner' để lấy thông tin chi tiết
+        select: 'name'  // Lấy tên của đối tác
       }
-      return acc;
-    }, []);
+    });
 
-    if (groupedRevenues.length === 0) {
-      return res.status(404).json({ message: "No revenue data found for this partner." });
+    console.log("Orders found:", orders); // Log orders để kiểm tra
+
+    if (!orders || orders.length === 0) {
+      console.log("No orders found for the week.");
     }
 
-    // Render file EJS và truyền dữ liệu
-    res.render('Revenue/allTourRevenueByPartner', { partnerId, groupedRevenues });
+    // Tạo đối tượng lưu doanh thu theo từng partner và tour
+// Lấy doanh thu hàng tuần của tất cả partner
+const partnerRevenues = {};
+
+orders.forEach(order => {
+  const partnerId = order.tour.partner._id; 
+  const partnerName = order.tour.partner.name; 
+  const tourId = order.tour._id;
+
+  if (!partnerRevenues[partnerId]) {
+    partnerRevenues[partnerId] = {
+      name: partnerName,  // Lưu tên của partner
+      tours: {}
+    };
+  }
+
+  if (!partnerRevenues[partnerId].tours[tourId]) {
+    partnerRevenues[partnerId].tours[tourId] = { sales: 0, orders: 0 };
+  }
+
+  partnerRevenues[partnerId].tours[tourId].sales += order.totalValue;
+  partnerRevenues[partnerId].tours[tourId].orders += 1;
+});
+
+    console.log("Partner Revenues:", partnerRevenues); // Log dữ liệu doanh thu
+
+    // Chuyển đổi dữ liệu thành mảng để dễ hiển thị trong EJS
+    const groupedRevenues = Object.entries(partnerRevenues).map(([partnerId, partnerData]) => {
+      return {
+        partnerId,
+        partnerName: partnerData.name,  // Lấy tên của partner
+        tours: Object.entries(partnerData.tours).map(([tourId, data]) => ({
+          tourId,
+          sales: data.sales,
+          orders: data.orders
+        }))
+      };
+    });
+    console.log("Grouped Revenues:", groupedRevenues); // Log dữ liệu để kiểm tra
+    
+    res.render('Revenue/allTourRevenueByPartner', { groupedRevenues });
+    
   } catch (error) {
-    res.status(500).json({ message: "Error retrieving revenue by partner", error });
+    console.error("Error retrieving weekly revenue for all partners:", error);
+    res.status(500).json({ message: "Error retrieving weekly revenue for all partners", error });
   }
 };
+
+
 
 module.exports = {
   getDailyRevenue,
   getMonthlyRevenue,
   getYearlyRevenue,
-  getRevenueByTourAndPartner,
-  getAllTourRevenueByPartner
+  getWeeklyRevenueForAllPartners,
 };

@@ -3,31 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doanh thu của tất cả các Tour thuộc một Đối tác</title>
+    <title>Doanh thu của tất cả các Tour thuộc các Đối tác</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <%- include('../header', { pageTitle: '' }) %>
+    <%- include('../header', { pageTitle: 'Doanh thu hàng tuần của các Đối tác' }) %>
     <div class="container mt-5">
-        <h2>Doanh thu của tất cả các Tour thuộc Đối tác ID: <%= partnerId %></h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Tour ID</th>
-                    <th>Doanh thu</th>
-                    <th>Số đơn hàng</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% groupedRevenues.forEach(revenue => { %>
-                    <tr>
-                        <td><%= revenue.tourId %></td>
-                        <td><%= revenue.sales %> VNĐ</td>
-                        <td><%= revenue.orders %></td>
-                    </tr>
-                <% }); %>
-            </tbody>
-        </table>
+        <h2>Doanh thu hàng tuần của tất cả các Tour thuộc các Đối tác</h2>
+        
+        <% if (groupedRevenues && groupedRevenues.length > 0) { %>
+            <% groupedRevenues.forEach(partner => { %>
+                <div class="mt-4">
+                    <h3>Đối tác: <%= partner.partnerName %></h3> 
+                    <table class="table table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Tour ID</th>
+                                <th>Doanh thu (VNĐ)</th>
+                                <th>Số đơn hàng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% partner.tours.forEach(tour => { %>
+                                <tr>
+                                    <td><%= tour.tourId %></td>
+                                    <td><%= tour.sales.toLocaleString() %> VNĐ</td> <!-- Định dạng số tiền -->
+                                    <td><%= tour.orders %></td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <p>Không có dữ liệu doanh thu cho các đối tác trong tuần này.</p>
+        <% } %>
     </div>
 </body>
 </html>

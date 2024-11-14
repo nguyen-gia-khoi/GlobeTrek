@@ -6,3 +6,4 @@ router.get('/api/orders', getPartnerOrders);
 router.get('/', renderPartnerOrdersPage);
 
 module.exports = router;
+    

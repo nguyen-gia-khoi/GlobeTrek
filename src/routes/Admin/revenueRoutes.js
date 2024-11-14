@@ -4,7 +4,7 @@ const {
   getDailyRevenue,
   getMonthlyRevenue,
   getYearlyRevenue,
-  getRevenueByTourAndPartner,getAllTourRevenueByPartner
+  getWeeklyRevenueForAllPartners
 } = require("../../controllers/Admin/revenueController");
 
 // Route lấy doanh thu hàng ngày cho admin
@@ -16,10 +16,8 @@ router.get("/monthly", getMonthlyRevenue);
 // Route lấy doanh thu hàng năm cho admin
 router.get("/yearly", getYearlyRevenue);
 
-// Route lấy doanh thu của tất cả các tour theo từng partner
-router.get("/partner/:partnerId", getAllTourRevenueByPartner);
+// doanh thu trong tuần của partner.
+router.get("/partner/weekly-revenue", getWeeklyRevenueForAllPartners);
 
-// Route lấy doanh thu của một tour thuộc về một partner
-router.get("/tour/:tourId/partner/:partnerId", getRevenueByTourAndPartner);
 
 module.exports = router;

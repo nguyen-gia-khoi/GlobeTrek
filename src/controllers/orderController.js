@@ -1,29 +1,34 @@
 const mongoose = require('mongoose');
+const moment = require('moment-timezone'); // Import moment-timezone
 const Order = require('../models/Order');
 const User = require('../models/User');
 const { Tour } = require('../models/Tour');
 const { sendOrderConfirmationEmail } = require('../service/mailtrap/email');
 
+// Sử dụng múi giờ 'Asia/Ho_Chi_Minh' cho giờ địa phương
 const updateAvailabilityOnCreateOrder = async (tourId, bookingDate, adultCount, childCount) => {
   const tour = await Tour.findById(tourId);
 
   if (!tour) {
     throw new Error("Tour not found");
   }
-  const bookingDateISO = new Date(bookingDate).toISOString().slice(0, 10);
+
+  const bookingDateLocal = moment(bookingDate).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD');
   const selectedAvailability = tour.availabilities.find(avail => {
-    const availDateISO = new Date(avail.date).toISOString().slice(0, 10);
-    return availDateISO === bookingDateISO; 
+    const availDateLocal = moment(avail.date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD');
+    return availDateLocal === bookingDateLocal;
   });
+
   if (!selectedAvailability) {
     throw new Error("No availability found for the selected date");
   }
+
   const totalSeatsRequested = adultCount + childCount;
   if (selectedAvailability.availableSeats < totalSeatsRequested) {
     throw new Error("Not enough available spots for the selected date");
   }
 
-  // giảm số lượng chỗ trống cho ngày đã chọn
+  // Giảm số lượng chỗ trống cho ngày đã chọn
   selectedAvailability.availableSeats -= totalSeatsRequested;
   await tour.save();
 };
@@ -36,15 +41,18 @@ const updateAvailabilityOnCancelOrder = async (tourId, bookingDate, adultCount, 
   }
 
   const availability = tour.availabilities.find(avail => 
-    new Date(avail.date).toLocaleDateString() === new Date(bookingDate).toLocaleDateString()
+    moment(avail.date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') === moment(bookingDate).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD')
   );
+
   if (!availability) {
     throw new Error("No availability found for the selected date");
   }
+
   // Tăng số lượng chỗ trống khi hủy đơn hàng
   availability.availableSeats += adultCount + childCount;
   await tour.save();
 };
+
 const createOrder = async (req, res) => {
   try {
     const {
@@ -68,9 +76,10 @@ const createOrder = async (req, res) => {
     }
 
     await updateAvailabilityOnCreateOrder(tour, bookingDate, adultCount, childCount);
+
     // Tạo đơn hàng mới
     const newOrder = new Order({
-      orderDate: new Date(),
+      orderDate: moment().tz('Asia/Ho_Chi_Minh').toDate(), // Lưu ngày giờ theo múi giờ địa phương
       totalValue,
       user: req.user._id,
       customerInfo,
@@ -84,13 +93,16 @@ const createOrder = async (req, res) => {
       status: 'pending',
       paymentMethod,
     });
+
     const savedOrder = await newOrder.save();
+
     // Cập nhật lịch sử đơn hàng của người dùng
     await User.updateOne(
       { _id: req.user._id },
       { $push: { orderHistory: savedOrder._id } }
     );
-    // Chuyển trạng thái sau 1 phút, nếu chưa thanh toán sẽ tự động hủy sau 10 phút
+
+    // Cập nhật trạng thái đơn hàng sau 1 phút, nếu chưa thanh toán sẽ tự động hủy sau 10 phút
     setTimeout(async () => {
       const orderToProcess = await Order.findById(savedOrder._id);
       if (orderToProcess && orderToProcess.status === 'pending') {
@@ -111,7 +123,7 @@ const createOrder = async (req, res) => {
             await User.findByIdAndUpdate(orderToCancel.user, { $inc: { cancellationCount: 1 } }, { new: true });
             console.log(`Order ${savedOrder._id} was automatically canceled and cancellation count updated.`);
           }
-        }, 1 * 60 * 1000); // 10 phút
+        }, 10 * 60 * 1000); // 10 phút
       }
     }, 1 * 60 * 1000); // 1 phút
    

@@ -116,7 +116,7 @@ const tourSchema = new mongoose.Schema({
       availableSeats: { 
         type: Number, 
         required: true, 
-        min: [30, 'Available seats must be a positive number'] 
+        min: [1, 'Available seats must be a positive number'] 
       } 
     }
   ]
