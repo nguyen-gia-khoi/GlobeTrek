@@ -77,7 +77,7 @@ const OrderSchema = new Schema({
     enum: ['pointer-wallet'],
     required: true,
   },
-}, { timestamps: true }); // Tự động thêm các trường createdAt và updatedAt
+}, { timestamps: true }); 
 
 const Order = mongoose.model('Order', OrderSchema);
 module.exports = Order;

@@ -10,7 +10,7 @@
     <%- include('../../header', { pageTitle: ' ' }) %>
     <div class="container mt-4">
         <h2>Danh sách yêu cầu xóa Tour</h2>
-        <% if (deleteRequests.length === 0) { %>
+        <% if (formattedRequests.length === 0) { %>
             <div class="alert alert-warning">Không có yêu cầu xóa nào.</div>
         <% } else { %>
             <table class="table">
@@ -18,14 +18,16 @@
                     <tr>
                         <th>ID</th>
                         <th>Tên Tour</th>
+                        <th>Partner</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% deleteRequests.forEach(request => { %>
+                    <% formattedRequests.forEach(request => { %>
                         <tr>
-                            <td><%= request._id %></td>
+                            <td><%= request.id %></td>
                             <td><%= request.title %></td>
+                            <th><%= request.partnerName  %></th>
                             <td>
                                 <form action="/admin/tours/confirm-delete/<%= request._id %>" method="POST" style="display:inline;">
                                     <button type="submit" class="btn btn-danger">Xác nhận xóa</button>

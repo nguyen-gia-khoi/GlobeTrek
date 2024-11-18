@@ -9,89 +9,138 @@
 <body>
     <%- include('../../DashboardPN', { pageTitle: 'Tạo Tour Mới' }) %>  
 
-<div class="container mt-4">
-    <h2 class="text-center">Tạo Tour Mới</h2>
-
-    <form action="/partner/tours/create" method="POST" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="title" class="form-label">Tiêu đề Tour</label>
-            <input type="text" class="form-control" id="title" name="title" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="description" class="form-label">Mô tả Tour</label>
-            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
-        </div>
-
-        <div class="mb-3">
-            <label for="price" class="form-label">Giá Tour (VND)</label>
-            <input type="number" class="form-control" id="price" name="price" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="location" class="form-label">Địa điểm</label>
-            <input type="text" class="form-control" id="location" name="location" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="totalSpots" class="form-label">Số chỗ (cho tất cả các ngày)</label>
-            <input type="number" class="form-control" id="totalSpots" name="totalSpots" required min="1">
-        </div>
-        
-        <div class="mb-3">
-            <label for="duration" class="form-label">Thời gian (Số ngày)</label>
-            <input type="number" class="form-control" id="duration" name="duration" required min="1" oninput="generateScheduleFields()">
-        </div>
-
-        <div class="mb-3">
-            <label for="tourType" class="form-label">Loại Tour</label>
-            <select class="form-control" id="tourType" name="tourType" required>
-                <% tourTypes.forEach(function(type) { %>
-                    <option value="<%= type._id %>"><%= type.name %></option>
-                <% }) %>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="destination" class="form-label">Địa điểm Tour</label>
-            <select class="form-control" id="destination" name="destination" required>
-                <% destinations.forEach(function(dest) { %>
-                    <option value="<%= dest._id %>"><%= dest.name %></option>
-                <% }) %>
-            </select>
-        </div>
-
-        <div class="mb-3" id="scheduleFields"></div>
-
-        <div class="mb-3">
-            <label for="images" class="form-label">Hình ảnh (Chọn nhiều ảnh nếu cần)</label>
-            <input type="file" class="form-control" id="images" name="images" multiple>
-        </div>
-
-        <div class="mb-3">
-            <label for="videos" class="form-label">Video</label>
-            <input type="file" class="form-control" id="videos" name="videos" multiple>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Tạo Tour</button>
-    </form>
-</div>
+    <div class="container mt-4">
+        <h2 class="text-center">Tạo Tour Mới</h2>
+    
+        <form action="/partner/tours/create" method="POST" enctype="multipart/form-data">
+            <!-- Các trường cơ bản -->
+            <div class="mb-3">
+                <label for="title" class="form-label">Tiêu đề Tour</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+            </div>
+            <div class="mb-3">
+                <label for="location" class="form-label">Địa điểm</label>
+                <input type="text" class="form-control" id="location" name="location" required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Mô tả Tour</label>
+                <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="price" class="form-label">Giá Tour (VND)</label>
+                <input type="number" class="form-control" id="price" name="price" required>
+            </div>
+            <div class="mb-3">
+                <label for="totalSpots" class="form-label">Số chỗ (cho tất cả các ngày)</label>
+                <input type="number" class="form-control" id="totalSpots" name="totalSpots" required min="1">
+            </div>
+            <div class="mb-3">
+                <label for="duration" class="form-label">Thời gian (Số ngày)</label>
+                <input type="number" class="form-control" id="duration" name="duration" required min="1" oninput="generateScheduleFields()">
+            </div>
+            <div class="mb-3">
+                <label for="tourType" class="form-label">Loại Tour</label>
+                <select class="form-control" id="tourType" name="tourType" required>
+                    <% tourTypes.forEach(function(type) { %>
+                        <option value="<%= type._id %>"><%= type.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="destination" class="form-label">Địa điểm Tour</label>
+                <select class="form-control" id="destination" name="destination" required>
+                    <% destinations.forEach(function(dest) { %>
+                        <option value="<%= dest._id %>"><%= dest.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+    
+            <!-- Chọn giữa Auto và Custom Dates -->
+            <div class="mb-3">
+                <label class="form-label">Tùy chọn ngày khả dụng</label>
+                <div>
+                    <input type="radio" id="autoDates" name="availabilityType" value="auto" checked onchange="toggleAvailabilityType('auto')">
+                    <label for="autoDates">Tự động tạo (30 ngày cách nhau Duration)</label>
+                </div>
+                <div>
+                    <input type="radio" id="customDates" name="availabilityType" value="custom" onchange="toggleAvailabilityType('custom')">
+                    <label for="customDates">Ngày tùy chỉnh</label>
+                </div>
+            </div>
+    
+            <!-- Nếu là Auto Dates -->
+            <div class="mb-3" id="autoAvailabilitySection">
+                <p class="text-muted">Hệ thống sẽ tự động tạo 30 ngày khả dụng cách nhau số ngày trong "Duration".</p>
+            </div>
+    
+            <!-- Nếu là Custom Dates -->
+            <div class="mb-3 d-none" id="customAvailabilitySection">
+                <label for="customDatesInput" class="form-label">Thêm các ngày tùy chỉnh (YYYY-MM-DD):</label>
+                <div id="customDatesContainer">
+                    <input type="date" class="form-control mb-2" name="customAvailabilities[]">
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="addCustomDate()">Thêm ngày</button>
+            </div>
+    
+            <!-- Trường Lịch trình -->
+            <div class="mb-3" id="scheduleFields"></div>
+    
+            <!-- Upload hình ảnh và video -->
+            <div class="mb-3">
+                <label for="images" class="form-label">Hình ảnh (Chọn nhiều ảnh nếu cần)</label>
+                <input type="file" class="form-control" id="images" name="images" multiple>
+            </div>
+            <div class="mb-3">
+                <label for="videos" class="form-label">Video</label>
+                <input type="file" class="form-control" id="videos" name="videos" multiple>
+            </div>
+    
+            <button type="submit" class="btn btn-primary">Tạo Tour</button>
+        </form>
+    </div>
+    
 
 <script>
+    function toggleAvailabilityType(type) {
+        const autoSection = document.getElementById('autoAvailabilitySection');
+        const customSection = document.getElementById('customAvailabilitySection');
+
+        if (type === 'auto') {
+            autoSection.classList.remove('d-none');
+            customSection.classList.add('d-none');
+        } else if (type === 'custom') {
+            autoSection.classList.add('d-none');
+            customSection.classList.remove('d-none');
+        }
+    }
+
+    function addCustomDate() {
+        const container = document.getElementById('customDatesContainer');
+        const newInput = document.createElement('input');
+        newInput.type = 'date';
+        newInput.name = 'customAvailabilities[]';
+        newInput.className = 'form-control mb-2';
+
+        // Set the max date to the last day of the current month
+        const today = new Date();
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const formattedDate = lastDay.toISOString().split('T')[0];
+        newInput.setAttribute('max', formattedDate);
+
+        container.appendChild(newInput);
+    }
+
     function generateScheduleFields() {
-        let duration = document.getElementById('duration').value;
-        let scheduleFieldsContainer = document.getElementById('scheduleFields');
-        scheduleFieldsContainer.innerHTML = '';  // Clear previous fields
-        
-        // Create schedule fields dynamically based on the duration
+        const duration = document.getElementById('duration').value;
+        const scheduleFieldsContainer = document.getElementById('scheduleFields');
+        scheduleFieldsContainer.innerHTML = ''; // Clear previous fields
+
         for (let i = 1; i <= duration; i++) {
-            let inputGroup = document.createElement('div');
+            const inputGroup = document.createElement('div');
             inputGroup.classList.add('mb-3');
             inputGroup.innerHTML = `
-               <label for="schedules_${i}" class="form-label">Ngày ${i}: Mô tả hoạt động</label>
-<textarea class="form-control" name="schedules[${i}]" placeholder="Mô tả cho ngày ${i}"></textarea>
-
-               
+                <label for="schedules_${i}" class="form-label">Ngày ${i}: Mô tả hoạt động</label>
+                <textarea class="form-control" name="schedules[${i}]" placeholder="Mô tả cho ngày ${i}"></textarea>
             `;
             scheduleFieldsContainer.appendChild(inputGroup);
         }

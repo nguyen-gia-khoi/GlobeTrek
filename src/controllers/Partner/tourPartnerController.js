@@ -6,11 +6,15 @@ const { storage } = require('../../Middleware/cloudinary');
 const multer = require('multer');
 const upload = multer({ storage });
 const moment = require('moment');
+const Order  = require('../../models/Order')
 
+
+// const [autoAvailability, customAvailability, createTourWithAvailability] = require('../../Middleware/availabilityMiddleware');
 
 const SPECIAL_DAY_MULTIPLIER = 1.5;
 const CHILD_MULTIPLIER = 0.75;
 
+// Get userId from the token
 const getUserIdFromToken = (PartneraccessToken) => {
   try {
     const decoded = jwt.verify(PartneraccessToken, process.env.ACCESS_TOKEN_SECRET);
@@ -21,7 +25,7 @@ const getUserIdFromToken = (PartneraccessToken) => {
   }
 };
 
-// Danh sách tour của Partner
+// Get list of tours for a partner
 const getTourList = async (req, res) => {
   try {
     const token = req.cookies.PartneraccessToken;
@@ -59,8 +63,7 @@ const getTourList = async (req, res) => {
   }
 };
 
-
-// Tạo tour mới
+// Get create tour page
 const getCreateTour = async (req, res) => {
   try {
     const tourTypes = await TourType.find({});
@@ -72,57 +75,97 @@ const getCreateTour = async (req, res) => {
   }
 };
 
+// Post create new tour
 const postCreateTour = async (req, res) => {
-  const { title, description, price, location, duration, tourType, destination, schedules, totalSpots } = req.body;
-  const token = req.cookies.PartneraccessToken;
-  const partnerId = getUserIdFromToken(token);
-
-  // Kiểm tra các trường bắt buộc
-  if (!title || !description || !price || !location || !duration || !tourType || !destination || !totalSpots) {
-    return res.status(400).send('Thiếu thông tin bắt buộc.');
-  }
-
-  // Kiểm tra giá và thời gian hợp lệ
-  if (price <= 0 || duration < 1) {
-    return res.status(400).send('Giá hoặc thời gian không hợp lệ.');
-  }
-
-  const images = req.files?.['images'] ? req.files['images'].map(file => file.path) : [];
-  const videos = req.files?.['videos'] ? req.files['videos'].map(file => file.path) : [];
-
-  const isDisabled = req.body.isDisabled ? true : false;
-  const specialAdultPrice = price * SPECIAL_DAY_MULTIPLIER;
-  const childPrice = price * CHILD_MULTIPLIER;
-  const specialChildPrice = childPrice * SPECIAL_DAY_MULTIPLIER;
-
-  // Xử lý lịch trình (schedules)
-  const tourSchedules = [];
-  for (let i = 1; i <= duration; i++) {
-    const activity = schedules[i] || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
-    tourSchedules.push({
-      day: i + 1,
-      activity: activity,
-    });
-  }
-
-  // Tạo availability cho 30 ngày (hoặc tùy chọn theo số ngày được nhập)
-  const availabilityData = [];
-  const totalDays = 30; // Hoặc bạn có thể thay đổi theo `duration` nếu muốn linh hoạt hơn
-
-  for (let i = 0; i < totalDays; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() + i); // Cộng thêm ngày vào hiện tại
-    const formattedDate = date.toISOString().split('T')[0]; // Định dạng ngày theo 'YYYY-MM-DD'
-    const availableSeats = Number(totalSpots);
-
-    availabilityData.push({
-      date: formattedDate, // Lưu dưới dạng chuỗi 'YYYY-MM-DD'
-      availableSeats: availableSeats,
-    });
-  }
+  const { 
+    title, 
+    description, 
+    price, 
+    location, 
+    duration, 
+    tourType, 
+    destination, 
+    schedules, 
+    totalSpots, 
+    customAvailabilities, 
+    availabilityType 
+  } = req.body;
 
   try {
-    // Tạo tour mới và lưu vào DB
+    // Get partnerId from token
+    const token = req.cookies.PartneraccessToken;
+    const partnerId = getUserIdFromToken(token);
+
+    // Validate required fields
+    if (!title || !description || !price || !location || !duration || !tourType || !destination || !totalSpots) {
+      return res.status(400).send('Các trường bắt buộc chưa được điền.');
+    }
+
+    // Validate values
+    if (price <= 0 || duration < 1 || totalSpots < 1) {
+      return res.status(400).send('Thông tin không hợp lệ. Kiểm tra lại giá, thời gian và số chỗ ngồi.');
+    }
+
+    // Handle images and videos (if any)
+    const images = req.files?.['images']?.map(file => file.path) || [];
+    const videos = req.files?.['videos']?.map(file => file.path) || [];
+
+    // Special and child prices
+    const specialAdultPrice = price * SPECIAL_DAY_MULTIPLIER;
+    const childPrice = price * CHILD_MULTIPLIER;
+    const specialChildPrice = childPrice * SPECIAL_DAY_MULTIPLIER;
+
+    // Handle schedules
+    const tourSchedules = [];
+    for (let i = 0; i < duration; i++) {
+      const activity = (schedules && schedules[i]) || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
+      tourSchedules.push({
+        day: i + 1,
+        activity: activity,
+      });
+    }
+
+    // Handle availability (auto or custom)
+    let availabilityData = [];
+
+    if (availabilityType === 'auto') {
+      // Lấy ngày cuối tháng hiện tại
+      const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);  // Lấy ngày cuối tháng
+      const totalDays = Math.ceil((endOfMonth - new Date()) / (1000 * 3600 * 24));  // Tính tổng số ngày từ hôm nay đến cuối tháng
+      
+      let nextDate = new Date();  // Ngày bắt đầu là hôm nay
+    
+      for (let i = 0; i < totalDays; i++) {
+        const formattedDate = nextDate.toISOString().split('T')[0];  // Định dạng ngày theo 'YYYY-MM-DD'
+        const availableSeats = Number(totalSpots);
+    
+        availabilityData.push({
+          date: formattedDate,  // Lưu ngày dưới dạng chuỗi 'YYYY-MM-DD'
+          availableSeats: availableSeats,
+        });
+
+        // Cộng thêm duration vào ngày hiện tại, chỉ cộng đúng số ngày cần thiết (ví dụ: 3 ngày)
+        let durationValue = Number(duration);
+        console.log("Ngày ban đầu:", nextDate.toISOString().split('T')[0]);
+        console.log("Duration value:", durationValue);
+        nextDate.setDate(nextDate.getDate() + durationValue);  // Cộng thêm số ngày (duration) vào nextDate
+        
+        // Kiểm tra nếu ngày đã vượt qua ngày cuối của tháng thì dừng lại
+        if (nextDate > endOfMonth) break;  // Nếu ngày tiếp theo vượt quá ngày cuối của tháng thì thoát khỏi vòng lặp
+        
+        console.log("Ngày sau khi cộng duration:", nextDate.toISOString().split('T')[0]);
+      }
+    } 
+    else if (availabilityType === 'custom' && Array.isArray(customAvailabilities) && customAvailabilities.length) {
+      availabilityData = customAvailabilities.map(date => ({
+        date: new Date(date),
+        availableSeats: totalSpots,
+      }));
+    } else {
+      return res.status(400).send('Loại availability không hợp lệ (auto/custom).');
+    }
+
+    // Create and save the tour to DB
     const newTour = await Tour.create({
       title,
       description,
@@ -132,26 +175,27 @@ const postCreateTour = async (req, res) => {
       partner: partnerId,
       tourType,
       destination,
-      isDisabled,
+      isDisabled: req.body.isDisabled || false,
       specialAdultPrice,
       childPrice,
       specialChildPrice,
       images,
       videos,
-      isApproved: false,
-      schedules: tourSchedules, // Gắn lịch trình vào tour
-      availabilities: availabilityData, // Gắn availability vào tour
+      isApproved: false, // Needs admin approval
+      schedules: tourSchedules,
+      availabilities: availabilityData,
     });
 
-    // Chuyển hướng về danh sách tour của partner
     res.redirect('/partner/tours/list');
   } catch (error) {
     console.error('Lỗi khi tạo tour:', error);
-    res.status(500).send('Lỗi khi tạo tour.');
+    res.status(500).send('Có lỗi xảy ra khi tạo tour.');
   }
 };
 
-// Cập nhật tour
+
+
+// Get update tour page
 const getUpdateTour = async (req, res) => {
   const token = req.cookies.PartneraccessToken;
   const partnerId = getUserIdFromToken(token);
@@ -181,24 +225,24 @@ const getUpdateTour = async (req, res) => {
   }
 };
 
+// Post update tour
 const postUpdateTour = async (req, res) => {
   const { title, description, price, location, duration, tourType, destination, schedules, isDisabled } = req.body;
   const token = req.cookies.PartneraccessToken;
   const partnerId = getUserIdFromToken(token);
-  const tourID = req.params.id; // Correctly use tourID here
+  const tourID = req.params.id;
 
-  // Kiểm tra xem partnerId có hợp lệ không
   if (!partnerId) {
     console.log("Invalid token or partnerId.");
     return res.status(401).send('Unauthorized: Invalid token');
   }
 
-  // Kiểm tra các trường bắt buộc
+  // Validate required fields
   if (!title || !description || !price || !location || !duration || !tourType || !destination) {
     return res.status(400).send('Missing required fields.');
   }
 
-  // Kiểm tra giá và thời gian hợp lệ
+  // Validate price and duration
   if (price <= 0 || duration < 1) {
     return res.status(400).send('Invalid price or duration.');
   }
@@ -207,11 +251,10 @@ const postUpdateTour = async (req, res) => {
   const childPrice = price * CHILD_MULTIPLIER;
   const specialChildPrice = childPrice * SPECIAL_DAY_MULTIPLIER;
 
-  // Xử lý lịch trình (schedules)
+  // Handle schedules
   const tourSchedules = [];
-  for (let i = 0; i < duration; i++) {
+  for (let i = 1; i < duration; i++) {
     const activity = (schedules && schedules[i]) || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
-
     tourSchedules.push({
       day: i + 1,
       activity: activity,
@@ -219,13 +262,8 @@ const postUpdateTour = async (req, res) => {
   }
 
   try {
-    // Log để kiểm tra ID tour và partner ID
-    console.log("tourID:", tourID); // Correct the variable name
-    console.log("partnerId:", partnerId);
-
-    // Tìm và cập nhật tour nếu tồn tại và thuộc về partner
     const updatedTour = await Tour.findOneAndUpdate(
-      { _id: tourID, partner: partnerId },  // Kiểm tra ID và partner
+      { _id: tourID, partner: partnerId },
       {
         title,
         description,
@@ -239,12 +277,11 @@ const postUpdateTour = async (req, res) => {
         specialAdultPrice,
         childPrice,
         specialChildPrice,
-        schedules: tourSchedules, // Cập nhật lịch trình  
+        schedules: tourSchedules,
       },
-      { new: true } // Trả về document đã cập nhật
+      { new: true }
     );
 
-    // Nếu không tìm thấy tour hoặc không thuộc partner này
     if (!updatedTour) {
       console.log("Tour not found or not owned by this partner.");
       return res.status(404).send('Tour not found or you are not authorized to update this tour.');
@@ -256,7 +293,6 @@ const postUpdateTour = async (req, res) => {
     res.status(500).send('Error updating tour');
   }
 };
-
 
 // Gửi yêu cầu phê duyệt cho admin
 const requestApproval = async (req, res) => {
@@ -285,21 +321,31 @@ const requestApproval = async (req, res) => {
 const requestDeleteTour = async (req, res) => {
   const tourID = req.params.id;
   try {
+    // Tìm tour theo ID
     const tour = await Tour.findById(tourID);
     if (!tour) {
       return res.status(404).send('Tour not found.'); 
     }
 
-    tour.isDeleted = true;
+    // Kiểm tra nếu tour có đơn hàng đã được đặt
+    const orders = await Order.find({ 'tour': tourID });
+    if (orders.length > 0) {
+      return res.status(400).send('Không thể xóa tour vì đã có đơn hàng liên quan.');
+    }
+
+    // Nếu không có đơn hàng, cho phép yêu cầu xóa tour
+    tour.isDeleted = false;
     tour.deletionRequested = true;
     await tour.save();
 
+    // Render lại trang yêu cầu xóa tour
     res.render('Tours/Partner/requestTour', { tour });
   } catch (error) {
     console.error('Error requesting deletion:', error);
     res.status(500).send('Error requesting deletion');
   }
 };
+
 
 // Bật/tắt trạng thái tour
 const toggleTourStatus = async (req, res) => {

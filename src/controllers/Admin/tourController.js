@@ -57,8 +57,13 @@ const getDeleteRequests = async (req, res) => {
       deletionRequested: true, 
       isDeleted: false 
     }).populate('partner', 'name email'); 
-    console.log(deleteRequests); // Kiểm tra xem dữ liệu có trả về không
-    res.render('Tours/Admin/deleteRequests', { deleteRequests });
+    const formattedRequests = deleteRequests.map(tour => ({
+      id: tour._id,
+      title: tour.title,
+      partnerName: tour.partner ? tour.partner.name : 'N/A', 
+    }));
+    console.log(formattedRequests); // Kiểm tra xem dữ liệu có trả về không
+    res.render('Tours/Admin/deleteRequests', { formattedRequests });
   } catch (error) {
     console.error('Lỗi khi lấy danh sách yêu cầu xóa tour:', error);
     res.status(500).send('Lỗi khi lấy danh sách yêu cầu xóa tour');

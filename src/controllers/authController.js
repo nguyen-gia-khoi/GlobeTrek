@@ -347,9 +347,9 @@ const callback = async (req, res) => {
       await user.save();
       console.log("User already exists and was updated:", user);
     }
-
+    const userID = user._id
     // Generate JWT
-    const token = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
+    const accessToken = jwt.sign({ userID, email}, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "1h",
     });
 
@@ -358,8 +358,8 @@ const callback = async (req, res) => {
       login: true,
       role: user.role,
       email: user.email,
-      userId: user._id,
-      token,
+      _id: user._id,
+      accessToken,
     });
   } catch (error) {
     console.error("Error in callback:", error);  // Log full error object

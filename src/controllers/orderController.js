@@ -4,8 +4,8 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 const { Tour } = require('../models/Tour');
 const { sendOrderConfirmationEmail } = require('../service/mailtrap/email');
+const { Pointer } = require("pointer-wallet");
 
-// Sử dụng múi giờ 'Asia/Ho_Chi_Minh' cho giờ địa phương
 const updateAvailabilityOnCreateOrder = async (tourId, bookingDate, adultCount, childCount) => {
   const tour = await Tour.findById(tourId);
 
@@ -71,15 +71,17 @@ const createOrder = async (req, res) => {
     if (!tour) {
       return res.status(400).json({ message: "Tour is required" });
     }
+
     if (adultCount <= 0 && childCount <= 0) {
       return res.status(400).json({ message: "At least one ticket must be purchased" });
     }
 
+    // Kiểm tra và cập nhật số lượng chỗ trống trong tour
     await updateAvailabilityOnCreateOrder(tour, bookingDate, adultCount, childCount);
 
     // Tạo đơn hàng mới
     const newOrder = new Order({
-      orderDate: moment().tz('Asia/Ho_Chi_Minh').toDate(), // Lưu ngày giờ theo múi giờ địa phương
+      orderDate: moment().tz('Asia/Ho_Chi_Minh').toDate(),
       totalValue,
       user: req.user._id,
       customerInfo,
@@ -102,31 +104,16 @@ const createOrder = async (req, res) => {
       { $push: { orderHistory: savedOrder._id } }
     );
 
-    // Cập nhật trạng thái đơn hàng sau 1 phút, nếu chưa thanh toán sẽ tự động hủy sau 10 phút
+    // Cập nhật trạng thái đơn hàng sau 1 phút nếu chưa thanh toán
     setTimeout(async () => {
       const orderToProcess = await Order.findById(savedOrder._id);
       if (orderToProcess && orderToProcess.status === 'pending') {
         orderToProcess.status = 'processing';
         await orderToProcess.save();
         console.log(`Order ${savedOrder._id} updated to 'processing'.`);
-
-        setTimeout(async () => {
-          const orderToCancel = await Order.findById(savedOrder._id);
-          if (orderToCancel && orderToCancel.status === 'processing') {
-            orderToCancel.status = 'canceled';
-            await orderToCancel.save();
-            
-            // Tăng lại số lượng chỗ trống trong Tour nếu đơn hàng bị hủy
-            await updateAvailabilityOnCancelOrder(tour, orderToCancel.bookingDate, orderToCancel.adultCount, orderToCancel.childCount);
-
-            console.log(`Order ${savedOrder._id} was automatically canceled.`);
-            await User.findByIdAndUpdate(orderToCancel.user, { $inc: { cancellationCount: 1 } }, { new: true });
-            console.log(`Order ${savedOrder._id} was automatically canceled and cancellation count updated.`);
-          }
-        }, 10 * 60 * 1000); // 10 phút
       }
     }, 1 * 60 * 1000); // 1 phút
-   
+
     res.status(201).json({ message: 'Order created successfully', order: savedOrder });
   } catch (error) {
     console.log("Error in createOrder controller", error.message);
@@ -134,10 +121,12 @@ const createOrder = async (req, res) => {
   }
 };
 
+
 // Lấy các đơn hàng của người dùng
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.user._id;
+    console.log(userId)
     const currentDate = new Date().toISOString().slice(0, 10); 
 
     const user = await User.findById(userId).populate({
@@ -174,6 +163,7 @@ const getUserOrders = async (req, res) => {
 // Xử lý thanh toán
 const processPayment = async (req, res) => {
   try {
+    console.log(req.body)
     const { orderID, status } = req.body;
 
     const order = await Order.findById(orderID).populate('user');
@@ -219,29 +209,28 @@ const processPayment = async (req, res) => {
     res.status(500).json({ message: 'Error processing payment', error });
   }
 };
-
 const cancelOrder = async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { orderId, status } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    if (order.status !== 'pending') {
-      return res.status(400).json({ message: "Only pending orders can be canceled" });
-    }
-
+    if (order.status === 'canceled' || order.status === 'paid') {
+      return res.status(400).json({ message: "Only orders that are not canceled or paid can be canceled" });
+    }    
+      if(status == 200){
     // Cập nhật lại số lượng chỗ trống trong Tour khi hủy đơn hàng
     await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
 
     await User.findByIdAndUpdate(order.user, { $inc: { cancellationCount: 1 } }, { new: true });
-
-    // Cập nhật trạng thái đơn hàng thành "canceled"
-    order.status = 'canceled';
-    await order.save();
-   
+        // Cập nhật trạng thái đơn hàng thành "canceled"
+        order.status = 'canceled';
+        await order.save();
+       
+      }
     res.status(200).json({ message: 'Order canceled successfully', order });
   } catch (error) {
     console.log("Error in cancelOrder", error.message);
@@ -250,14 +239,14 @@ const cancelOrder = async (req, res) => {
 };
 const cancelPaidOrder = async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { orderId, status } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    if (order.status !== 'paid') {
+    if (order.status == 'paid' && status == 200) {
       return res.status(400).json({ message: "Only paid orders can be canceled with this function" });
     }
 
