@@ -45,7 +45,7 @@
                                 %>
                                     <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
                                 <% }) %>
-                                <% if (tour.schedules.length > 2) { %>
+                                <% if (tour.schedules.length > 5) { %>
                                     <div id="schedules-<%= tour._id %>" class="additional-schedules" style="display:none;">
                                         <% tour.schedules.slice(2).forEach((schedule) => { %>
                                             <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
@@ -57,7 +57,7 @@
                             
                             <td>
                                 <% 
-                                    let displayedAvailabilities = tour.availabilities.slice(0, 2);
+                                    let displayedAvailabilities = tour.availabilities.slice(0, 10);
                                     displayedAvailabilities.forEach((availabilities, index) => { 
                                 %>
                                     <div> <%= availabilities.date.toLocaleDateString() %>: <%= availabilities.availableSeats %> chỗ</div>
