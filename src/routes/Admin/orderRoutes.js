@@ -7,16 +7,17 @@ const {
   updateOrderStatus,
   deleteOrder,
 } = require('../../controllers/Admin/orderController');
+const {verifyAdmin} = require('../../Middleware/authMiddleware');
 
 // Route hiển thị trang đơn hàng
-router.get('/view', renderOrdersPage);
+router.get('/view',verifyAdmin, renderOrdersPage);
 
 // Lấy tất cả đơn hàng
-router.get('/', getAllOrders);
+router.get('/',verifyAdmin, getAllOrders);
 // Cập nhật trạng thái đơn hàng
-router.put('/:orderId/status', updateOrderStatus);
+router.put('/:orderId/status',verifyAdmin, updateOrderStatus);
 
 // Xóa đơn hàng
-router.delete('/:orderId', deleteOrder);
+router.delete('/:orderId',verifyAdmin, deleteOrder);
 
 module.exports = router;

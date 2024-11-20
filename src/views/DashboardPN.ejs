@@ -12,34 +12,94 @@
   <style>
     body {
       display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
+    .header {
+      background-color: #e9f5e9; /* Màu nền header */
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000; /* Đảm bảo header luôn trên cùng */
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
     }
     .sidebar {
       min-height: 100vh;
-      background-color: #e9f5e9; 
+      background-color: #e9f5e9;
       padding: 15px;
       position: fixed;
       width: 250px;
+      top: 60px; /* Đẩy sidebar xuống dưới header */
       transition: all 0.3s;
     }
     .content {
       margin-left: 250px;
       padding: 15px;
       flex-grow: 1;
+      margin-top: 60px; /* Đẩy nội dung xuống dưới header */
     }
     .nav-link {
       color: #3c763d;
     }
     .nav-link:hover {
-      background-color: #d4edda; 
-      color: #155724; 
+      background-color: #d4edda;
+      color: #155724;
     }
     .nav-link.active {
-      background-color: #c3e6cb; 
-      color: #155724; 
+      background-color: #c3e6cb;
+      color: #155724;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo-container img {
+      width: 40px; /* Chỉnh kích thước ảnh */
+      height: auto;
+      margin-right: 10px;
+    }
+
+    .namelogo {
+      text-decoration: none;
+      font-size: 1.5rem; 
+      font-weight: bold;
+      color: #28a745; 
+    }
+    .namelogo:hover {
+      text-decoration: none;
+      font-size: 1.5rem; 
+      font-weight: bold;
+      color: #28a745; 
     }
   </style>
 </head>
 <body>
+  <div class="header">
+    <div class="container d-flex justify-content-between align-items-center">
+    <a class="logo-container d-flex align-items-center" href="/partner/revenue">
+      <img src="/images/logo.jpg" alt="Logo">
+      <span class="namelogo ms-2">GlobeTek</span>
+    </a>
+    <ul class="navbar-nav d-flex align-items-center mb-0">
+      <li class="nav-item">
+          <form action="/logout" method="POST" class="d-inline">
+              <button type="submit" class="btn btn-success">logout</button>
+          </form>
+      </li>
+  </ul>
+</div> 
+</div>
+
+
   <div class="sidebar">
     <h2 class="active">Dashboard</h2>
     <ul class="nav flex-column">
@@ -47,7 +107,7 @@
         <a class="nav-link" href="/partner/revenue">Home </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link " href="/partner/orders">Orders</a>
+        <a class="nav-link" href="/partner/orders">Orders</a>
       </li>
 
       <li class="nav-item">
@@ -64,15 +124,12 @@
                 </li>            
             </ul>
         </div>
-
-    </li>
-
+      </li>
     </ul>
   </div>
-<!--   
+
   <div class="content">
     <h1><%= pageTitle %></h1>
-  
-  </div> -->
+  </div>
 </body>
 </html>
