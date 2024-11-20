@@ -99,63 +99,54 @@ const getYearlyRevenue = async (req, res) => {
     res.status(500).json({ message: "Error retrieving yearly revenue", error });
   }
 };
-// Lấy doanh thu hàng tuần của tất cả partner
 const getWeeklyRevenueForAllPartners = async (req, res) => {
   try {
     const today = new Date();
-    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay())); 
-    const endOfWeek = new Date(today.setDate(today.getDate() + 6 - today.getDay())); 
+    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+    const endOfWeek = new Date(today.setDate(today.getDate() + 6 - today.getDay()));
 
-    // Lấy tất cả các đơn hàng đã thanh toán trong tuần
+    // Định dạng ngày theo kiểu dễ đọc (ví dụ: DD/MM/YYYY)
+    const formattedStartOfWeek = startOfWeek.toLocaleDateString('vi-VN');
+    const formattedEndOfWeek = endOfWeek.toLocaleDateString('vi-VN');
+
     const orders = await Order.find({
       status: "paid",
       createdAt: { $gte: startOfWeek, $lte: endOfWeek },
     }).populate({
-      path: 'tour', 
-      select: 'partner',  // Đảm bảo lấy trường 'partner' từ đối tượng 'tour'
+      path: 'tour',
+      select: 'partner',
       populate: {
-        path: 'partner',  // Thêm populate cho 'partner' để lấy thông tin chi tiết
-        select: 'name'  // Lấy tên của đối tác
+        path: 'partner',
+        select: 'name'
       }
     });
 
-    console.log("Orders found:", orders); // Log orders để kiểm tra
+    const partnerRevenues = {};
 
-    if (!orders || orders.length === 0) {
-      console.log("No orders found for the week.");
-    }
+    orders.forEach(order => {
+      const partnerId = order.tour.partner._id;
+      const partnerName = order.tour.partner.name;
+      const tourId = order.tour._id;
 
-    // Tạo đối tượng lưu doanh thu theo từng partner và tour
-// Lấy doanh thu hàng tuần của tất cả partner
-const partnerRevenues = {};
+      if (!partnerRevenues[partnerId]) {
+        partnerRevenues[partnerId] = {
+          name: partnerName,
+          tours: {}
+        };
+      }
 
-orders.forEach(order => {
-  const partnerId = order.tour.partner._id; 
-  const partnerName = order.tour.partner.name; 
-  const tourId = order.tour._id;
+      if (!partnerRevenues[partnerId].tours[tourId]) {
+        partnerRevenues[partnerId].tours[tourId] = { sales: 0, orders: 0 };
+      }
 
-  if (!partnerRevenues[partnerId]) {
-    partnerRevenues[partnerId] = {
-      name: partnerName,  // Lưu tên của partner
-      tours: {}
-    };
-  }
+      partnerRevenues[partnerId].tours[tourId].sales += order.totalValue;
+      partnerRevenues[partnerId].tours[tourId].orders += 1;
+    });
 
-  if (!partnerRevenues[partnerId].tours[tourId]) {
-    partnerRevenues[partnerId].tours[tourId] = { sales: 0, orders: 0 };
-  }
-
-  partnerRevenues[partnerId].tours[tourId].sales += order.totalValue;
-  partnerRevenues[partnerId].tours[tourId].orders += 1;
-});
-
-    console.log("Partner Revenues:", partnerRevenues); // Log dữ liệu doanh thu
-
-    // Chuyển đổi dữ liệu thành mảng để dễ hiển thị trong EJS
     const groupedRevenues = Object.entries(partnerRevenues).map(([partnerId, partnerData]) => {
       return {
         partnerId,
-        partnerName: partnerData.name,  // Lấy tên của partner
+        partnerName: partnerData.name,
         tours: Object.entries(partnerData.tours).map(([tourId, data]) => ({
           tourId,
           sales: data.sales,
@@ -163,13 +154,68 @@ orders.forEach(order => {
         }))
       };
     });
-    console.log("Grouped Revenues:", groupedRevenues); // Log dữ liệu để kiểm tra
-    
-    res.render('Revenue/allTourRevenueByPartner', { groupedRevenues });
-    
+
+    res.render('Revenue/allTourRevenueByPartner', { 
+      groupedRevenues, 
+      formattedStartOfWeek, 
+      formattedEndOfWeek 
+    });
+
   } catch (error) {
     console.error("Error retrieving weekly revenue for all partners:", error);
     res.status(500).json({ message: "Error retrieving weekly revenue for all partners", error });
+  }
+};
+
+const getTotalRevenueForAllPartners = async (req, res) => {
+  try {
+    const today = new Date();
+    const formattedToday = today.toLocaleDateString('vi-VN');
+    
+    // Lấy tất cả các đơn hàng có trạng thái "paid"
+    const orders = await Order.find({
+      status: "paid",
+      createdAt: { $lte: today }
+    }).populate({
+      path: 'tour',
+      select: 'partner',
+      populate: {
+        path: 'partner',
+        select: 'name'
+      }
+    });
+
+    const partnerRevenues = {};
+
+    // Tính doanh thu cho từng partner
+    orders.forEach(order => {
+      const partnerId = order.tour.partner._id;
+      const partnerName = order.tour.partner.name;
+
+      if (!partnerRevenues[partnerId]) {
+        partnerRevenues[partnerId] = { name: partnerName, totalSales: 0 };
+      }
+
+      partnerRevenues[partnerId].totalSales += order.totalValue;
+    });
+
+    const groupedRevenues = Object.entries(partnerRevenues).map(([partnerId, partnerData]) => ({
+      partnerId,
+      partnerName: partnerData.name,
+      totalSales: partnerData.totalSales
+    }));
+
+    console.log(groupedRevenues);  // Kiểm tra dữ liệu
+
+    // Render trang tổng doanh thu
+    res.render('Revenue/allTourRevenueByPartnerTotal', { 
+      groupedRevenues, 
+      formattedToday 
+    });
+
+  } catch (error) {
+    console.error("Error retrieving total revenue for all partners:", error);
+    res.status(500).json({ message: "Error retrieving total revenue for all partners", error });
   }
 };
 
@@ -180,4 +226,5 @@ module.exports = {
   getMonthlyRevenue,
   getYearlyRevenue,
   getWeeklyRevenueForAllPartners,
+  getTotalRevenueForAllPartners,
 };

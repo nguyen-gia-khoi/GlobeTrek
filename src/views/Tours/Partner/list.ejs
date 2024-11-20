@@ -71,7 +71,13 @@
                                     <div><a href="javascript:void(0);" onclick="toggleAvailabilities('<%= tour._id %>')">Xem thêm...</a></div>
                                 <% } %>
                             </td>
-                            <td><%= tour.isDisabled ? 'Tắt' : 'Bật' %></td>
+                            <td>
+                                <form action="/partner/tours/toggle-status/<%= tour._id %>" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-toggle <%= tour.isDisabled ? 'btn-success' : 'btn-danger' %>">
+                                        <%= tour.isDisabled ? 'Bật' : 'Tắt' %>
+                                    </button>
+                                </form>
+                            </td>
                             <td>
                                 <a href="/partner/tours/edit/<%= tour._id %>" class="btn btn-warning btn-sm">Chỉnh sửa</a>
                                 <form action="/partner/tours/requestDeleteTour/<%= tour._id %>" method="POST" style="display:inline;">

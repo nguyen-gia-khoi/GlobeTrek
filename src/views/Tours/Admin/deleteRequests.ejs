@@ -29,7 +29,7 @@
                             <td><%= request.title %></td>
                             <th><%= request.partnerName  %></th>
                             <td>
-                                <form action="/admin/tours/confirm-delete/<%= request._id %>" method="POST" style="display:inline;">
+                                <form method="POST" action="/admin/tours/confirm-delete/<%= request.id %>">
                                     <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
                                 </form>
                             </td>
