@@ -212,12 +212,10 @@ const processPayment = async (req, res) => {
 const cancelOrder = async (req, res) => {
   try {
     const { orderId, status } = req.body;
-
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-
     if (order.status === 'canceled' || order.status === 'paid') {
       return res.status(400).json({ message: "Only orders that are not canceled or paid can be canceled" });
     }    

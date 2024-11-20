@@ -56,7 +56,6 @@
             <th>Trạng thái</th>
             <th>Ngày đặt</th>
             <th>Ngày tạo</th>
-            <th>Ngày cập nhật</th>
           </tr>
         </thead>
         <tbody>
@@ -77,7 +76,6 @@
               <td class="badge <%= order.status === 'pending' ? 'bg-warning' : order.status === 'processing' ? 'bg-primary' : order.status === 'paid' ? 'bg-success' : order.status === 'canceled' ? 'bg-danger' : '' %> mt-1 "><%= order.status %></td>
               <td><%= new Date(order.bookingDate).toLocaleDateString('vi-VN') %></td>
               <td><%= new Date(order.createdAt).toLocaleDateString('vi-VN') %></td>
-              <td><%= new Date(order.updatedAt).toLocaleDateString('vi-VN') %></td>
             </tr>
           <% }); %>
         </tbody>

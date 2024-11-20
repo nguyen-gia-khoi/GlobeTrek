@@ -7,14 +7,17 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <%- include('../header', { pageTitle: 'Doanh thu hàng tuần của các Đối tác' }) %>
+    <%- include('../header', { pageTitle: 'Doanh thu hàng của các Đối tác' }) %>
     <div class="container mt-5">
         <h2>Doanh thu hàng tuần của tất cả các Tour thuộc các Đối tác</h2>
+        <p>
+            <strong>Thời gian:</strong> Từ <%= formattedStartOfWeek %> đến <%= formattedEndOfWeek %>
+        </p>
         
         <% if (groupedRevenues && groupedRevenues.length > 0) { %>
             <% groupedRevenues.forEach(partner => { %>
                 <div class="mt-4">
-                    <h3>Đối tác: <%= partner.partnerName %></h3> 
+                    <h3>Đối tác: <%= partner.partnerName %></h3>
                     <table class="table table-bordered">
                         <thead class="thead-light">
                             <tr>
@@ -27,7 +30,7 @@
                             <% partner.tours.forEach(tour => { %>
                                 <tr>
                                     <td><%= tour.tourId %></td>
-                                    <td><%= tour.sales.toLocaleString() %> VNĐ</td> <!-- Định dạng số tiền -->
+                                    <td><%= tour.sales.toLocaleString() %> VNĐ</td>
                                     <td><%= tour.orders %></td>
                                 </tr>
                             <% }); %>
@@ -39,5 +42,6 @@
             <p>Không có dữ liệu doanh thu cho các đối tác trong tuần này.</p>
         <% } %>
     </div>
+    
 </body>
 </html>

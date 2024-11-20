@@ -81,7 +81,7 @@
             // Get schedules from EJS passed to the template
             const schedules = <%- JSON.stringify(tour.schedules) %>;
 
-            for (let i = 0; i <= duration; i++) {
+            for (let i = 1; i <= duration; i++) {
                 let activity = schedules[i - 1] ? schedules[i - 1].activity : '';
                 let inputGroup = document.createElement('div');
                 inputGroup.classList.add('mb-3');

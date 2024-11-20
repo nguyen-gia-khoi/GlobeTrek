@@ -117,7 +117,7 @@ const postCreateTour = async (req, res) => {
 
     // Handle schedules
     const tourSchedules = [];
-    for (let i = 0; i < duration; i++) {
+    for (let i = 1; i <= duration; i++) {
       const activity = (schedules && schedules[i]) || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
       tourSchedules.push({
         day: i + 1,
@@ -135,7 +135,7 @@ const postCreateTour = async (req, res) => {
       
       let nextDate = new Date();  // Ngày bắt đầu là hôm nay
     
-      for (let i = 0; i < totalDays; i++) {
+      for (let i = 1; i < totalDays; i++) {
         const formattedDate = nextDate.toISOString().split('T')[0];  // Định dạng ngày theo 'YYYY-MM-DD'
         const availableSeats = Number(totalSpots);
     
@@ -253,8 +253,8 @@ const postUpdateTour = async (req, res) => {
 
   // Handle schedules
   const tourSchedules = [];
-  for (let i = 1; i < duration; i++) {
-    const activity = (schedules && schedules[i]) || `Ngày ${i + 1}: Mô tả hoạt động cho ngày ${i + 1}`;
+  for (let i = 1; i <= duration; i++) {
+    const activity = (schedules && schedules[i]) || `Ngày ${i + 1}: Mô tả hoạt  cho ngày ${i + 1}`;
     tourSchedules.push({
       day: i + 1,
       activity: activity,
@@ -346,27 +346,28 @@ const requestDeleteTour = async (req, res) => {
   }
 };
 
-
-// Bật/tắt trạng thái tour
 const toggleTourStatus = async (req, res) => {
   const tourID = req.params.id;
   try {
     const tour = await Tour.findById(tourID);
     if (!tour) {
-      return res.status(404).send('Tour not found.');
+      return res.status(404).json({ message: 'Không tìm thấy tour' });
     }
 
-    if (tour.partner.toString() !== req.user._id.toString()) {
-      return res.status(403).send('You are not authorized to change this tour\'s status.');
+    // Kiểm tra đơn hàng trước khi bật/tắt tour
+    const existingOrders = await Order.find({ 'tour': tourID });
+    console.log('Existing Orders:', existingOrders);  
+    if (existingOrders.length > 0) {
+      return res.status(400).json({ message: 'Không thể tắt tour đã được đặt' });
     }
 
+    // Chuyển trạng thái bật/tắt
     tour.isDisabled = !tour.isDisabled;
     await tour.save();
-
-    res.redirect('/partner/tours/list');
+    res.redirect('/partner/tours/list'); 
   } catch (error) {
-    console.error('Error toggling tour status:', error);
-    res.status(500).send('Error toggling tour status');
+    console.error('Lỗi khi xác nhận bật/tắt tour:', error);
+    res.status(500).json({ message: 'Lỗi khi xác nhận bật/tắt tour', error });
   }
 };
 

@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doanh thu hàng năm</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Thêm Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .card {
+            border-radius: 15px;
             margin-bottom: 30px;
         }
 
@@ -22,25 +23,63 @@
             width: 100%;
             height: 400px;
         }
+
+        .total-revenue {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #17a2b8;
+        }
+
+        .btn-refresh {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-refresh:hover {
+            background-color: #0056b3;
+        }
+
+        /* Tạo không gian cho biểu đồ và bảng trong cùng một hàng */
+        .chart-and-table {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+        .chart-container {
+            width: 48%; /* Cho biểu đồ chiếm 50% chiều rộng */
+            height: 300px;
+        }
+
+        .table-container {
+            width: 48%; /* Cho bảng chiếm 50% chiều rộng */
+        }
     </style>
 </head>
 
 <body>
-    <%- include('../DashboardPN', { pageTitle: 'Doanh Thu Hàng Năm' }) %>  
+    <%- include('../DashboardPN', { pageTitle: 'Doanh Thu Hàng Năm' }) %>
 
     <div class="container mt-5">
-        <h1 class="text-center">Doanh Thu của Các Tour</h1>
+        <h1 class="text-center text-primary">Doanh Thu của Các Tour</h1>
         <p class="text-center">Xem doanh thu hàng năm của các tour mà bạn đã tạo</p>
 
-        <!-- Bảng Doanh Thu -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card shadow-lg">
-                    <div class="card-header bg-primary text-white">
+        <!-- Hàng chứa biểu đồ và bảng -->
+        <div class="chart-and-table">
+            <!-- Bảng Doanh Thu -->
+            <div class="table-container">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Danh sách Tour và Doanh Thu</h5>
+                        <button class="btn-refresh" onclick="location.reload()">Làm mới</button>
                     </div>
                     <div class="card-body">
-                        <p><strong>Tổng Doanh Thu:</strong> <%= totalRevenue.toLocaleString() %> VND</p>
+                        <h1>Welcome, <%= partnerName || 'Partner' %></h1>
+                        <p class="total-revenue"><strong>Tổng Doanh Thu:</strong> <%= totalRevenue.toLocaleString() %> VND</p>
 
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="thead-dark">
@@ -56,7 +95,7 @@
                                         <tr>
                                             <td><%= data.tourName %></td>
                                             <td><%= data.ordersCount %></td>
-                                            <td><%= data.revenue %> VND</td>
+                                            <td><%= data.revenue.toLocaleString() %> VND</td>
                                         </tr>
                                     <% }) %>
                                 <% } else { %>
@@ -69,12 +108,10 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Biểu đồ Doanh Thu
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card shadow-lg">
+            <!-- Biểu đồ Doanh Thu -->
+            <div class="chart-container">
+                <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0">Biểu đồ Doanh Thu của Các Tour</h5>
                     </div>
@@ -87,17 +124,17 @@
             </div>
         </div>
 
-    </div> -->
+    </div>
 
-    <!-- <script>
+    <script>
         // Dữ liệu cho biểu đồ
-        const revenueData = <%- JSON.stringify(revenueData) %>;  // Lấy dữ liệu từ backend
+        const revenueData = <%- JSON.stringify(revenueData) %>;
 
         // Lấy tên tour và doanh thu từ revenueData
         const tourNames = revenueData.map(data => data.tourName);
         const revenues = revenueData.map(data => data.revenue);
 
-        // Tạo màu ngẫu nhiên cho mỗi tour
+        // Tạo màu sắc ngẫu nhiên
         const getRandomColor = () => {
             const letters = '0123456789ABCDEF';
             let color = '#';
@@ -107,51 +144,37 @@
             return color;
         };
 
-        // Tạo mảng màu sắc ngẫu nhiên cho mỗi tour
         const colors = revenueData.map(() => getRandomColor());
 
-        // Tạo biểu đồ
+        // Vẽ biểu đồ tròn
         const ctx = document.getElementById('revenueChart').getContext('2d');
-        const revenueChart = new Chart(ctx, {
-            type: 'bar',  // Loại biểu đồ là bar
+        new Chart(ctx, {
+            type: 'pie',  // Chuyển thành biểu đồ tròn (pie chart)
             data: {
-                labels: tourNames,  // Trục X: tên các tour
+                labels: tourNames,
                 datasets: [{
                     label: 'Doanh Thu (VND)',
-                    data: revenues,  // Trục Y: doanh thu của mỗi tour
-                    backgroundColor: colors,  // Màu sắc cho mỗi tour
-                    borderColor: colors.map(color => color), // Màu viền cho mỗi tour
+                    data: revenues,
+                    backgroundColor: colors,
+                    borderColor: colors,
                     borderWidth: 1
                 }]
             },
             options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,  // Đảm bảo trục Y bắt đầu từ 0
-                        ticks: {
-                            callback: function(value) {
-                                return value.toLocaleString();  // Định dạng số liệu với dấu phân cách hàng nghìn
-                            }
-                        }
-                    }
-                },
                 responsive: true,
                 plugins: {
                     legend: {
-                        position: 'top',  // Vị trí của chú thích
+                        position: 'top'
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(tooltipItem) {
-                                return tooltipItem.raw.toLocaleString() + ' VND';
-                            }
+                            label: tooltipItem => tooltipItem.raw.toLocaleString() + ' VND'
                         }
                     }
                 }
             }
         });
-    </script> -->
-
+    </script>
 </body>
 
 </html>
