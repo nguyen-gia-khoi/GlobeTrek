@@ -43,87 +43,76 @@
             background-color: #0056b3;
         }
 
-        /* Tạo không gian cho biểu đồ và bảng trong cùng một hàng */
-        .chart-and-table {
+        .table-container {
+            margin-top: 30px;
+        }
+
+        .chart-row {
             display: flex;
-            justify-content: space-between;
-            gap: 30px;
+            justify-content: center;
         }
 
         .chart-container {
-            width: 48%; /* Cho biểu đồ chiếm 50% chiều rộng */
+            width: 60%;
             height: 300px;
-        }
-
-        .table-container {
-            width: 48%; /* Cho bảng chiếm 50% chiều rộng */
         }
     </style>
 </head>
 
 <body>
-    <%- include('../DashboardPN', { pageTitle: 'Doanh Thu Hàng Năm' }) %>
+    <%- include('../DashboardPN', { pageTitle: '' }) %>
 
     <div class="container mt-5">
-        <h1 class="text-center text-primary">Doanh Thu của Các Tour</h1>
+        <h1 class="text-center mt-5 text-primary">Doanh Thu của Các Tour</h1>
         <p class="text-center">Xem doanh thu hàng năm của các tour mà bạn đã tạo</p>
 
-        <!-- Hàng chứa biểu đồ và bảng -->
-        <div class="chart-and-table">
-            <!-- Bảng Doanh Thu -->
-            <div class="table-container">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Danh sách Tour và Doanh Thu</h5>
-                        <button class="btn-refresh" onclick="location.reload()">Làm mới</button>
-                    </div>
-                    <div class="card-body">
-                        <h1>Welcome, <%= partnerName || 'Partner' %></h1>
-                        <p class="total-revenue"><strong>Tổng Doanh Thu:</strong> <%= totalRevenue.toLocaleString() %> VND</p>
-
-                        <table class="table table-bordered table-striped table-hover">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>Tên Tour</th>
-                                    <th>Số Đơn Hàng</th>
-                                    <th>Doanh Thu</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (revenueData && revenueData.length > 0) { %>
-                                    <% revenueData.forEach(data => { %>
-                                        <tr>
-                                            <td><%= data.tourName %></td>
-                                            <td><%= data.ordersCount %></td>
-                                            <td><%= data.revenue.toLocaleString() %> VND</td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr>
-                                        <td colspan="3">Không có dữ liệu doanh thu</td>
-                                    </tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
+        <!-- Bảng Doanh Thu -->
+        <div class="table-container">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Danh sách Tour và Doanh Thu</h5>
+                    <button class="btn-refresh" onclick="location.reload()">Làm mới</button>
                 </div>
-            </div>
+                <div class="card-body">
+                    <h1>Welcome, <%= partnerName || 'Partner' %></h1>
+                    <p class="total-revenue"><strong>Tổng Doanh Thu đến nay:</strong> <%= totalRevenue.toLocaleString() %> VND</p>
+                    <p class="text-center"><strong>doanh thu đến ngày:</strong> <%= new Date().toLocaleDateString() %></p> 
 
-            <!-- Biểu đồ Doanh Thu -->
-            <div class="chart-container">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Biểu đồ Doanh Thu của Các Tour</h5>
-                    </div>
-                    <div class="card-body">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Tên Tour</th>
+                                <th>Số Đơn Hàng</th>
+                                <th>Doanh Thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (revenueData && revenueData.length > 0) { %>
+                                <% revenueData.forEach(data => { %>
+                                    <tr>
+                                        <td><%= data.tourName %></td>
+                                        <td><%= data.ordersCount %></td>
+                                        <td><%= data.revenue.toLocaleString() %> VND</td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="3">Không có dữ liệu doanh thu</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+
+                    <!-- Biểu đồ Doanh Thu -->
+                    <div class="chart-row">
                         <div class="chart-container">
                             <canvas id="revenueChart"></canvas>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>

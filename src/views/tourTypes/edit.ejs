@@ -9,7 +9,7 @@
 <body>
     <%- include('../header', { pageTitle: 'Edit Tour Type' }) %>
     <div class="container mt-5">
-        <h1>Edit Tour Type</h1>
+        <h1 class="mt-5">Edit Tour Type</h1>
         <form action="/tourTypes/<%= tourType._id %>?_method=PUT" method="POST">
             <div class="form-group">
                 <label for="name">Tour Type Name:</label>

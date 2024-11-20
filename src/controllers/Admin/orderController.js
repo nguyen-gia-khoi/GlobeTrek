@@ -91,31 +91,35 @@ const deleteOrder = async (req, res) => {
 const renderOrdersPage = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
-    const skip = (page - 1) * limit;
+    const pageNumber = Math.max(1, parseInt(page)); // Đảm bảo page không nhỏ hơn 1
+    const pageLimit = Math.min(50, parseInt(limit)); // Giới hạn limit tối đa để tránh quá nhiều dữ liệu
+    const skip = (pageNumber - 1) * pageLimit;
     
     // Tính tổng số đơn hàng
     const totalOrders = await Order.countDocuments();
-    const totalPages = Math.ceil(totalOrders / limit);
+    const totalPages = Math.ceil(totalOrders / pageLimit);
 
     // Lấy danh sách đơn hàng phân trang
     const orders = await Order.find()
       .skip(skip)
-      .limit(parseInt(limit))
+      .limit(pageLimit)
       .populate("user", "email")
       .populate("tour", "title");
 
-    // Render the 'orders.ejs' template and pass the data correctly
+    // Render the 'orders.ejs' template và truyền dữ liệu
     res.render('Order/orders', {
+      token: req.cookies.AdminaccessToken || null,  // Kiểm tra token từ cookie
       orders,
       totalPages,
       totalOrders,
-      currentPage: parseInt(page),
+      currentPage: pageNumber,
     });
   } catch (error) {
     console.log("Error in renderOrdersPage controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
+
 
 module.exports = {
   renderOrdersPage,

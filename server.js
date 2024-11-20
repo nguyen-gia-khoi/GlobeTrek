@@ -31,10 +31,12 @@ const userRoute = require('./src/routes/Admin/userRoutes')
 const partnertourroutes = require("./src/routes/Partner/partnerToursRoutes"); 
 const partnerOrderRoutes = require("./src/routes/Partner/partnerOrderRoutes");
  const partneRevenueRoutes = require("./src/routes/Partner/PartnerrevenueRoutes"); 
+//logout
+const logout = require('./src/routes/Logout/logoutRoutes')
+
 
 const cookieParser = require("cookie-parser");  
 const cors = require("cors");
-
 
 
 // Cấu hình view engine
@@ -48,7 +50,7 @@ app.get('/home', (req, res) => {
 // Home route
 app.get('/homePartner', (req, res) => {
   // Redirect to the login route by default
-  res.redirect('/api/auth/homePartner');
+  res.redirect('/partner/revenue');
 });
 
 app.get('/', (req, res) => {
@@ -81,6 +83,7 @@ app.use(cors(corsOptions));
 
 // Auth routes
 app.use("/api/auth", authRoutes);
+app.use('/',logout);
 
 // User routes
 app.use('/tours', toursRouter);

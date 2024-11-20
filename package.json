@@ -23,6 +23,7 @@
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "ioredis": "^5.4.1",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "mailtrap": "^3.4.0",
     "method-override": "^3.0.0",
