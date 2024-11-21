@@ -327,11 +327,9 @@ const callback = async (req, res) => {
 
     // Exchange the authorization code for an access token
     const accessTokenData = await pointer.getAccessToken(code);
+  
+    const {user: { email } } = accessTokenData;
     console.log("Access Token Data:", accessTokenData);
-
-    const {user: { _id: userId, email } } = accessTokenData;
-
-    console.log(accessTokenData)
 
     if (!email) {
       return res.status(400).json({ message: "User ID and email are required" });
@@ -345,11 +343,11 @@ const callback = async (req, res) => {
     } else {
       user.email = email;
       await user.save();
-      console.log("User already exists and was updated:", user);
+      console.log("User already exists and was updated:", user );
     }
-    const userID = user._id
+    const userId = user._id
     // Generate JWT
-    const accessToken = jwt.sign({ userID, email}, process.env.ACCESS_TOKEN_SECRET, {
+    const accessToken = jwt.sign({ userId, email}, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "1h",
     });
 
@@ -357,8 +355,8 @@ const callback = async (req, res) => {
     return res.json({
       login: true,
       role: user.role,
-      email: user.email,
       _id: user._id,
+      email: user.email,
       accessToken,
     });
   } catch (error) {
