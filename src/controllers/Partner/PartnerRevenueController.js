@@ -4,7 +4,26 @@ const { Tour } = require('../../models/Tour');
 const User = require('../../models/User');
 const moment = require('moment');
 
-// Controller
+// Hàm tính doanh thu theo khoảng thời gian
+const getRevenueByTimePeriod = async (tourIds, startDate, endDate) => {
+  return Order.aggregate([
+    {
+      $match: {
+        tour: { $in: tourIds },
+        status: 'paid', // Chỉ tính đơn hàng đã thanh toán
+        createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }, // Lọc theo khoảng thời gian
+      },
+    },
+    {
+      $group: {
+        _id: '$tour', // Nhóm theo tour ID
+        totalRevenue: { $sum: '$totalValue' },
+        ordersCount: { $sum: 1 },
+      },
+    },
+  ]);
+};
+
 const getPartnerRevenue = async (req, res) => {
   try {
     const token = req.cookies.PartneraccessToken;
@@ -12,6 +31,8 @@ const getPartnerRevenue = async (req, res) => {
     if (!token) {
       return res.status(401).json({ message: 'Token not found, please login' });
     }
+
+    // Giải mã token
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const partnerId = decoded.userId;
 
@@ -19,32 +40,74 @@ const getPartnerRevenue = async (req, res) => {
       return res.status(400).json({ message: 'Partner ID not found in token' });
     }
 
-    const tours = await Tour.find({ partner: partnerId });
+    // Lấy danh sách tours của đối tác
+    const tours = await Tour.find({ partner: partnerId }).select('_id title');
 
-    let revenueData = [];
-    let totalRevenue = 0;
-    let totalActualRevenue = 0; // Tổng doanh thu thực tế
-
-    for (let tour of tours) {
-      const orders = await Order.find({ tour: tour._id, status: 'paid' });
-
-      let tourRevenue = 0;
-      orders.forEach(order => {
-        tourRevenue += order.totalValue;
-      });
-
-      totalRevenue += tourRevenue;
-
-      let actualRevenue = tourRevenue * 0.7; // Giả sử tỷ lệ thực tế là 70%
-      totalActualRevenue += actualRevenue; // Cộng dồn doanh thu thực tế
-
-      revenueData.push({
-        tourName: tour.title,
-        revenue: tourRevenue,
-        actualRevenue: actualRevenue,
-        ordersCount: orders.length
+    if (!tours.length) {
+      return res.render('Revenue/Partner/PartnerRevenue', {
+        success: true,
+        partnerName: '',
+        partnerEmail: '',
+        revenueData: [],
+        totalRevenue: 0,
+        totalActualRevenue: 0,
+        dailyRevenue: [],
+        weeklyRevenue: [],
+        monthlyRevenue: [],
+        yearlyRevenue: [],
       });
     }
+
+    // Lấy danh sách tour ID
+    const tourIds = tours.map(tour => tour._id);
+
+    // Tính tổng doanh thu và doanh thu thực tế
+    const orders = await Order.aggregate([
+      {
+        $match: {
+          tour: { $in: tourIds },
+          status: 'paid',
+        },
+      },
+      {
+        $group: {
+          _id: '$tour', // Nhóm theo tour ID
+          totalRevenue: { $sum: '$totalValue' },
+          ordersCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    let totalRevenue = 0;
+    let totalActualRevenue = 0;
+    const revenueData = tours.map(tour => {
+      const order = orders.find(o => o._id.toString() === tour._id.toString());
+      if (order) {
+        const tourRevenue = order.totalRevenue;
+        const actualRevenue = tourRevenue * 0.7; // Giả sử tỷ lệ thực tế là 70%
+        totalRevenue += tourRevenue;
+        totalActualRevenue += actualRevenue;
+
+        return {
+          tourName: tour.title,
+          revenue: tourRevenue,
+          actualRevenue: actualRevenue,
+          ordersCount: order.ordersCount,
+        };
+      }
+      return {
+        tourName: tour.title,
+        revenue: 0,
+        actualRevenue: 0,
+        ordersCount: 0,
+      };
+    });
+
+    // Tính doanh thu theo ngày, tuần, tháng, năm
+    const dailyRevenue = await getRevenueByTimePeriod(tourIds, moment().startOf('day').toISOString(), moment().endOf('day').toISOString());
+    const weeklyRevenue = await getRevenueByTimePeriod(tourIds, moment().startOf('week').toISOString(), moment().endOf('week').toISOString());
+    const monthlyRevenue = await getRevenueByTimePeriod(tourIds, moment().startOf('month').toISOString(), moment().endOf('month').toISOString());
+    const yearlyRevenue = await getRevenueByTimePeriod(tourIds, moment().startOf('year').toISOString(), moment().endOf('year').toISOString());
 
     const partner = await User.findById(partnerId).select('name email');
 
@@ -54,7 +117,11 @@ const getPartnerRevenue = async (req, res) => {
       partnerEmail: partner.email,
       revenueData: revenueData,
       totalRevenue: totalRevenue,
-      totalActualRevenue: totalActualRevenue, // Trả về tổng doanh thu thực tế
+      totalActualRevenue: totalActualRevenue,
+      dailyRevenue: dailyRevenue,
+      weeklyRevenue: weeklyRevenue,
+      monthlyRevenue: monthlyRevenue,
+      yearlyRevenue: yearlyRevenue,
     });
   } catch (err) {
     console.error(err);
