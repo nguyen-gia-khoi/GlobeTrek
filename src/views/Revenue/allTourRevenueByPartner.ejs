@@ -21,15 +21,15 @@
                     <table class="table table-bordered">
                         <thead class="thead-light">
                             <tr>
-                                <th>Tour ID</th>
+                                <th>Tour name</th>
                                 <th>Doanh thu (VNĐ)</th>
                                 <th>Số đơn hàng</th>
-                            </tr>
+                            </tr>   
                         </thead>
                         <tbody>
                             <% partner.tours.forEach(tour => { %>
                                 <tr>
-                                    <td><%= tour.tourId %></td>
+                                    <td><%= tour.title %></td>
                                     <td><%= tour.sales.toLocaleString() %> VNĐ</td>
                                     <td><%= tour.orders %></td>
                                 </tr>

@@ -11,14 +11,14 @@ const {
 const {verifyAdmin} = require('../../Middleware/authMiddleware');
 
 // Route hiển thị trang đơn hàng
-router.get('/view',verifyAdmin, renderOrdersPage);
+router.get('/view', renderOrdersPage);
 
 // Lấy tất cả đơn hàng
-router.get('/',verifyAdmin, getAllOrders);
+router.get('/', getAllOrders);
 // Cập nhật trạng thái đơn hàng
-router.put('/:orderId/status',verifyAdmin, updateOrderStatus);
+router.put('/:orderId/status', updateOrderStatus);
 
 // Xóa đơn hàng
-router.delete('/:orderId',verifyAdmin, deleteOrder);
+router.delete('/:orderId', deleteOrder);
 
 module.exports = router;

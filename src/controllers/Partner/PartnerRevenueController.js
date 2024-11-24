@@ -1,19 +1,17 @@
-const jwt = require('jsonwebtoken');  // Đảm bảo bạn đã cài thư viện jwt
-const Order = require('../../models/Order');  // Mô hình Order
-const { Tour } = require('../../models/Tour');  // Mô hình Tour
-const User = require('../../models/User');  // Mô hình User để lấy thông tin partner
+const jwt = require('jsonwebtoken');
+const Order = require('../../models/Order');
+const { Tour } = require('../../models/Tour');
+const User = require('../../models/User');
+const moment = require('moment');
 
 // Controller
 const getPartnerRevenue = async (req, res) => {
   try {
-    // Lấy token từ cookie
     const token = req.cookies.PartneraccessToken;
 
     if (!token) {
       return res.status(401).json({ message: 'Token not found, please login' });
     }
-
-    // Giải mã token để lấy thông tin userId (partnerId)
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const partnerId = decoded.userId;
 
@@ -21,45 +19,42 @@ const getPartnerRevenue = async (req, res) => {
       return res.status(400).json({ message: 'Partner ID not found in token' });
     }
 
-    // Tìm tất cả các tour của partner
     const tours = await Tour.find({ partner: partnerId });
 
-    // Mảng để lưu doanh thu của từng tour
     let revenueData = [];
-    let totalRevenue = 0;  // Biến để tính tổng doanh thu
+    let totalRevenue = 0;
+    let totalActualRevenue = 0; // Tổng doanh thu thực tế
 
-    // Lặp qua các tour của partner và tính doanh thu cho mỗi tour
     for (let tour of tours) {
-      // Lấy tất cả đơn hàng đã thanh toán của tour này
       const orders = await Order.find({ tour: tour._id, status: 'paid' });
 
-      // Tính tổng doanh thu của tour
       let tourRevenue = 0;
       orders.forEach(order => {
-        tourRevenue += order.totalValue;  // Tổng giá trị đơn hàng là totalAmount
+        tourRevenue += order.totalValue;
       });
 
-      // Thêm doanh thu của tour vào tổng doanh thu
       totalRevenue += tourRevenue;
 
-      // Thêm dữ liệu doanh thu của tour vào mảng revenueData
+      let actualRevenue = tourRevenue * 0.7; // Giả sử tỷ lệ thực tế là 70%
+      totalActualRevenue += actualRevenue; // Cộng dồn doanh thu thực tế
+
       revenueData.push({
-        tourName: tour.title,  // Tên tour
-        revenue: tourRevenue,  // Doanh thu của tour
-        ordersCount: orders.length  // Số lượng đơn hàng đã thanh toán
+        tourName: tour.title,
+        revenue: tourRevenue,
+        actualRevenue: actualRevenue,
+        ordersCount: orders.length
       });
     }
 
-    // Tìm thông tin partner từ User model
-    const partner = await User.findById(partnerId).select('name email'); // Lấy tên và email của partner
+    const partner = await User.findById(partnerId).select('name email');
 
-    // Trả về doanh thu của các tour và thông tin partner cho client
-    res.render('Revenue/PartnerRevenue', {
+    res.render('Revenue/Partner/PartnerRevenue', {
       success: true,
-      partnerName: partner.name,  // Trả về tên partner
-      partnerEmail: partner.email, // Trả về email của partner
-      revenueData: revenueData,  // Truyền dữ liệu doanh thu của các tour
-      totalRevenue: totalRevenue  // Trả về tổng doanh thu của tất cả các tour
+      partnerName: partner.name,
+      partnerEmail: partner.email,
+      revenueData: revenueData,
+      totalRevenue: totalRevenue,
+      totalActualRevenue: totalActualRevenue, // Trả về tổng doanh thu thực tế
     });
   } catch (err) {
     console.error(err);

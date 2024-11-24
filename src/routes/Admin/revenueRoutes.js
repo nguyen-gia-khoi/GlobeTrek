@@ -5,22 +5,28 @@ const {
   getMonthlyRevenue,
   getYearlyRevenue,
   getWeeklyRevenueForAllPartners,
-  getTotalRevenueForAllPartners
+  getMonthlyRevenueForEachPartner,
+  getTotalRevenueForAllPartners,
+  processMonthlyPayments
 } = require("../../controllers/Admin/revenueController");
 const {verifyAdmin} = require('../../Middleware/authMiddleware');
 // Route lấy doanh thu hàng ngày cho admin
-router.get("/daily",verifyAdmin, getDailyRevenue);
+router.get("/daily", getDailyRevenue);
 
 // Route lấy doanh thu hàng tháng cho admin
-router.get("/monthly",verifyAdmin, getMonthlyRevenue);
+router.get("/monthly", getMonthlyRevenue);
 
 // Route lấy doanh thu hàng năm cho admin
-router.get("/yearly",verifyAdmin, getYearlyRevenue);
+router.get("/yearly", getYearlyRevenue);
+
+router.get("/process-payment", processMonthlyPayments);
 
 // doanh thu trong tuần của partner.
-router.get("/partner/weekly-revenue",verifyAdmin, getWeeklyRevenueForAllPartners);
+router.get("/partner/weekly-revenue", getWeeklyRevenueForAllPartners);
 
-router.get("/partner/total-revenue",verifyAdmin,getTotalRevenueForAllPartners);
+router.get("/partner/monthly-revenue", getMonthlyRevenueForEachPartner);
+
+router.get("/partner/total-revenue",getTotalRevenueForAllPartners);
 
 
 
