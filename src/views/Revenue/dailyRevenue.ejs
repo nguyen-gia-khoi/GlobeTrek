@@ -1,49 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doanh thu hàng ngày</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-    <%- include('../header', { pageTitle: '' }) %>
+    <%- include('../header', { pageTitle: 'Doanh thu hàng ngày' }) %>
     <div class="container mt-5">
         <h2 class="mt-5">Doanh thu hàng ngày trong tuần</h2>
 
-        <canvas id="revenueChart" width="400" height="200"></canvas> 
+        <canvas id="revenueChart" width="400" height="200"></canvas>
 
         <script>
-            const revenueData = <%- JSON.stringify(revenueData) %>; 
-            
-            // Dữ liệu cho biểu đồ
-            const labels = revenueData.map(data => data.date); 
-            const dataValues = revenueData.map(data => data.total);
+            // Lấy dữ liệu doanh thu từ backend
+            const revenueData = <%- JSON.stringify(revenueData) %>;
 
-            // Biểu đồ doanh thu
+            // Kiểm tra xem dữ liệu có hợp lệ không
+            console.log(revenueData);
+
+            // Chuyển đổi dữ liệu thành các mảng label và giá trị doanh thu cho admin và partner
+            const labels = revenueData.map(data => data.date); // Lấy các ngày
+            const adminRevenue = revenueData.map(data => data.admin); // Doanh thu của admin
+            const partnerRevenue = revenueData.map(data => data.partner); // Doanh thu của partner
+
+            // Kiểm tra dữ liệu sau khi đã chuyển đổi
+            console.log(labels, adminRevenue, partnerRevenue);
+
+            // Vẽ biểu đồ doanh thu
             const ctx = document.getElementById('revenueChart').getContext('2d');
             const revenueChart = new Chart(ctx, {
-                type: 'bar', 
+                type: 'bar',
                 data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Doanh thu hàng ngày (VNĐ)', 
-                        data: dataValues,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)', 
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1 
-                    }]
+                    labels: labels, // Các ngày trong tuần
+                    datasets: [
+                        {
+                            label: 'Doanh thu hàng ngày của Admin (VNĐ)', // Nhãn cho doanh thu Admin
+                            data: adminRevenue, // Dữ liệu doanh thu của Admin
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)', // Màu nền của các cột
+                            borderColor: 'rgba(75, 192, 192, 1)', // Màu viền của các cột
+                            borderWidth: 1 // Độ dày viền
+                        },
+                        {
+                            label: 'Doanh thu hàng ngày của Partner (VNĐ)', // Nhãn cho doanh thu Partner
+                            data: partnerRevenue, // Dữ liệu doanh thu của Partner
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)', // Màu nền khác cho partner
+                            borderColor: 'rgba(153, 102, 255, 1)', // Màu viền khác cho partner
+                            borderWidth: 1 // Độ dày viền
+                        }
+                    ]
                 },
                 options: {
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true, // Đảm bảo trục y bắt đầu từ 0
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN'); // Hiển thị giá trị VNĐ
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.raw.toLocaleString('vi-VN'); // Hiển thị tooltip với giá trị VNĐ
+                                }
+                            }
                         }
                     }
                 }
             });
         </script>
+
     </div>
 </body>
+
 </html>

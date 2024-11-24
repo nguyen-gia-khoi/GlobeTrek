@@ -3,9 +3,9 @@ const router = express.Router();
 
 router.post('/logout', (req, res) => {
   if (req.cookies.PartneraccessToken) {
-      delete req.cookies.PartneraccessToken; // Xóa session của Partner
+      delete req.cookies.PartneraccessToken; 
   } else if (req.cookies.AdminaccessToken) {
-      delete req.cookies.AdminaccessToken; // Xóa session của Admin
+      delete req.cookies.AdminaccessToken; 
   }
 
   // Redirect về trang login

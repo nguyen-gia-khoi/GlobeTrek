@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,35 +8,69 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Thêm Chart.js -->
 </head>
+
 <body>
-    <%- include('../header', { pageTitle: '' }) %>
+    <%- include('../header', { pageTitle: 'Doanh thu hàng tháng' }) %>
     <div class="container mt-5">
         <h2 class="mt-5">Doanh thu hàng tháng 6 tháng gần nhất</h2>
 
         <canvas id="monthlyRevenueChart" width="400" height="200"></canvas> <!-- Khung vẽ biểu đồ -->
 
         <script>
-            const labels = <%- JSON.stringify(labels) %>; // Nhãn cho trục x
-            const monthlyRevenues = <%- JSON.stringify(monthlyRevenues) %>; // Dữ liệu cho biểu đồ
+            // Dữ liệu doanh thu từ backend
+            const labels = <%- JSON.stringify(labels) %>; // Nhãn cho trục x (tháng)
+            const monthlyRevenues = <%- JSON.stringify(monthlyRevenues) %>; // Dữ liệu doanh thu tổng
+            const adminRevenues = <%- JSON.stringify(adminRevenues) %>; // Dữ liệu doanh thu của admin
+            const partnerRevenues = <%- JSON.stringify(partnerRevenues) %>; // Dữ liệu doanh thu của partner
 
-            // Biểu đồ doanh thu
+            // Biểu đồ doanh thu hàng tháng
             const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
             const monthlyRevenueChart = new Chart(ctx, {
                 type: 'bar', // Kiểu biểu đồ
                 data: {
-                    labels: labels.reverse(), // Nhãn tháng
-                    datasets: [{
-                        label: 'Doanh thu hàng tháng (VNĐ)', // Nhãn cho bộ dữ liệu
-                        data: monthlyRevenues.reverse(), // Dữ liệu để hiển thị
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // Màu nền của cột
-                        borderColor: 'rgba(75, 192, 192, 1)', // Màu viền của cột
-                        borderWidth: 1 // Độ dày viền
-                    }]
+                    labels: labels.reverse(), // Nhãn tháng (đảo ngược để hiển thị từ tháng mới nhất)
+                    datasets: [
+                        {
+                            label: 'Doanh thu tổng (VNĐ)', // Nhãn cho bộ dữ liệu tổng
+                            data: monthlyRevenues.reverse(), // Dữ liệu doanh thu tổng
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)', // Màu nền của cột tổng
+                            borderColor: 'rgba(75, 192, 192, 1)', // Màu viền của cột tổng
+                            borderWidth: 1 // Độ dày viền
+                        },
+                        {
+                            label: 'Doanh thu Admin (30%) (VNĐ)', // Nhãn cho bộ dữ liệu của admin
+                            data: adminRevenues.reverse(), // Dữ liệu doanh thu của admin
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)', // Màu nền của cột admin
+                            borderColor: 'rgba(255, 99, 132, 1)', // Màu viền của cột admin
+                            borderWidth: 1 // Độ dày viền
+                        },
+                        {
+                            label: 'Doanh thu Partner (70%) (VNĐ)', // Nhãn cho bộ dữ liệu của partner
+                            data: partnerRevenues.reverse(), // Dữ liệu doanh thu của partner
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)', // Màu nền của cột partner
+                            borderColor: 'rgba(54, 162, 235, 1)', // Màu viền của cột partner
+                            borderWidth: 1 // Độ dày viền
+                        }
+                    ]
                 },
                 options: {
                     scales: {
                         y: {
-                            beginAtZero: true // Bắt đầu từ 0 trên trục y
+                            beginAtZero: true, // Bắt đầu từ 0 trên trục y
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN'); // Định dạng giá trị VNĐ
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.raw.toLocaleString('vi-VN'); // Định dạng tooltip với VNĐ
+                                }
+                            }
                         }
                     }
                 }
@@ -43,4 +78,5 @@
         </script>
     </div>
 </body>
+
 </html>

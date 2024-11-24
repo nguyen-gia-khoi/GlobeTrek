@@ -1,46 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doanh thu hàng năm</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Thêm Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-    <%- include('../header', { pageTitle: '' }) %>
-    <div class="container mt-5">
-        <h2 class="mt-5">Doanh thu hàng năm cho 2 năm gần nhất</h2>
 
-        <canvas id="yearlyRevenueChart" width="400" height="200"></canvas> <!-- Khung vẽ biểu đồ -->
+<body>
+    <%- include('../header', { pageTitle: 'Doanh thu hàng năm' }) %>
+    <div class="container mt-5">
+        <h2 class="mt-5 text-center text-primary">Doanh thu hàng năm cho 2 năm gần nhất</h2>
+
+        <!-- Khung vẽ biểu đồ nhỏ hơn -->
+        <div class="chart-container">
+            <canvas id="yearlyRevenueChart" ></canvas> 
+        </div>
 
         <script>
-            const labels = <%- JSON.stringify(labels) %>; // Nhãn cho trục x
-            const revenues = <%- JSON.stringify(revenues) %>; // Dữ liệu cho biểu đồ
+        
+            const labels = <%- JSON.stringify(labels) %>; 
+            const adminYearlyRevenue = <%- JSON.stringify(adminRevenues) %>;
+            const partnerYearlyRevenue = <%- JSON.stringify(partnerRevenues) %>; 
 
-            // Biểu đồ doanh thu
+            const totalRevenue = adminYearlyRevenue.map((adminRevenue, index) => {
+                return adminRevenue + partnerYearlyRevenue[index];
+            });
             const ctx = document.getElementById('yearlyRevenueChart').getContext('2d');
             const yearlyRevenueChart = new Chart(ctx, {
-                type: 'bar', // Kiểu biểu đồ
+                type: 'bar', 
                 data: {
-                    labels: labels, // Nhãn năm
-                    datasets: [{
-                        label: 'Doanh thu hàng năm (VNĐ)', // Nhãn cho bộ dữ liệu
-                        data: revenues, // Dữ liệu để hiển thị
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // Màu nền của cột
-                        borderColor: 'rgba(75, 192, 192, 1)', // Màu viền của cột
-                        borderWidth: 1 // Độ dày viền
-                    }]
+                    labels: labels, 
+                    datasets: [
+                        {
+                            label: 'Doanh thu Admin (VNĐ)', 
+                            data: adminYearlyRevenue, 
+                            backgroundColor: ['rgba(75, 192, 192, 0.7)'], 
+                            borderColor: 'rgba(75, 192, 192, 1)', 
+                            borderWidth: 1 
+                        },
+                        {
+                            label: 'Doanh thu Partner (VNĐ)',
+                            data: partnerYearlyRevenue, 
+                            backgroundColor: ['rgba(153, 102, 255, 0.7)'], 
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            borderWidth: 1 
+                        }
+                    ]
                 },
                 options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true // Bắt đầu từ 0 trên trục y
+                    responsive: true, 
+                    cutoutPercentage: 60, 
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.raw.toLocaleString('vi-VN'); 
+                                }
+                            }
                         }
                     }
                 }
             });
         </script>
+
     </div>
 </body>
+
 </html>

@@ -30,7 +30,8 @@ const userRoute = require('./src/routes/Admin/userRoutes')
 //partner
 const partnertourroutes = require("./src/routes/Partner/partnerToursRoutes"); 
 const partnerOrderRoutes = require("./src/routes/Partner/partnerOrderRoutes");
- const partneRevenueRoutes = require("./src/routes/Partner/PartnerrevenueRoutes"); 
+const partneRevenueRoutes = require("./src/routes/Partner/PartnerrevenueRoutes"); 
+
 //logout
 const logout = require('./src/routes/Logout/logoutRoutes')
 
