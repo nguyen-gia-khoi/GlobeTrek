@@ -65,6 +65,16 @@
         .table-container {
             margin-top: 30px;
         }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            margin: 0 10px;
+        }
     </style>
 </head>
 
@@ -74,6 +84,14 @@
     <div class="container mt-5">
         <h1 class="text-center mt-5 text-primary">Doanh Thu của Các Tour</h1>
         <p class="text-center">Xem doanh thu của các tour mà bạn đã tạo</p>
+
+        <!-- Button Group -->
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="updateChart('daily')">Doanh Thu Ngày</button>
+            <button class="btn btn-primary" onclick="updateChart('weekly')">Doanh Thu Tuần</button>
+            <button class="btn btn-primary" onclick="updateChart('monthly')">Doanh Thu Tháng</button>
+            <button class="btn btn-primary" onclick="updateChart('yearly')">Doanh Thu Năm</button>
+        </div>
 
         <!-- Dashboard -->
         <div class="dashboard-container">
@@ -116,13 +134,13 @@
                                     <tr>
                                         <td><%= data.tourName %></td>
                                         <td><%= data.ordersCount %></td>
-                                        <td><%= data.revenue.toLocaleString() %> VND</td>
-                                        <td><%= data.actualRevenue.toLocaleString() %> VND</td>
+                                        <td><%= data.revenue.toLocaleString() %></td>
+                                        <td><%= data.actualRevenue.toLocaleString() %></td>
                                     </tr>
                                 <% }) %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="4">Không có dữ liệu doanh thu</td>
+                                    <td colspan="4" class="text-center">Không có dữ liệu</td>
                                 </tr>
                             <% } %>
                         </tbody>
@@ -133,55 +151,49 @@
     </div>
 
     <script>
-        // Dữ liệu cho biểu đồ
-        const revenueData = <%- JSON.stringify(revenueData) %>;
-
-        // Lấy tên tour và doanh thu từ revenueData
-        const tourNames = revenueData.map(data => data.tourName);
-        const revenues = revenueData.map(data => data.revenue);
-
-        // Tạo màu sắc ngẫu nhiên
-        const getRandomColor = () => {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
-        };
-
-        const colors = revenueData.map(() => getRandomColor());
-
-        // Vẽ biểu đồ tròn
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',  // Biểu đồ tròn
+        // Khởi tạo biểu đồ doanh thu
+        var ctx = document.getElementById('revenueChart').getContext('2d');
+        var revenueChart = new Chart(ctx, {
+            type: 'bar',
             data: {
-                labels: tourNames,
+                labels: ['Hôm nay', 'Tuần này', 'Tháng này', 'Năm nay'],
                 datasets: [{
-                    label: 'Doanh Thu (VND)',
-                    data: revenues,
-                    backgroundColor: colors,
-                    borderColor: colors,
-                    borderWidth: 1
+                    label: 'Doanh Thu',
+                    data: [<%= dailyRevenue[0]?.totalRevenue || 0 %>, <%= weeklyRevenue[0]?.totalRevenue || 0 %>, <%= monthlyRevenue[0]?.totalRevenue || 0 %>, <%= yearlyRevenue[0]?.totalRevenue || 0 %>],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
                 }]
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                return tooltipItem.label + ': ' + tooltipItem.raw.toLocaleString() + ' VND';
-                            }
-                        }
-                    }
-                }
+                maintainAspectRatio: false,
             }
         });
+
+        // Hàm cập nhật biểu đồ theo khoảng thời gian
+        function updateChart(period) {
+            let revenueData = [];
+            let labels = [];
+            if (period === 'daily') {
+                revenueData = [<%= dailyRevenue[0]?.totalRevenue || 0 %>];
+                labels = ['Hôm nay'];
+            } else if (period === 'weekly') {
+                revenueData = [<%= weeklyRevenue[0]?.totalRevenue || 0 %>];
+                labels = ['Tuần này'];
+            } else if (period === 'monthly') {
+                revenueData = [<%= monthlyRevenue[0]?.totalRevenue || 0 %>];
+                labels = ['Tháng này'];
+            } else if (period === 'yearly') {
+                revenueData = [<%= yearlyRevenue[0]?.totalRevenue || 0 %>];
+                labels = ['Năm nay'];
+            }
+
+            // Cập nhật dữ liệu của biểu đồ
+            revenueChart.data.labels = labels;
+            revenueChart.data.datasets[0].data = revenueData;
+            revenueChart.update();
+        }
     </script>
 </body>
 
