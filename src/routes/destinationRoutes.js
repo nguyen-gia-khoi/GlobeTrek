@@ -4,5 +4,5 @@ const destinationController = require('../controllers/Admin/destinationControlle
 const {verifyAdmin} = require('../Middleware/authMiddleware');
 
 // Định nghĩa các route cho Destination
-router.get('/', verifyAdmin , destinationController.getAllDestinations); // Lấy danh sách Destination
+router.get('/', destinationController.getAllDestinations); // Lấy danh sách Destination
 module.exports = router;
