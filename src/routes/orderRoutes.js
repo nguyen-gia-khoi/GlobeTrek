@@ -8,6 +8,7 @@ router.get('/api/list', authController.verifyToken, orderController.getUserOrder
 router.post('/api/process-payment', orderController.processPayment);
 router.post('/api/cancel',   orderController.cancelOrder); 
 router.post('/api/refund', orderController.Refund);
+router.post('/api/whrefund', orderController.weekhookRefund);
 
 
 module.exports = router;
