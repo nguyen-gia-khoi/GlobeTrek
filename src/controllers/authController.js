@@ -372,7 +372,7 @@ const callback = async (req, res) => {
       accessToken,
     });
   } catch (error) {
-    console.error("Error in callback:", error);  // Log full error object
+    console.error("Error in callback:", JSON.stringify(error, null, 2));  // Log full error object
     return res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
