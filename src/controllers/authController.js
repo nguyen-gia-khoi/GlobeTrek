@@ -339,7 +339,7 @@ const callback = async (req, res) => {
 
     // Exchange the authorization code for an access token
     const accessTokenData = await pointer.getAccessToken(code);
-  
+    console.log(accessTokenData)
     const {user: { email } } = accessTokenData;
     console.log("Access Token Data:", accessTokenData);
 
