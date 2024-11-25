@@ -14,7 +14,7 @@ const {verifyAdmin} = require('../../Middleware/authMiddleware');
 router.get('/view', renderOrdersPage);
 
 // Lấy tất cả đơn hàng
-router.get('/', verifyAdmin , getAllOrders);
+router.get('/' , getAllOrders);
 // Cập nhật trạng thái đơn hàng
 router.put('/:orderId/status', verifyAdmin , updateOrderStatus);
 

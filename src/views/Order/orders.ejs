@@ -5,59 +5,106 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách Đơn hàng</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .toggle-content {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <%- include('../header', { pageTitle: ' ' }) %>
+    <%- include('../header', { pageTitle: 'Danh sách Đơn hàng' }) %>
 
     <div class="container mt-5">
         <h1 class="mt-5">Danh sách Đơn hàng</h1>
 
-        <% const ordersList = orders || []; %> <!-- Check if 'orders' is null or undefined -->
-
-        <% if (ordersList.length === 0) { %>
-            <div class="alert alert-warning" role="alert">Không có đơn hàng nào được tìm thấy.</div>
+        <% if (ordersSummary.length === 0) { %>
+            <div class="alert alert-warning">Không có đơn hàng nào được tìm thấy.</div>
         <% } else { %>
-            <table class="table">
+            <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>ID Đơn hàng</th>
-                        <th>Email Người dùng</th>
-                        <th>Sản phẩm</th>
-                        <th>Số lượng người lớn</th>
-                        <th>Số lượng trẻ em</th>
-                        <th>Tổng giá trị</th>
-                        <th>Trạng thái</th>
-                        <th>Ngày đặt</th>
+                        <th>Tên Tour</th>
+                        <th>Ngày Đặt</th>
+                        <th>Tổng số Người</th>
+                        <th>Tổng số Vé</th>
+                        <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% ordersList.forEach(order => { %>
+                    <% ordersSummary.forEach((summary, index) => { %>
                         <tr>
-                            <td><%= order.id || "Không có ID" %></td>
-                            <td><%= order.user.email %> || "Không có email" %></td>
+                            <td><%= summary.orders[0].tourDetails.title %></td>
+                            <td><%= new Date(summary._id.bookingDate).toLocaleDateString("vi-VN") %></td>
+                            <td><%= summary.totalPeople %></td>
+                            <td><%= summary.totalTickets %></td>
                             <td>
-                                <% if (order.tour && order.tour.title) { %>
-                                    <span class="badge bg-primary"><%= order.tour.title %></span>
-                                <% } else { %>
-                                    <span class="text-muted">Không có sản phẩm</span>
-                                <% } %>
+                                <button 
+                                    class="btn btn-primary btn-sm toggle-btn" 
+                                    data-target="#details-<%= index %>">
+                                    Xem chi tiết
+                                </button>
                             </td>
-                            <td><%= order.adultCount || 0 %></td> <!-- Số lượng người lớn -->
-                            <td><%= order.childCount || 0 %></td> <!-- Số lượng trẻ em -->
-                            <td><%= order.totalValue ? order.totalValue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) : "0 VND" %></td>
-                            <td>
-                                <span class="badge <%= order.status === 'pending' ? 'bg-warning' : order.status === 'processing' ? 'bg-primary' : order.status === 'paid' ? 'bg-success' : order.status === 'canceled' ? 'bg-danger' : '' %>">
-                                    <%= order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : "Không có trạng thái" %>
-                                </span>
-                            </td>
-                            <td><%= order.bookingDate ? new Date(order.bookingDate).toLocaleDateString('vi-VN') : "Không có ngày đặt" %></td>
                         </tr>
-                    <% }) %>
+                        <!-- Chi tiết -->
+                        <tr id="details-<%= index %>" class="toggle-content">
+                            <td colspan="5">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Email Người Dùng</th>
+                                            <th>ID Đơn Hàng</th>
+                                            <th>Người Lớn</th>
+                                            <th>Trẻ Em</th>
+                                            <th>Tổng Giá Trị</th>
+                                            <th>Trạng Thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% summary.orders.forEach(order => { %>
+                                            <tr>
+                                                <td><%= order.userDetails.email || "N/A" %></td>
+                                                <td><%= order._id %></td>
+                                                <td><%= order.adultCount %></td>
+                                                <td><%= order.childCount %></td>
+                                                <td><%= order.totalValue?.toLocaleString("vi-VN", { style: "currency", currency: "VND" }) || "0 VND" %></td>
+                                                <td>
+                                                    <span class="badge <%= order.status === 'pending' ? 'bg-warning' : order.status === 'paid' ? 'bg-success' : 'bg-secondary' %>">
+                                                        <%= order.status %>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    <% }); %>
                 </tbody>
             </table>
         <% } %>
+
+        <!-- Phân trang -->
+        <nav>
+            <ul class="pagination">
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                    </li>
+                <% } %>
+            </ul>
+        </nav>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('.toggle-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const target = document.querySelector(button.dataset.target);
+                if (target) {
+                    target.style.display = target.style.display === 'none' ? 'table-row' : 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

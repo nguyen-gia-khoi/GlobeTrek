@@ -4,6 +4,6 @@ const { getPartnerTransactions } = require("../../controllers/Partner/Transation
 const {verifyAdmin} = require('../../Middleware/authMiddleware');
 
 // Route hiển thị giao dịch của Partner
-router.get("/",verifyAdmin ,  getPartnerTransactions);
+router.get("/" ,  getPartnerTransactions);
 
 module.exports = router;
