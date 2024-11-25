@@ -91,35 +91,71 @@ const deleteOrder = async (req, res) => {
 const renderOrdersPage = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
-    const pageNumber = Math.max(1, parseInt(page)); // Đảm bảo page không nhỏ hơn 1
-    const pageLimit = Math.min(50, parseInt(limit)); // Giới hạn limit tối đa để tránh quá nhiều dữ liệu
+
+    const pageNumber = Math.max(1, parseInt(page));
+    const pageLimit = Math.min(50, parseInt(limit));
     const skip = (pageNumber - 1) * pageLimit;
-    
-    // Tính tổng số đơn hàng
-    const totalOrders = await Order.countDocuments();
-    const totalPages = Math.ceil(totalOrders / pageLimit);
 
-    // Lấy danh sách đơn hàng phân trang
-    const orders = await Order.find()
-      .skip(skip)
-      .limit(pageLimit)
-      .populate("user", "email")
-      .populate("tour", "title");
+    // Lấy dữ liệu nhóm theo tour và ngày đặt
+    const groupedOrders = await Order.aggregate([
+      {
+        $lookup: {
+          from: "tours", // Liên kết với bảng tours
+          localField: "tour",
+          foreignField: "_id",
+          as: "tourDetails",
+        },
+      },
+      { $unwind: "$tourDetails" }, // Trích xuất chi tiết tour từ mảng
 
-    // Render the 'orders.ejs' template và truyền dữ liệu
-    res.render('Order/orders', {
-      token: req.cookies.AdminaccessToken || null,  // Kiểm tra token từ cookie
-      orders,
+      {
+        $lookup: {
+          from: "users", // Liên kết với bảng users để lấy thông tin người dùng
+          localField: "user",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      { $unwind: "$userDetails" }, // Trích xuất chi tiết người dùng từ mảng
+
+      {
+        $group: {
+          _id: { tour: "$tour", bookingDate: "$bookingDate" },
+          totalPeople: {
+            $sum: { $add: ["$adultCount", "$childCount"] },
+          },
+          totalTickets: { $sum: "$adultCount" },
+          totalChildren: { $sum: "$childCount" },
+          totalOrders: { $sum: 1 },
+          orders: { $push: "$$ROOT" }, // Đẩy tất cả dữ liệu vào danh sách chi tiết
+        },
+      },
+      {
+        $sort: { "_id.bookingDate": -1 },
+      },
+      {
+        $facet: {
+          data: [{ $skip: skip }, { $limit: pageLimit }],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    ]);
+
+    const ordersSummary = groupedOrders[0].data || [];
+    const totalOrdersCount = groupedOrders[0].totalCount?.[0]?.count || 0;
+    const totalPages = Math.ceil(totalOrdersCount / pageLimit);
+
+    res.render("Order/orders", {
+      token: req.cookies.AdminaccessToken || null,
+      ordersSummary,
       totalPages,
-      totalOrders,
       currentPage: pageNumber,
     });
   } catch (error) {
-    console.log("Error in renderOrdersPage controller", error.message);
+    console.error("Error in renderOrdersPage controller:", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
   }
 };
-
 
 module.exports = {
   renderOrdersPage,

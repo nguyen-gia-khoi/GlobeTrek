@@ -4,6 +4,6 @@ const { getPartnerRevenue } = require('../../controllers/Partner/PartnerRevenueC
 const {verifyAdmin} = require('../../Middleware/authMiddleware');
 
 // Route để lấy doanh thu của partner
-router.get('/',  verifyAdmin , getPartnerRevenue);
+router.get('/' , getPartnerRevenue);
 
 module.exports = router;
