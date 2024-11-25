@@ -270,13 +270,21 @@ const cancelOrder = async (req, res) => {
 };
 
 
+const Refund = async(req,res)=>{
 
+  const orderID = await Order.findById(orderID);
+  const refundResponse = await pointerPayment.refundMoney(orderID);
 
-const Refund = async (req, res) => {
+  console.log(refundResponse)
+  
+}
+
+const weekhookRefund = async (req, res) => {
   try {
-    const { orderID } = req.body;
+    const { orderID, status  } = req.body;
 
     const order = await Order.findById(orderID);
+    console.log(orderID)
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -284,12 +292,10 @@ const Refund = async (req, res) => {
       return res.status(400).json({ message: "Only paid orders can be canceled with this function" });
     }
 
-    const refundResponse = await pointerPayment.refundMoney(orderID);
-    console.log(refundResponse)
     // Cập nhật số lượng chỗ trống khi hủy tour
     await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
 
-    if (refundResponse.status === 200) {
+    if (status === 200) {
       order.status = 'canceled';
       await order.save();
 
@@ -308,5 +314,6 @@ module.exports = {
   getUserOrders,
   processPayment,
   cancelOrder,
-  Refund
+  Refund,
+  weekhookRefund,
 };
