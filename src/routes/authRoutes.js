@@ -18,5 +18,7 @@ router.get('/home',verifyAdmin ,authController.getHomePage)
 router.get('/homePartner',verifyAdmin ,authController.getHomePartnerPage)
 router.get('/unverified-partners', verifyAdmin ,authController.getUnverifiedPartners);
 router.post('/partner/verify',authController.verifyPartner)
+router.get("/callback_partner",authController.Partner_callback)
+router.get("/checkSSO", authController.CheckSSO)
 module.exports = router;
     
