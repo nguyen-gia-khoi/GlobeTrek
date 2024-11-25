@@ -33,7 +33,7 @@ const middlewareController = {
   verifyAdmin: async (req, res, next) => {
     // Verify token before checking for admin role
     await middlewareController.verifyToken(req, res, () => {
-      if (req.user && (req.user.role === "admin" || req.user.role === "partner" )) {
+      if (req.user && (req.user.role === "admin" || (req.user.role === "partner" && req.user.status === "verified" ))) {
         return next(); // Proceed if the user is an admin
       }
       return res.status(403).json({ message: "Access denied - Admin only" });

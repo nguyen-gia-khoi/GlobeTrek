@@ -27,7 +27,6 @@ const getRevenueByTimePeriod = async (tourIds, startDate, endDate) => {
 const getPartnerRevenue = async (req, res) => {
   try {
     const token = req.cookies.PartneraccessToken;
-
     if (!token) {
       return res.status(401).json({ message: 'Token not found, please login' });
     }

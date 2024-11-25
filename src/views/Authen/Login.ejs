@@ -83,7 +83,7 @@
                 <button type="submit" class="btn btn-green btn-block mt-4">Đăng nhập</button>
               </form>
               <button type="button" class="btn btn-green btn-block mt-4" onclick="window.location.href='/api/auth/register'">Đăng ký</button>
-              <button type="button" class="btn btn-green btn-block mt-4" onclick="window.location.href='https://sso-pointer.vercel.app/'">Đăng nhập SSO</button>
+              <button type="button" class="btn btn-green btn-block mt-4" onclick="window.location.href='/api/auth/checkSSO'">Đăng nhập SSO</button>
               <% if (message) { %>
                 <p class="error-message mt-3 text-center"><%= message %></p>
               <% } %>
@@ -96,5 +96,6 @@
 
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 </body>
 </html>
