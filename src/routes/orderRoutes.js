@@ -4,11 +4,11 @@ const orderController = require('../controllers/orderController');
 const authController = require('../Middleware/authMiddleware'); // Đảm bảo đường dẫn chính xác
 const {verifyAdmin} = require('../Middleware/authMiddleware');
 
-router.post('/api/create',verifyAdmin , orderController.createOrder);
-router.get('/api/list',verifyAdmin , orderController.getUserOrders);
-router.post('/api/process-payment', verifyAdmin ,orderController.processPayment);
-router.post('/api/cancel',verifyAdmin ,   orderController.cancelOrder); 
-router.post('/api/cancel-paid-order',verifyAdmin , orderController.cancelPaidOrder);
+router.post('/api/create', orderController.createOrder);
+router.get('/api/list', orderController.getUserOrders);
+router.post('/api/process-payment', orderController.processPayment);
+router.post('/api/cancel', orderController.cancelOrder); 
+router.post('/api/cancel-paid-order', orderController.cancelPaidOrder);
 
 
 module.exports = router;
