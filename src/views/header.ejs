@@ -80,6 +80,8 @@
         .nav-link:hover {
             background-color: #d4edda;
             color: #155724;
+            text-decoration: none;
+
         }
 
         .nav-link.active {
@@ -100,6 +102,9 @@
         .navbar-nav .nav-item {
             margin-left: 10px;
         }
+        a{
+            text-decoration: none;
+        }
 
     </style>
 </head>
@@ -115,7 +120,7 @@
             </a>
             <ul class="navbar-nav d-flex align-items-center mb-0">
                 <li class="nav-item">
-                    <form action="/logout" method="POST" class="d-inline">
+                    <form action="/api/auth/signout" method="POST" class="d-inline">
                         <button type="submit" class="btn btn-success">Logout</button>
                     </form>
                 </li>
@@ -200,13 +205,13 @@
                             <a class="nav-link" href="/admin/revenue/yearly">Yearly Revenue</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/revenue/partner/weekly-revenue">Revenue week for Partner</a>
+                            <a class="nav-link" href="/admin/revenue/partner/weekly-revenue">Weekly revenue of Partners</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/revenue/partner/monthly-revenue">Revenue month for Partner</a>
+                            <a class="nav-link" href="/admin/revenue/partner/monthly-revenue">Monthly revenue of Partners</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/revenue/partner/total-revenue">Revenue total for Partner</a>
+                            <a class="nav-link" href="/admin/revenue/partner/total-revenue">Total revenue of Partners</a>
                         </li>
                     </ul>
                 </div>

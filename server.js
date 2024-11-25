@@ -32,9 +32,6 @@ const partnertourroutes = require("./src/routes/Partner/partnerToursRoutes");
 const partnerOrderRoutes = require("./src/routes/Partner/partnerOrderRoutes");
 const partneRevenueRoutes = require("./src/routes/Partner/PartnerrevenueRoutes"); 
 
-//logout
-const logout = require('./src/routes/Logout/logoutRoutes')
-
 
 const cookieParser = require("cookie-parser");  
 const cors = require("cors");
@@ -84,8 +81,6 @@ app.use(cors(corsOptions));
 
 // Auth routes
 app.use("/api/auth", authRoutes);
-app.use('/',logout);
-
 // User routes
 app.use('/tours', toursRouter);
 app.use('/tourtypes', tourTypeRoutes);

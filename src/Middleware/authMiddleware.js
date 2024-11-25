@@ -3,12 +3,14 @@ const User = require("../models/User");
 
 const middlewareController = {
   verifyToken: async (req, res, next) => {
-    const token = req.headers.authorization;
+    const token = req.cookies.AdminaccessToken|| req.cookies.PartneraccessToken;
+    console.log(token)
     if (!token) {
-      return res.status(401).json({ message: "You're not authenticated" });
+      return res.redirect("/api/auth/login")
     }
 
-    const accessToken = token.split(" ")[1]; // Extract token
+    const accessToken = token
+    
     if (!accessToken) {
       return res.status(401).json({ message: "Token is missing" });
     }
@@ -31,7 +33,7 @@ const middlewareController = {
   verifyAdmin: async (req, res, next) => {
     // Verify token before checking for admin role
     await middlewareController.verifyToken(req, res, () => {
-      if (req.user && req.user.role === "admin") {
+      if (req.user && (req.user.role === "admin" || req.user.role === "partner" )) {
         return next(); // Proceed if the user is an admin
       }
       return res.status(403).json({ message: "Access denied - Admin only" });
