@@ -13,7 +13,12 @@ const { PointerStrategy } = require("sso-pointer");
 const pointer = new PointerStrategy(
   process.env.POINTER_CLIENT_ID,
   process.env.POINTER_CLIENT_SECRET
-);const {
+);
+const PartnerPointer = new PointerStrategy(
+  process.env.POINTER_PARTNER_ID,
+  process.env.POINTER_PARTNER_SECRET
+);
+const {
     generateToken,
     storeRefreshToken,
   } = require("../service/tokenService")
@@ -332,14 +337,14 @@ const checkEmail = async(req,res)=>{
         return res.status(500).json({ error: "Internal server error" });
     }
 }
-const callback = async (req, res) => {
+const Partner_callback = async (req, res) => {
   try {
     const { code } = req.query;
     console.log("Received code:", code);
 
     // Exchange the authorization code for an access token
-    const accessTokenData = await pointer.getAccessToken(code);
-  
+    const accessTokenData = await PartnerPointer.getAccessToken(code);
+    console.log(accessTokenData)
     const {user: { email } } = accessTokenData;
     console.log("Access Token Data:", accessTokenData);
 
@@ -350,33 +355,94 @@ const callback = async (req, res) => {
     // Find or create user
     let user = await User.findOne({ email });
     if (!user) {
-      user = await new User({ email }).save();
+      user = await new User({ email,role:"partner" }).save();
       console.log("New user created:", user);
     } else {
       user.email = email;
       await user.save();
       console.log("User already exists and was updated:", user );
     }
-    const userId = user._id
-    // Generate JWT
-    const accessToken = jwt.sign({ userId, email}, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: "1h",
-    });
-
-    // Respond with user data
-    return res.json({
-      login: true,
-      role: user.role,
-      _id: user._id,
-      email: user.email,
-      accessToken,
-    });
+    
+    const PartneraccessToken = jwt.sign({ userId: user._id, email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
+      res.cookie("PartneraccessToken", PartneraccessToken, {
+        httpOnly: true,
+        sameSite: "Strict",
+        maxAge: 1 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === "production",
+      });      
+        return res.redirect('/api/auth/login');
+      
+    //save on cookies
   } catch (error) {
     console.error("Error in callback:", error);  // Log full error object
     return res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+const CheckSSO = async (req, res) =>{
+ try {
+  const token = req.cookies.PartneraccessToken;
+  if(token){
+    return res.redirect('/partner/revenue')
+  }
+  else{
+    return res.redirect('https://sso-pointer.vercel.app/authorize?clientId=67449e24e3c5e68440bdf070')
+  }
+ } catch (error) {
+  console.error("Error in CheckSSO :", error);  // Log full error object
+    return res.status(500).json({ message: "Server Error", error: error.message });
+ }
+}
+const callback = async (req, res) => {
+  try {
+    const { code } = req.query;
 
+    console.log("Received code:", code); // Log the authorization code for debugging
+    if (!code) {
+      return res.status(400).json({ message: "Authorization code is required" });
+    }
+
+    // Exchange the authorization code for an access token
+    const accessTokenData = await pointer.getAccessToken(code);
+    console.log("Access Token Response:", accessTokenData);
+
+    // Extract accessToken and user data from the response
+    const { accessToken, user } = accessTokenData;
+    const { _id: userId, email } = user;
+
+    if (!userId || !email) {
+      return res.status(400).json({ message: "User ID and email are required" });
+    }
+
+    // Find or create the user in the database
+    let dbUser = await User.findOne({ email });
+    if (!dbUser) {
+      dbUser = new User({ email });
+      await dbUser.save();
+      console.log("New user created:", dbUser);
+    }
+
+    // Generate a custom JWT (if needed)
+    const jwtToken = jwt.sign({ userId, email }, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: "1h",
+    });
+
+    // Return the accessToken and other details
+    return res.json({
+      login: true,
+      role: dbUser.role,
+      _id: dbUser._id,
+      email: dbUser.email,
+      accessToken: jwtToken, // Your custom token
+      pointerAccessToken: accessToken, // SSO Pointer token
+    });
+  } catch (error) {
+    console.error("Error in callback:", JSON.stringify(error, null, 2));
+    return res.status(500).json({
+      message: "Server Error",
+      error: error.message || "Unknown error",
+    });
+  }
+};
 
 
 const getLoginPage = (req, res) => {
@@ -506,4 +572,6 @@ module.exports ={
     getUser,
     banPartner,
     banAndUnbanUser,
+    Partner_callback,
+    CheckSSO
 }
