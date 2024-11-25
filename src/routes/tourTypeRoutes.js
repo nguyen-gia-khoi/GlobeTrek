@@ -5,8 +5,8 @@ const tourTypeController = require('../controllers/Admin/tourtypeController');
 const {verifyAdmin} = require('../Middleware/authMiddleware');
 
 // Định nghĩa các route cho TourType
-router.get('/',verifyAdmin , tourTypeController.getAllTourTypes); 
-router.get('/api',verifyAdmin , tourTypeController.getAllTourTypesAPI);
+router.get('/', tourTypeController.getAllTourTypes); 
+router.get('/api',tourTypeController.getAllTourTypesAPI);
 
 
 
