@@ -185,25 +185,37 @@ const signin = async (req, res) => {
   }
 };
 
+const signout = async (req, res) => {
+  try {
+    const AdminaccessToken = req.cookies.AdminaccessToken; // Correct cookie access
+    const PartneraccessToken = req.cookies.PartneraccessToken; // Correct cookie access
+    const refreshToken = req.cookies.refreshToken;
 
-const signout = async( req, res ) => {
-    try {
-        console.log("Cookies received:", req.cookies); // Log received cookies
-        const refreshToken = req.cookies.refreshToken;
-        if (refreshToken) {
-          const decoded = jwt.verify(
-            refreshToken,
-            process.env.REFRESH_TOKEN_SECRET
-          );
-          await redis.del(`refresh_token:${decoded.userId}`);
-        }
-        res.clearCookie("refreshToken");
-        res.status(200).json({ message: "Logged out successfully" });
-    } catch (error) {
-        console.log("Error in login controller: ", error.message);
-        res.status(500).json({ message: "Server Error!", error: error.message });
+    if (refreshToken) {
+      // Handle refresh token removal (if using Redis)
+      const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      await redis.del(`refresh_token:${decoded.userId}`);
+      res.clearCookie("refreshToken"); // Clear the refresh token
     }
-}
+
+    if (AdminaccessToken) {
+      res.clearCookie("AdminaccessToken"); // Clear admin token
+      return res.redirect("/api/auth/login"); // Exit after redirect
+    }
+
+    if (PartneraccessToken) {
+      res.clearCookie("PartneraccessToken"); // Clear partner token
+      return res.redirect("/api/auth/login"); // Exit after redirect
+    }
+
+    // If no specific token, respond with a success message
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Error in login controller:", error.message);
+    return res.status(500).json({ message: "Server Error!", error: error.message });
+  }
+};
+
 const forgotPassword = async(req,res)=>{
     const { email } = req.body;
     try {

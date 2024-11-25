@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const {verifyAdmin} = require('../Middleware/authMiddleware');
 
 router.post('/signup', authController.signup);
 router.post('/verify-account', authController.verfiaccount)
@@ -13,9 +14,9 @@ router.post("/check-email",authController.checkEmail)
 router.get('/callback',authController.callback)
 router.get('/login', authController.getLoginPage);
 router.get('/register', authController.getRegisterPage);
-router.get('/home',authController.getHomePage)
-router.get('/homePartner',authController.getHomePartnerPage)
-router.get('/unverified-partners',authController.getUnverifiedPartners);
+router.get('/home',verifyAdmin ,authController.getHomePage)
+router.get('/homePartner',verifyAdmin ,authController.getHomePartnerPage)
+router.get('/unverified-partners', verifyAdmin ,authController.getUnverifiedPartners);
 router.post('/partner/verify',authController.verifyPartner)
 module.exports = router;
     

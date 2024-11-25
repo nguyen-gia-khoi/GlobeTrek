@@ -11,22 +11,22 @@ const {
 } = require("../../controllers/Admin/revenueController");
 const {verifyAdmin} = require('../../Middleware/authMiddleware');
 // Route lấy doanh thu hàng ngày cho admin
-router.get("/daily", getDailyRevenue);
+router.get("/daily",  verifyAdmin ,getDailyRevenue);
 
 // Route lấy doanh thu hàng tháng cho admin
-router.get("/monthly", getMonthlyRevenue);
+router.get("/monthly",  verifyAdmin ,getMonthlyRevenue);
 
 // Route lấy doanh thu hàng năm cho admin
-router.get("/yearly", getYearlyRevenue);
+router.get("/yearly",  verifyAdmin ,getYearlyRevenue);
 
-router.get("/process-payment", processMonthlyPayments);
+router.get("/process-payment", verifyAdmin , processMonthlyPayments);
 
 // doanh thu trong tuần của partner.
-router.get("/partner/weekly-revenue", getWeeklyRevenueForAllPartners);
+router.get("/partner/weekly-revenue",  verifyAdmin ,getWeeklyRevenueForAllPartners);
 
-router.get("/partner/monthly-revenue", getMonthlyRevenueForEachPartner);
+router.get("/partner/monthly-revenue",  verifyAdmin ,getMonthlyRevenueForEachPartner);
 
-router.get("/partner/total-revenue",getTotalRevenueForAllPartners);
+router.get("/partner/total-revenue", verifyAdmin ,getTotalRevenueForAllPartners);
 
 
 

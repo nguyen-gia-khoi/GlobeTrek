@@ -4,23 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách Tour của Partner</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.3/antd.min.css" />
     <style>
         body {
-            padding: 20px;
             font-family: Arial, sans-serif;
         }
         .container {
             max-width: 1000px;
             margin: auto;
         }
-        .table th {
-            background-color: #343a40;
-            color: #fff;
+        .ant-table {
+            width: 100%;
+            table-layout: fixed; /* Ensures fixed column widths */
         }
-        .btn-toggle {
-            border-radius: 50px;
-            font-size: 0.9rem;
+        .ant-table-thead th, .ant-table-tbody td {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap; /* Prevents text from wrapping */
+        }
+        /* Set specific column widths */
+        .col-title { width: 150px; }
+        .col-description { width: 200px; }
+        .col-price { width: 100px; }
+        .col-location { width: 150px; }
+        .col-duration { width: 100px; }
+        .col-schedule { width: 200px; }
+        .col-partner { width: 150px; }
+        .col-availability { width: 150px; }
+        .col-status { width: 100px; }
+        .col-action { width: 120px; }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .ant-table-thead th, .ant-table-tbody td {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -28,127 +45,112 @@
     <%- include('../../header', { pageTitle: 'Danh sách Tour của Partner' }) %>
     <div class="container mt-5">
         <h1 class="mb-5 text-center">Danh sách Tour của Partner</h1>
-        <table class="table table-hover table-bordered">
-            <thead>
-                <tr>
-                    <th>Tiêu đề</th>
-                    <th>Mô tả</th>
-                    <th>Giá</th>
-                    <th>Địa điểm</th>
-                    <th>Thời gian</th>
-                    <th>Lịch trình</th>
-                    <th>Partner</th>
-                    <th>Số chỗ còn lại</th>
-                    <th>Hành động</th>
-                    <th>Trạng thái</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (tours.length === 0) { %>
+        <div class="ant-table-wrapper">
+            <table class="ant-table">
+                <thead class="ant-table-thead">
                     <tr>
-                        <td colspan="10" class="text-center">Không có tour nào.</td>
+                        <th class="col-title">Tiêu đề</th>
+                        <th class="col-description">Mô tả</th>
+                        <th class="col-price">Giá</th>
+                        <th class="col-location">Địa điểm</th>
+                        <th class="col-duration">Thời gian</th>
+                        <th class="col-schedule">Lịch trình</th>
+                        <th class="col-partner">Partner</th>
+                        <th class="col-availability">Số chỗ còn lại</th>
+                        <th class="col-status">Trạng thái</th>
+                        <th class="col-action">Hành động</th>
                     </tr>
-                <% } else { %>
-                    <% tours.forEach(tour => { %>
+                </thead>
+                <tbody class="ant-table-tbody">
+                    <% if (tours.length === 0) { %>
                         <tr>
-                            <td><%= tour.title %></td>
-                            <td><%= tour.description %></td>
-                            <td><%= tour.price %> VNĐ</td>
-                            <td><%= tour.location %></td>
-                 
-                            <td><%= tour.duration %> ngày</td>
-                            <td>
-                                <% 
-                                    let displayedSchedules = tour.schedules.slice(0, 2);
-                                    displayedSchedules.forEach((schedule) => { 
-                                %>
-                                    <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
-                                <% }) %>
-                                <% if (tour.schedules.length > 2) { %>
-                                    <div id="schedules-<%= tour._id %>" class="additional-schedules" style="display:none;">
-                                        <% tour.schedules.slice(2).forEach((schedule) => { %>
-                                            <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
-                                        <% }) %>
-                                    </div>
-                                    <div><a href="javascript:void(0);" onclick="toggleSchedules('<%= tour._id %>')">Xem thêm...</a></div>
-                                <% } %>
-                            </td>
-                         
-                            <td><%= tour.partner ? tour.partner.name : 'Không có' %></td>
-                            <td>
-                                <% 
-                                    let displayedAvailabilities = tour.availabilities.slice(0, 2);
-                                    displayedAvailabilities.forEach((availabilities) => { 
-                                %>
-                                    <div> <%= availabilities.date.toLocaleDateString() %>: <%= availabilities.availableSeats %> chỗ</div>
-                                <% }) %>
-                                <% if (tour.availabilities.length > 2) { %>
-                                    <div id="availabilities-<%= tour._id %>" class="additional-availabilities" style="display:none;">
-                                        <% tour.availabilities.slice(2).forEach((availabilities) => { %>
-                                            <div> <%= availabilities.date.toLocaleDateString() %>: <%= availabilities.availableSeats %> chỗ</div>
-                                        <% }) %>
-                                    </div>
-                                    <div><a href="javascript:void(0);" onclick="toggleAvailabilities('<%= tour._id %>')">Xem thêm...</a></div>
-                                <% } %>
-                            </td>
-                            <td>
-                                <span class="badge <%= tour.isDisabled ? 'badge-danger' : 'badge-success' %>">
-                                    <%= tour.isDisabled ? 'Tắt' : 'Bật' %>
-                                </span>
-                            </td>
-                            <td>
-                                <form action="/admin/tours/toggle-status/<%= tour._id %>" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-toggle <%= tour.isDisabled ? 'btn-success' : 'btn-danger' %>">
-                                        <%= tour.isDisabled ? 'Bật' : 'Tắt' %>
-                                    </button>
-                                </form>
-                            </td>
+                            <td colspan="10" class="ant-table-cell ant-table-cell-align-center">Không có tour nào.</td>
                         </tr>
-                    <% }) %>
-                <% } %>
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
-                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-                    <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
+                    <% } else { %>
+                        <% tours.forEach(tour => { %>
+                            <tr>
+                                <td class="ant-table-cell"><%= tour.title %></td>
+                                <td class="ant-table-cell"><%= tour.description %></td>
+                                <td class="ant-table-cell"><%= tour.price %> VNĐ</td>
+                                <td class="ant-table-cell"><%= tour.location %></td>
+                                <td class="ant-table-cell"><%= tour.duration %> ngày</td>
+                                <td class="ant-table-cell">
+                                    <% 
+                                        let displayedSchedules = tour.schedules.slice(0, 2);
+                                        displayedSchedules.forEach((schedule) => { 
+                                    %>
+                                        <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
+                                    <% }) %>
+                                    <% if (tour.schedules.length > 2) { %>
+                                        <div id="schedules-<%= tour._id %>" class="additional-schedules" style="display:none;">
+                                            <% tour.schedules.slice(2).forEach((schedule) => { %>
+                                                <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
+                                            <% }) %>
+                                        </div>
+                                        <a href="javascript:void(0);" onclick="toggleSchedules('<%= tour._id %>')">Xem thêm...</a>
+                                    <% } %>
+                                </td>
+                                <td class="ant-table-cell"><%= tour.partner ? tour.partner.name : 'Không có' %></td>
+                                <td class="ant-table-cell">
+                                    <% 
+                                        let displayedAvailabilities = tour.availabilities.slice(0, 2);
+                                        displayedAvailabilities.forEach((availabilities) => { 
+                                    %>
+                                        <div><%= availabilities.date.toLocaleDateString() %>: <%= availabilities.availableSeats %> chỗ</div>
+                                    <% }) %>
+                                    <% if (tour.availabilities.length > 2) { %>
+                                        <div id="availabilities-<%= tour._id %>" class="additional-availabilities" style="display:none;">
+                                            <% tour.availabilities.slice(2).forEach((availabilities) => { %>
+                                                <div><%= availabilities.date.toLocaleDateString() %>: <%= availabilities.availableSeats %> chỗ</div>
+                                            <% }) %>
+                                        </div>
+                                        <a href="javascript:void(0);" onclick="toggleAvailabilities('<%= tour._id %>')">Xem thêm...</a>
+                                    <% } %>
+                                </td>
+                                <td class="ant-table-cell">
+                                    <span class="ant-tag <%= tour.isDisabled ? 'ant-tag-red' : 'ant-tag-green' %>">
+                                        <%= tour.isDisabled ? 'Tắt' : 'Bật' %>
+                                    </span>
+                                </td>
+                                <td class="ant-table-cell">
+                                    <form action="/admin/tours/toggle-status/<%= tour._id %>" method="POST" class="d-inline">
+                                        <button type="submit" class="ant-btn <%= tour.isDisabled ? 'ant-btn-primary' : 'ant-btn-danger' %>">
+                                            <%= tour.isDisabled ? 'Bật' : 'Tắt' %>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination mt-3">
+            <ul class="ant-pagination">
+                <li class="ant-pagination-prev <%= currentPage === 1 ? 'ant-pagination-disabled' : '' %>">
+                    <a href="?page=<%= currentPage - 1 %>">&laquo;</a>
                 </li>
                 <% for (let i = 1; i <= totalPages; i++) { %>
-                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                    <li class="ant-pagination-item <%= i === currentPage ? 'ant-pagination-item-active' : '' %>">
+                        <a href="?page=<%= i %>"><%= i %></a>
                     </li>
                 <% } %>
-                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-                    <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
+                <li class="ant-pagination-next <%= currentPage === totalPages ? 'ant-pagination-disabled' : '' %>">
+                    <a href="?page=<%= currentPage + 1 %>">&raquo;</a>
                 </li>
             </ul>
-        </nav>
+        </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.3/antd.min.js"></script>
     <script>
-        // Hàm để hiển thị thêm lịch trình
         function toggleSchedules(tourId) {
             var schedulesDiv = document.getElementById("schedules-" + tourId);
-            if (schedulesDiv.style.display === "none") {
-                schedulesDiv.style.display = "block";
-            } else {
-                schedulesDiv.style.display = "none";
-            }
+            schedulesDiv.style.display = schedulesDiv.style.display === "none" ? "block" : "none";
         }
-
-        // Hàm để hiển thị thêm số lượng chỗ ngồi
         function toggleAvailabilities(tourId) {
             var availabilitiesDiv = document.getElementById("availabilities-" + tourId);
-            if (availabilitiesDiv.style.display === "none") {
-                availabilitiesDiv.style.display = "block";
-            } else {
-                availabilitiesDiv.style.display = "none";
-            }
+            availabilitiesDiv.style.display = availabilitiesDiv.style.display === "none" ? "block" : "none";
         }
     </script>
-    
 </body>
 </html>
