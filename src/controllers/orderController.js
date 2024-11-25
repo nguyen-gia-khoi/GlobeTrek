@@ -270,14 +270,40 @@ const cancelOrder = async (req, res) => {
 };
 
 
-const Refund = async(req,res)=>{
+const Refund = async (req, res) => {
+  try {
+    const { orderID } = req.body;
 
-  const orderID = await Order.findById(orderID);
-  const refundResponse = await pointerPayment.refundMoney(orderID);
+    if (!orderID) {
+      return res.status(400).json({ message: "OrderID is required" });
+    }
+    const order = await Order.findById(orderID);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
 
-  console.log(refundResponse)
-  
-}
+    const refundResponse = await pointerPayment.refundMoney(orderID);
+
+    // Kiểm tra phản hồi từ refund API
+    if (refundResponse && refundResponse.status === 200) {
+      console.log("Refund successful:", refundResponse.data);
+      return res.status(200).json({
+        message: "Refund successful",
+        data: refundResponse.data,
+      });
+    } else {
+      console.error("Refund failed:", refundResponse);
+      return res.status(400).json({
+        message: "Refund failed",
+        response: refundResponse,
+      });
+    }
+  } catch (error) {
+    console.error("Error in Refund:", error.message);
+    res.status(500).json({ message: "Error processing refund", error: error.message });
+  }
+};
+
 
 const weekhookRefund = async (req, res) => {
   try {
