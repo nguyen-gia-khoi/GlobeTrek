@@ -4,23 +4,23 @@ const partnerController = require('../../controllers/Partner/tourPartnerControll
 const { uploadMultiple } = require('../../Middleware/cloudinary');
 const {verifyAdmin} = require('../../Middleware/authMiddleware');
 
-router.get('/list', verifyAdmin , partnerController.getTourList); 
+router.get('/list' , partnerController.getTourList); 
 
 // Tạo tour mới
-router.get('/create',verifyAdmin ,  partnerController.getCreateTour);
-router.post('/create',verifyAdmin ,  uploadMultiple, partnerController.postCreateTour);
+router.get('/create' ,  partnerController.getCreateTour);
+router.post('/create' ,  uploadMultiple, partnerController.postCreateTour);
 
 // Chỉnh sửa tour
-router.get('/edit/:id',verifyAdmin ,  partnerController.getUpdateTour);
-router.post('/edit/:id',verifyAdmin ,  uploadMultiple, partnerController.postUpdateTour);
+router.get('/edit/:id' ,  partnerController.getUpdateTour);
+router.post('/edit/:id' ,  uploadMultiple, partnerController.postUpdateTour);
 
 // Gửi yêu cầu phê duyệt cho admin
-router.post('/request-approval/:id',verifyAdmin ,  partnerController.requestApproval);
+router.post('/request-approval/:id' ,  partnerController.requestApproval);
 
 // Bật/tắt trạng thái tour
-router.post('/toggle-status/:id',verifyAdmin ,  partnerController.toggleTourStatus);
+router.post('/toggle-status/:id' ,  partnerController.toggleTourStatus);
 
 // Yêu cầu xóa tour
-router.post('/requestDeleteTour/:id',verifyAdmin ,  partnerController.requestDeleteTour);
+router.post('/requestDeleteTour/:id' ,  partnerController.requestDeleteTour);
 
 module.exports = router;

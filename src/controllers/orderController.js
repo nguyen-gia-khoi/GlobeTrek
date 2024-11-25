@@ -6,6 +6,11 @@ const { Tour } = require('../models/Tour');
 const { sendOrderConfirmationEmail } = require('../service/mailtrap/email');
 const { Pointer } = require("pointer-wallet");
 
+
+const secretKey = process.env.VITE_POINTER_SECRET_KEY; 
+const pointerPayment = new Pointer(secretKey);
+
+
 const updateAvailabilityOnCreateOrder = async (tourId, bookingDate, adultCount, childCount) => {
   const tour = await Tour.findById(tourId);
 
@@ -209,56 +214,91 @@ const processPayment = async (req, res) => {
     res.status(500).json({ message: 'Error processing payment', error });
   }
 };
+
+const axios = require('axios');
+
 const cancelOrder = async (req, res) => {
   try {
-    const { orderId, status } = req.body;
+    const { orderId } = req.body; 
+    console.log("Received orderID:", orderId);
+
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    if (order.status === 'canceled' || order.status === 'paid') {
-      return res.status(400).json({ message: "Only orders that are not canceled or paid can be canceled" });
-    }    
-      if(status == 200){
-    // Cập nhật lại số lượng chỗ trống trong Tour khi hủy đơn hàng
-    await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
 
-    await User.findByIdAndUpdate(order.user, { $inc: { cancellationCount: 1 } }, { new: true });
-        // Cập nhật trạng thái đơn hàng thành "canceled"
-        order.status = 'canceled';
-        await order.save();
-       
-      }
-    res.status(200).json({ message: 'Order canceled successfully', order });
+    if (order.status === 'canceled') {
+      return res.status(400).json({ message: 'Order has already been canceled' });
+    }
+
+    if (order.status === 'paid') {
+      return res.status(400).json({ message: 'Paid orders cannot be canceled' });
+    }
+    const pointerSecretKey = process.env.VITE_POINTER_SECRET_KEY;
+    if (!pointerSecretKey) {
+      return res.status(500).json({ message: 'Pointer Wallet secret key is missing' });
+    }
+    const headers = {
+      'Authorization': `Bearer ${pointerSecretKey}`,
+      'Content-Type': 'application/json',
+    };
+    // const orderID = orderId;
+    //     // Gọi API Pointer Wallet để hủy đơn hàng, truyền orderID trong thân yêu cầu
+    //     const cancelResponse = await pointerPayment.cancelOrder(
+    //       { orderID }, 
+    //       { headers }           
+    //     );    
+    const cancelResponse = await axios.post('https://api.pointer.io.vn/api/payment/cancel-order', {
+      orderID: orderId
+    }, { headers});
+
+    console.log('Pointer Wallet cancel response:', cancelResponse.data);
+    if (cancelResponse.status === 200 ) {
+      await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
+      await User.findByIdAndUpdate(order.user, { $inc: { cancellationCount: 1 } }, { new: true });
+      order.status = 'canceled';
+      await order.save();
+
+      return res.status(200).json({ message: 'Order canceled successfully', order });
+    } else {
+      return res.status(400).json({ message: 'Failed to cancel order via Pointer Wallet', details: cancelResponse.data });
+    }
   } catch (error) {
-    console.log("Error in cancelOrder", error.message);
-    res.status(500).json({ message: 'Error canceling order', error });
+    console.error('Error in cancelOrder:', error); 
+    res.status(500).json({ message: 'Error canceling order', error: error.message });
   }
 };
-const cancelPaidOrder = async (req, res) => {
-  try {
-    const { orderId, status } = req.body;
 
-    const order = await Order.findById(orderId);
+
+
+
+const Refund = async (req, res) => {
+  try {
+    const { orderID } = req.body;
+
+    const order = await Order.findById(orderID);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-
-    if (order.status == 'paid' && status == 200) {
+    if (order.status !== 'paid') {
       return res.status(400).json({ message: "Only paid orders can be canceled with this function" });
     }
 
-    // Cập nhật lại số lượng chỗ trống trong Tour khi hủy đơn hàng
+    const refundResponse = await pointerPayment.refundMoney(orderID);
+    // Cập nhật số lượng chỗ trống khi hủy tour
     await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
 
-    // Cập nhật trạng thái đơn hàng thành "canceled"
-    order.status = 'canceled';
-    await order.save();
+    if (refundResponse.status === 200) {
+      order.status = 'canceled';
+      await order.save();
 
-    res.status(200).json({ message: 'Paid order canceled successfully', order });
+      return res.status(200).json({ message: 'Paid order canceled successfully', order });
+    } else {
+      return res.status(400).json({ message: 'Failed to refund money', refundResponse });
+    }
   } catch (error) {
-    console.log("Error in cancelPaidOrder", error.message);
-    res.status(500).json({ message: 'Error canceling paid order', error });
+    console.error("Error in cancelPaidOrder:", error.message);
+    res.status(500).json({ message: 'Error canceling paid order', error: error.message });
   }
 };
 
@@ -267,5 +307,5 @@ module.exports = {
   getUserOrders,
   processPayment,
   cancelOrder,
-  cancelPaidOrder
+  Refund
 };

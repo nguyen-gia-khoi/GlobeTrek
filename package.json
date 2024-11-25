@@ -14,6 +14,7 @@
   "author": "khoi",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.6",
     "cloudinary": "^1.21.0",
@@ -35,7 +36,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^6.9.16",
     "oauth-pointer": "^1.0.3",
-    "pointer-wallet": "^1.0.8",
+    "pointer-wallet": "^2.0.1",
     "sso-pointer": "^1.0.7"
   },
   "devDependencies": {
