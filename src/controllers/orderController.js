@@ -284,27 +284,8 @@ const Refund = async (req, res) => {
       return res.status(400).json({ message: "Only paid orders can be canceled with this function" });
     }
 
-    // const refundResponse = await pointerPayment.refundMoney(orderID);
-
-    const pointerSecretKey = process.env.VITE_POINTER_SECRET_KEY;
-    if (!pointerSecretKey) {
-      return res.status(500).json({ message: 'Pointer Wallet secret key is missing' });
-    }
-    const headers = {
-      'Authorization': `Bearer ${pointerSecretKey}`,
-      'Content-Type': 'application/json',
-    };
-    // const orderID = orderId;
-    //     // Gọi API Pointer Wallet để hủy đơn hàng, truyền orderID trong thân yêu cầu
-    //     const cancelResponse = await pointerPayment.cancelOrder(
-    //       { orderID }, 
-    //       { headers }           
-    //     );    
-    const refundResponse = await axios.post('https://api.pointer.io.vn/api/payment/refund', 
-      orderID
-    , { headers});
-
-    console.log(refundResponse.data)
+    const refundResponse = await pointerPayment.refundMoney(orderID);
+    console.log(refundResponse)
     // Cập nhật số lượng chỗ trống khi hủy tour
     await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
 
@@ -320,7 +301,7 @@ const Refund = async (req, res) => {
     console.error("Error in cancelPaidOrder:", error.message);
     res.status(500).json({ message: 'Error canceling paid order', error: error.message });
   }
-}; 
+};
 
 module.exports = {
   createOrder,
