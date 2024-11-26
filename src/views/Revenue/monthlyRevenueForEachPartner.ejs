@@ -8,6 +8,37 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        .btn-pay[disabled] {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .text-success {
+            font-weight: bold;
+        }
+
+        .modal-header {
+            background-color: #f8f9fa;
+        }
+
+        .modal-title {
+            color: #007bff;
+        }
+    </style>
 </head>
 
 <body>
@@ -17,33 +48,39 @@
 
         <!-- Bảng doanh thu -->
         <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
+            <table class="table table-bordered table-hover">
+                <thead class="thead-dark">
                     <tr>
                         <th>Đối tác</th>
+                        <th>Email</th>
                         <th>Tổng doanh thu (VNĐ)</th>
                         <th>Doanh thu Admin (VNĐ)</th>
                         <th>Doanh thu Partner (VNĐ)</th>
+                        <th>Trạng thái</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% groupedRevenues.forEach((revenue) => { %>
-                    <tr>
-                        <td><%= revenue.partnerName %></td>
-                        <td><%= revenue.totalSales.toLocaleString('vi-VN') %></td>
-                        <td><%= revenue.adminRevenue.toLocaleString('vi-VN') %></td>
-                        <td><%= revenue.partnerRevenue.toLocaleString('vi-VN') %></td>
-                        <td>
-                            <!-- Nút Trả Tiền -->
-                            <button class="btn btn-success btn-pay"
-                                data-partner-id="<%= revenue.partnerId %>"
-                                data-partner-name="<%= revenue.partnerName %>"
-                                data-partner-amount="<%= revenue.partnerRevenue %>">
-                                Trả tiền
-                            </button>
-                        </td>
-                    </tr>
+                        <tr id="revenue-<%= revenue.partnerEmail %>">
+                            <td><%= revenue.partnerName %></td>
+                            <td><%= revenue.partnerEmail %></td>
+                            <td><%= revenue.totalSales.toLocaleString('vi-VN') %></td>
+                            <td><%= revenue.adminRevenue.toLocaleString('vi-VN') %></td>
+                            <td><%= revenue.partnerRevenue.toLocaleString('vi-VN') %></td>
+                            <td class="<%= revenue.status === 'success' ? 'text-success' : 'text-danger' %>">
+                                <%= revenue.status === 'success' ? 'Đã thanh toán' : 'Chưa thanh toán' %>
+                            </td>
+                            <td>
+                                <button class="btn btn-success btn-pay"
+                                    data-partner-email="<%= revenue.partnerEmail %>"
+                                    data-partner-name="<%= revenue.partnerName %>"
+                                    data-partner-amount="<%= revenue.partnerRevenue %>"
+                                    <%= revenue.status === 'success' ? 'disabled' : '' %>>
+                                    <%= revenue.status === 'success' ? 'Đã thanh toán' : 'Trả tiền' %>
+                                </button>
+                            </td>
+                        </tr>
                     <% }) %>
                 </tbody>
             </table>
@@ -56,7 +93,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title text-primary" id="paymentModalLabel">Xác nhận thanh toán</h5>
+                    <h5 class="modal-title" id="paymentModalLabel">Xác nhận thanh toán</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -72,15 +109,13 @@
         </div>
     </div>
 
-    <!-- Thông báo thành công -->
+    <!-- Thông báo -->
     <div class="alert alert-success alert-dismissible fade show" id="successAlert" style="display: none;" role="alert">
         Thanh toán thành công!
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
-
-    <!-- Thông báo lỗi -->
     <div class="alert alert-danger alert-dismissible fade show" id="errorAlert" style="display: none;" role="alert">
         Thanh toán thất bại!
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -88,18 +123,18 @@
         </button>
     </div>
 
+    <!-- Script -->
     <script>
-        let selectedPartnerId, selectedPartnerName, selectedPartnerAmount;
-
         $(document).ready(function () {
-            // Xử lý sự kiện nút "Trả tiền"
+            let selectedPartnerEmail, selectedPartnerName, selectedPartnerAmount;
+
+            // Khi click vào nút Trả tiền
             $(".btn-pay").click(function () {
-                selectedPartnerId = $(this).data("partner-id");
+                selectedPartnerEmail = $(this).data("partner-email");
                 selectedPartnerName = $(this).data("partner-name");
                 selectedPartnerAmount = $(this).data("partner-amount");
 
-                // Hiển thị modal xác nhận
-                const confirmationText = `Bạn có chắc chắn muốn trả số tiền <strong>${selectedPartnerAmount.toLocaleString('vi-VN')} VNĐ</strong> cho đối tác <strong>${selectedPartnerName}</strong>?`;
+                const confirmationText = `Bạn có chắc chắn muốn trả số tiền <strong>${Number(selectedPartnerAmount).toLocaleString('vi-VN')} VNĐ</strong> cho đối tác <strong>${selectedPartnerName}</strong>?`;
                 $("#paymentConfirmationText").html(confirmationText);
                 $("#paymentModal").modal("show");
             });
@@ -110,23 +145,38 @@
 
                 // Gửi yêu cầu POST đến server
                 $.ajax({
-                    url: '',
+                    url: '/admin/revenue/process-payment',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({
-                        partnerId: selectedPartnerId,
-                        partnerName: selectedPartnerName,
-                        partnerAmount: selectedPartnerAmount
+                        partneremail: selectedPartnerEmail,
+                        partnerAmount: selectedPartnerAmount,
                     }),
                     success: function (response) {
+                        // Nếu cập nhật thành công, cập nhật lại hàng tương ứng
+                        const updatedRow = `
+                            <tr id="revenue-${response.partnerEmail}">
+                                <td>${response.partnerName}</td>
+                                <td>${response.partnerEmail}</td>
+                                <td>${Number(response.totalSales).toLocaleString('vi-VN')}</td>
+                                <td>${Number(response.adminRevenue).toLocaleString('vi-VN')}</td>
+                                <td>${Number(response.partnerRevenue).toLocaleString('vi-VN')}</td>
+                                <td class="text-success">Đã thanh toán</td>
+                                <td>
+                                    <button class="btn btn-success btn-pay" disabled>Đã thanh toán</button>
+                                </td>
+                            </tr>`;
+                        $(`#revenue-${response.partnerEmail}`).replaceWith(updatedRow);
+
                         // Hiển thị thông báo thành công
-                        $("#successAlert").show('thanh toán thành công');
-                        setTimeout(() => location.reload(), 2000); // Reload trang sau 2 giây
+                        $("#successAlert").fadeIn();
+                        setTimeout(() => $("#successAlert").fadeOut(), 3000);
                     },
                     error: function (error) {
                         // Hiển thị thông báo lỗi
-                        $("#errorAlert").show('thanh toán tất bại');
-                    }
+                        $("#errorAlert").fadeIn();
+                        setTimeout(() => $("#errorAlert").fadeOut(), 3000);
+                    },
                 });
             });
         });

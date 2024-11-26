@@ -19,7 +19,7 @@ router.get("/monthly" ,getMonthlyRevenue);
 // Route lấy doanh thu hàng năm cho admin
 router.get("/yearly" ,getYearlyRevenue);
 
-router.get("/process-payment", verifyAdmin , processMonthlyPayments);
+router.post("/process-payment" , processMonthlyPayments);
 
 // doanh thu trong tuần của partner.
 router.get("/partner/weekly-revenue" ,getWeeklyRevenueForAllPartners);
