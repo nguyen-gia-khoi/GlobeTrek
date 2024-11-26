@@ -24,6 +24,7 @@ const middlewareController = {
 
       // Find user by ID from decoded token payload
       const user = await User.findById(decoded.userId).select("-password");
+      
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }

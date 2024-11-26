@@ -335,6 +335,47 @@ const weekhookRefund = async (req, res) => {
   }
 };
 
+const connectWallet = async(req, res) =>{
+  try {
+    const userId = req.user._id;
+    console.log(userId)
+    const partnerId = process.env.PARTNERID;
+    const returnUrl = 'http://localhost:5173/';
+
+    const redirectUrl = `https://wallet.pointer.io.vn/connect-app?partnerId=${partnerId}&returnUrl=${encodeURIComponent(returnUrl)}&userId=${userId}`;
+    res.json({ redirectUrl });
+  } catch (error) {
+    console.error("Error in cconnectWallet :", error.message);
+    res.status(500).json({ message: 'Error connectWallet ', error: error.message });
+  }
+}
+
+const handelEvent = async (req, res) => {
+  try {
+    const { userID, signature } = req.body;
+    if (!userID || !signature) {
+      return res.status(400).json({ message: 'Missing required fields: userID or signature' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userID,
+      { signature },
+      { new: true } 
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({ 
+      message: 'Signature saved successfully', 
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error('Error handling webhook:', error);
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
@@ -342,4 +383,6 @@ module.exports = {
   cancelOrder,
   Refund,
   weekhookRefund,
+  connectWallet,
+  handelEvent
 };

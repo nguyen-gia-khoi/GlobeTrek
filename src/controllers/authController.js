@@ -407,9 +407,9 @@ const callback = async (req, res) => {
 
     // Extract accessToken and user data from the response
     const { accessToken, user } = accessTokenData;
-    const { _id: userId, email } = user;
+    const {  email } = user;
 
-    if (!userId || !email) {
+    if ( !email) {
       return res.status(400).json({ message: "User ID and email are required" });
     }
 
@@ -420,7 +420,7 @@ const callback = async (req, res) => {
       await dbUser.save();
       console.log("New user created:", dbUser);
     }
-
+    const userId = dbUser._id
     // Generate a custom JWT (if needed)
     const jwtToken = jwt.sign({ userId, email }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "1h",
@@ -433,7 +433,6 @@ const callback = async (req, res) => {
       _id: dbUser._id,
       email: dbUser.email,
       accessToken: jwtToken, // Your custom token
-      pointerAccessToken: accessToken, // SSO Pointer token
     });
   } catch (error) {
     console.error("Error in callback:", JSON.stringify(error, null, 2));
