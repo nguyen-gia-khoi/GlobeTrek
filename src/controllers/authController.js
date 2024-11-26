@@ -385,7 +385,7 @@ const CheckSSO = async (req, res) =>{
     return res.redirect('/partner/revenue')
   }
   else{
-    return res.redirect('https://sso-pointer.vercel.app/authorize?clientId=67449e24e3c5e68440bdf070')
+    return res.redirect('https://sso-pointer.vercel.app/authorize?clientId=6745e36879af9ecea1200aef')
   }
  } catch (error) {
   console.error("Error in CheckSSO :", error);  // Log full error object
