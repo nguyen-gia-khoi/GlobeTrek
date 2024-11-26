@@ -425,8 +425,6 @@ const callback = async (req, res) => {
     const jwtToken = jwt.sign({ userId, email }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "1h",
     });
-
-    // Return the accessToken and other details
     return res.json({
       login: true,
       role: dbUser.role,
