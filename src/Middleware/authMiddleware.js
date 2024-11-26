@@ -16,11 +16,8 @@ const middlewareController = {
       if (!accessToken) {
         return res.redirect("/api/auth/login"); // Redirect if no token found
       }
-      console.log(accessToken)
-
       // Verify the token
       const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-      console.log(decoded)
       // Find user by ID from decoded token payload
       const user = await User.findById(decoded.userId).select("-password");
       
