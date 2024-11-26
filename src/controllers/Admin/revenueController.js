@@ -3,7 +3,13 @@ const {Revenue} = require("../../models/Revenue");
 const Order = require("../../models/Order"); 
 const {Tour} = require("../../models/Tour"); 
 const Transaction = require("../../models/Transaction"); 
+const User = require("../../models/User"); 
 
+const { Pointer } = require("pointer-wallet");
+
+
+const secretKey = process.env.VITE_POINTER_SECRET_KEY; 
+const pointerPayment = new Pointer(secretKey);
 // Lấy doanh thu hàng ngày cho admin trong một tuần
 const getDailyRevenue = async (req, res) => {
   try {
@@ -240,110 +246,161 @@ const getWeeklyRevenueForAllPartners = async (req, res) => {
   }
 };
 
-
-
 const getMonthlyRevenueForEachPartner = async (req, res) => {
   try {
     const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth(); // Lấy tháng hiện tại (0-11)
+    const currentYear = today.getFullYear(); // Lấy năm hiện tại
 
+    // Lấy tất cả các đơn hàng "paid" trong tháng
     const orders = await Order.find({
       status: "paid",
       createdAt: {
-        $gte: new Date(currentYear, currentMonth, 1),
-        $lte: new Date(currentYear, currentMonth + 1, 0)
-      }
+        $gte: new Date(currentYear, currentMonth, 1), // Ngày đầu tháng
+        $lt: new Date(currentYear, currentMonth + 1, 1), // Ngày đầu tháng kế tiếp
+      },
     }).populate({
-      path: 'tour',
-      select: 'partner',
+      path: "tour",
+      select: "partner",
       populate: {
-        path: 'partner',
-        select: 'name'
-      }
+        path: "partner",
+        select: "name email",
+      },
     });
 
+    // Lấy danh sách các đối tác đã được thanh toán trong tháng
+    const paidPartners = await Transaction.find({
+      date: {
+        $gte: new Date(currentYear, currentMonth, 1),
+        $lt: new Date(currentYear, currentMonth + 1, 1),
+      },
+    });
+
+    // Nhóm doanh thu theo partner
     const partnerRevenues = {};
 
     for (const order of orders) {
-      const partnerId = order.tour.partner._id;
+      const partner = order.tour?.partner; // Đảm bảo `partner` tồn tại
+      if (!partner || paidPartners.some(trx => trx.partner.toString() === partner._id.toString())) continue;
+
+      const partnerId = partner._id.toString();
+      const partnerEmail = partner.email;
       const totalRevenue = order.totalValue;
-      const adminShare = totalRevenue * 0.30;
-      const partnerShare = totalRevenue * 0.70;
+      const adminShare = totalRevenue * 0.3;
+      const partnerShare = totalRevenue * 0.7;
 
       if (!partnerRevenues[partnerId]) {
-        partnerRevenues[partnerId] = { name: order.tour.partner.name, totalSales: 0, adminRevenue: 0, partnerRevenue: 0 };
+        partnerRevenues[partnerId] = {
+          name: partner.name,
+          email: partnerEmail,
+          totalSales: 0,
+          adminRevenue: 0,
+          partnerRevenue: 0,
+          status: "pending", // Mặc định trạng thái là 'pending'
+        };
       }
 
+      // Cộng dồn doanh thu cho partner
       partnerRevenues[partnerId].totalSales += totalRevenue;
       partnerRevenues[partnerId].adminRevenue += adminShare;
       partnerRevenues[partnerId].partnerRevenue += partnerShare;
+
+      // Kiểm tra nếu đã có giao dịch thành công
+      const partnerTransaction = paidPartners.find(trx => trx.partner.toString() === partnerId);
+      if (partnerTransaction && partnerTransaction.status === "success") {
+        partnerRevenues[partnerId].status = "success";
+      }
     }
 
+    // Chuyển đối tượng thành mảng để dễ hiển thị
     const groupedRevenues = Object.entries(partnerRevenues).map(([partnerId, partnerData]) => ({
       partnerId,
       partnerName: partnerData.name,
+      partnerEmail: partnerData.email,
       totalSales: partnerData.totalSales,
       adminRevenue: partnerData.adminRevenue,
-      partnerRevenue: partnerData.partnerRevenue
+      partnerRevenue: partnerData.partnerRevenue,
+      status: partnerData.status,
     }));
 
-    res.render('Revenue/monthlyRevenueForEachPartner', {
+    // Render ra view EJS với dữ liệu cần thiết
+    res.render("Revenue/monthlyRevenueForEachPartner", {
       groupedRevenues,
-      month: `${currentMonth + 1}-${currentYear}`
+      month: `${currentMonth + 1}-${currentYear}`, // Tháng hiển thị (dạng 1-based)
     });
   } catch (error) {
-    console.error("Error retrieving monthly revenue for each partner:", error);
-    res.status(500).json({ message: "Error retrieving monthly revenue for each partner", error });
+    console.error("Error calculating monthly revenue for each partner:", error);
+    res.status(500).send("Error calculating revenue");
   }
 };
 
-// Hàm POST để chuyển tiền và cập nhật trạng thái
+
 const processMonthlyPayments = async (req, res) => {
   try {
-    const { transactionId, partnerAmount } = req.body;
+    const { partneremail, partnerAmount } = req.body;
 
-    if (!transactionId || !partnerAmount) {
-      return res.status(400).json({ message: "Missing required data" });
+    // Kiểm tra dữ liệu đầu vào
+    if (!partneremail || !partnerAmount) {
+      return res.status(400).json({ message: "Thiếu dữ liệu cần thiết" });
     }
 
-    // Tìm giao dịch cần thanh toán
-    const transaction = await Transaction.findById(transactionId);
+    console.log("Dữ liệu nhận được:", { partneremail, partnerAmount });
 
-    if (!transaction) {
-      return res.status(404).json({ message: "Transaction not found" });
+    // Tìm đối tác theo email
+    const partner = await User.findOne({ email: partneremail });
+    if (!partner) {
+      return res.status(404).json({ message: "Không tìm thấy đối tác với email đã cung cấp" });
     }
 
-    if (transaction.status === "success") {
-      return res.status(400).json({ message: "Transaction already completed" });
-    }
+    console.log("Thông tin đối tác tìm được:", partner);
 
-    // Giả sử xử lý thanh toán thành công qua ví điện tử
-    const paymentSuccess = true; // Thay bằng API xử lý thực tế của ví điện tử
+    // Gọi hàm thanh toán từ Pointer Wallet
+    const paymentResponse = await pointerPayment.withdrawMoney({
+      email: partneremail,
+      currency: "VND",
+      amount: partnerAmount,
+    });
 
-    if (paymentSuccess) {
-      // Cập nhật trạng thái giao dịch
-      transaction.status = "success";
-      transaction.paidAt = new Date();
-      await transaction.save();
+    // Kiểm tra phản hồi từ Pointer Wallet
+    if (paymentResponse?.status === 200) {
+      console.log(`Thanh toán thành công cho đối tác: ${partneremail}`);
 
-      // Cập nhật trạng thái của các đơn hàng liên quan
-      await Order.updateMany(
-        { 'tour.partner': transaction.partner, status: 'paid' },
-        { $set: { status: 'completed' } }
-      );
+      // Lưu thông tin giao dịch thành công vào DB
+      await Transaction.create({
+        partner: partner._id,
+        amount: partnerAmount,
+        status: "success",
+        date: new Date(),
+      });
 
-      return res.status(200).json({ message: "Payment processed successfully" });
+      return res.status(200).json({ message: "Thanh toán thành công" });
     } else {
-      return res.status(500).json({ message: "Payment failed" });
+      console.error("Thanh toán thất bại:", paymentResponse?.data);
+
+      // Lưu giao dịch thất bại vào DB
+      await Transaction.create({
+        partner: partner._id,
+        amount: partnerAmount,
+        status: "failed",
+        date: new Date(),
+      });
+
+      return res.status(500).json({
+        message: "Thanh toán thất bại",
+        error: paymentResponse?.data || "Không nhận được phản hồi từ dịch vụ thanh toán",
+      });
     }
   } catch (error) {
-    console.error("Error processing payment:", error);
-    res.status(500).json({ message: "Error processing payment", error });
+    // Xử lý lỗi khi thanh toán hoặc lưu giao dịch
+    console.error("Chi tiết lỗi xử lý thanh toán:", error.response?.data || error.message || error);
+
+    return res.status(500).json({
+      message: "Lỗi xử lý thanh toán",
+      error: error.response?.data || error.message || error,
+    });
   }
 };
-
-
+  
 const getTotalRevenueForAllPartners = async (req, res) => {
   try {
     const today = new Date();
