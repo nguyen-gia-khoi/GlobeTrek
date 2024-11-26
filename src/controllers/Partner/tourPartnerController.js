@@ -124,35 +124,30 @@ const postCreateTour = async (req, res) => {
         activity: activity,
       });
     }
-
-    // Handle availability (auto or custom)
     let availabilityData = [];
 
     if (availabilityType === 'auto') {
-      // Lấy ngày cuối tháng hiện tại
-      const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);  // Lấy ngày cuối tháng
-      const totalDays = Math.ceil((endOfMonth - new Date()) / (1000 * 3600 * 24));  // Tính tổng số ngày từ hôm nay đến cuối tháng
+      const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+      const totalDays = Math.ceil((endOfMonth - new Date()) / (1000 * 3600 * 24)); 
       
-      let nextDate = new Date();  // Ngày bắt đầu là hôm nay
+      let nextDate = new Date();  
     
       for (let i = 1; i < totalDays; i++) {
-        const formattedDate = nextDate.toISOString().split('T')[0];  // Định dạng ngày theo 'YYYY-MM-DD'
+        const formattedDate = nextDate.toISOString().split('T')[0]; 
         const availableSeats = Number(totalSpots);
     
         availabilityData.push({
-          date: formattedDate,  // Lưu ngày dưới dạng chuỗi 'YYYY-MM-DD'
+          date: formattedDate, 
           availableSeats: availableSeats,
         });
 
-        // Cộng thêm duration vào ngày hiện tại, chỉ cộng đúng số ngày cần thiết (ví dụ: 3 ngày)
         let durationValue = Number(duration);
         console.log("Ngày ban đầu:", nextDate.toISOString().split('T')[0]);
         console.log("Duration value:", durationValue);
-        nextDate.setDate(nextDate.getDate() + durationValue);  // Cộng thêm số ngày (duration) vào nextDate
+        nextDate.setDate(nextDate.getDate() + durationValue); 
         
-        // Kiểm tra nếu ngày đã vượt qua ngày cuối của tháng thì dừng lại
-        if (nextDate > endOfMonth) break;  // Nếu ngày tiếp theo vượt quá ngày cuối của tháng thì thoát khỏi vòng lặp
-        
+
+        if (nextDate > endOfMonth) break; 
         console.log("Ngày sau khi cộng duration:", nextDate.toISOString().split('T')[0]);
       }
     } 

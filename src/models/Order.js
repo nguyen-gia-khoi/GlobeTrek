@@ -74,7 +74,7 @@ const OrderSchema = new Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['pointer-wallet'],
+    enum: ['pointer-wallet','connected-wallet'],
     required: true,
   },
 }, { timestamps: true }); 
