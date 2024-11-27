@@ -421,19 +421,25 @@ const callback = async (req, res) => {
       console.log("New user created:", dbUser);
     }
     const userId = dbUser._id
-    const signature = dbUser.signature
+    // const signature = dbUser.signature
     // Generate a custom JWT (if needed)
     const jwtToken = jwt.sign({ userId, email }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "1h",
     });
-    return res.json({
-      login: true,
-      role: dbUser.role,
-      _id: dbUser._id,
-      email: dbUser.email,
-      accessToken: jwtToken, // Your custom token
-      signature:signature
-    });
+    // return res.json({
+    //   login: true,
+    //   role: dbUser.role,
+    //   _id: dbUser._id,
+    //   email: dbUser.email,
+    //   accessToken: jwtToken, // Your custom token
+    //   // signature:signature
+    // });
+    const { password, ...userDetails } = dbUser._doc; // Use `_doc` to access the document properties
+
+      return res.status(200).json({
+        ...userDetails, // Include all user details except the password
+        accessToken: jwtToken, // Add the generated JWT token
+      });
   } catch (error) {
     console.error("Error in callback:", JSON.stringify(error, null, 2));
     return res.status(500).json({
