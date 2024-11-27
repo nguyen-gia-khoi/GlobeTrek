@@ -421,7 +421,7 @@ const callback = async (req, res) => {
       console.log("New user created:", dbUser);
     }
     const userId = dbUser._id
-    const signature = bUser.signature
+    const signature = dbUser.signature
     // Generate a custom JWT (if needed)
     const jwtToken = jwt.sign({ userId, email }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "1h",
