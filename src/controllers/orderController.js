@@ -340,7 +340,7 @@ const connectWallet = async(req, res) =>{
     const userId = req.user._id;
     console.log(userId)
     const partnerId = process.env.PARTNERID;
-    const returnUrl = 'http://localhost:5173/';
+    const returnUrl = process.env.VITE_REDIRECT_URL;
 
     const redirectUrl = `https://wallet.pointer.io.vn/connect-app?partnerId=${partnerId}&returnUrl=${encodeURIComponent(returnUrl)}&userId=${userId}`;
     res.json({ redirectUrl });
