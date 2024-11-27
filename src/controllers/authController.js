@@ -421,6 +421,7 @@ const callback = async (req, res) => {
       console.log("New user created:", dbUser);
     }
     const userId = dbUser._id
+    const signature = bUser.signature
     // Generate a custom JWT (if needed)
     const jwtToken = jwt.sign({ userId, email }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "1h",
@@ -431,6 +432,7 @@ const callback = async (req, res) => {
       _id: dbUser._id,
       email: dbUser.email,
       accessToken: jwtToken, // Your custom token
+      signature:signature
     });
   } catch (error) {
     console.error("Error in callback:", JSON.stringify(error, null, 2));
