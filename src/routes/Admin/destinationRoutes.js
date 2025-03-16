@@ -3,7 +3,7 @@ const router = express.Router();
 const destinationController = require('../../controllers/Admin/destinationController');
 const {verifyAdmin} = require('../../Middleware/authMiddleware');
 
-
+router.get('/' ,destinationController.getAllDestinations); // Hiển thị tất cả Destination
 router.get('/create' ,destinationController.createDestinationForm); // Hiển thị trang tạo Destination
 router.post('/create' ,destinationController.createDestination); // Tạo Destination mới
 router.get('/edit/:id' ,destinationController.editDestinationForm); // Hiển thị trang chỉnh sửa Destination
