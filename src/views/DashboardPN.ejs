@@ -1,135 +1,287 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= pageTitle %></title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      margin: 0;
-    }
-    .header {
-      background-color: #e9f5e9; /* Màu nền header */
-      color: white;
-      padding: 10px 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: fixed;
-      width: 100%;
-      top: 0;
-      z-index: 1000; /* Đảm bảo header luôn trên cùng */
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-    .sidebar {
-      min-height: 100vh;
-      background-color: #e9f5e9;
-      padding: 15px;
-      position: fixed;
-      width: 250px;
-      top: 60px; /* Đẩy sidebar xuống dưới header */
-      transition: all 0.3s;
-    }
-    .content {
-      margin-left: 250px;
-      padding: 15px;
-      flex-grow: 1;
-      margin-top: 60px; /* Đẩy nội dung xuống dưới header */
-    }
-    .nav-link {
-      color: #3c763d;
-    }
-    .nav-link:hover {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    .nav-link.active {
-      background-color: #c3e6cb;
-      color: #155724;
-    }
-    .logo-container {
-      display: flex;
-      align-items: center;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #34d399;
+            --secondary-color: #06b6d4;
+            --accent-color: #a7f3d0;
+            --background-color: #f0fdfa;
+            --card-background: #ffffff;
+            --text-primary: #064e3b;
+            --text-secondary: #065f46;
+            --border-radius: 24px;
+            --border-radius-lg: 30px;
+            --shadow-sm: 0 4px 6px rgba(16, 185, 129, 0.05);
+            --shadow-md: 0 8px 20px rgba(16, 185, 129, 0.1);
+            --shadow-lg: 0 20px 40px rgba(16, 185, 129, 0.15);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --gradient-primary: linear-gradient(135deg, #10b981, #06b6d4);
+            --gradient-hover: linear-gradient(135deg, #059669, #0891b2);
+        }
 
-    .logo-container img {
-      width: 40px; /* Chỉnh kích thước ảnh */
-      height: auto;
-      margin-right: 10px;
-    }
+        body {
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            background-color: var(--background-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
 
-    .namelogo {
-      text-decoration: none;
-      font-size: 1.5rem; 
-      font-weight: bold;
-      color: #28a745; 
-    }
-    .namelogo:hover {
-      text-decoration: none;
-      font-size: 1.5rem; 
-      font-weight: bold;
-      color: #28a745; 
-    }
-  </style>
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(16, 185, 129, 0.1);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .logo-container:hover {
+            transform: translateY(-2px);
+        }
+
+        .logo-container img {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            margin-right: 1rem;
+            object-fit: cover;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .namelogo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            padding: 2rem 1.5rem;
+            position: fixed;
+            width: 280px;
+            top: 72px;
+            border-right: 1px solid rgba(16, 185, 129, 0.1);
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .sidebar h2 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            padding-left: 1rem;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-link:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .content {
+            margin-left: 280px;
+            padding: 2rem;
+            padding-top: 30px;
+            flex-grow: 1;
+        }
+
+        .btn-logout {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-logout:hover {
+            background: var(--gradient-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            color: white;
+        }
+
+        .submenu {
+            margin-left: 2.5rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .submenu.show {
+            display: block;
+        }
+
+        .submenu .nav-link {
+            font-size: 0.95rem;
+            padding: 0.8rem 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 1001;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+            }
+
+            .toggle-sidebar {
+                display: block;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="header">
-    <div class="container d-flex justify-content-between align-items-center">
-    <a class="logo-container d-flex align-items-center" href="/partner/revenue">
-      <img src="/images/logo.jpg" alt="Logo">
-      <span class="namelogo ms-2">GlobeTek</span>
-    </a>
-    <ul class="navbar-nav d-flex align-items-center mb-0">
-      <li class="nav-item">
-          <form action="/api/auth/signout" method="POST" class="d-inline">
-              <button type="submit" class="btn btn-success">logout</button>
-          </form>
-      </li>
-  </ul>
-</div> 
-</div>
-
-
-  <div class="sidebar">
-    <h2 class="active">Dashboard</h2>
-    <ul class="nav flex-column">
-      <li class="nav-item">
-        <a class="nav-link" href="/partner/revenue"> Home </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/partner/orders">Orders</a>
-      </li>
-
-      <li class="nav-item">
-        <a class="nav-link" data-toggle="collapse" href="#tourMenu" role="button" aria-expanded="false" aria-controls="tourMenu">
-            Tours
-        </a>
-        <div class="collapse" id="tourMenu">
-            <ul class="nav flex-column ml-3">
-                <li class="nav-item">
-                    <a class="nav-link" href="/partner/tours/list">Xem Tour</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/partner/tours/create">Tạo Tour</a> 
-                </li>            
-            </ul>
+    <div class="header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="logo-container" href="/partner/revenue">
+                <img src="/images/logo.jpg" alt="Logo" class="rounded">
+                <span class="namelogo">GlobeTrek</span>
+            </a>
+            <div class="d-flex align-items-center">
+                <form action="/api/auth/signout" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Đăng xuất
+                    </button>
+                </form>
+            </div>
         </div>
-      </li>
-    </ul>
-  </div>
+    </div>
 
-  <div class="content">
-    <h1><%= pageTitle %></h1>
-  </div>
+    <div class="sidebar">
+        <h2><i class="fas fa-th-large mr-2"></i>Dashboard</h2>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="/partner/revenue">
+                    <i class="fas fa-home"></i>
+                    Trang Chủ
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/partner/orders">
+                    <i class="fas fa-shopping-cart"></i>
+                    Đơn Hàng
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="collapse" href="#tourMenu">
+                    <i class="fas fa-route"></i>
+                    Tour Du Lịch
+                    <i class="fas fa-chevron-down ml-auto"></i>
+                </a>
+                <div class="collapse submenu" id="tourMenu">
+                    <a class="nav-link" href="/partner/tours/list">
+                        <i class="fas fa-list"></i>
+                        Xem Tour
+                    </a>
+                    <a class="nav-link" href="/partner/tours/create">
+                        <i class="fas fa-plus"></i>
+                        Tạo Tour
+                    </a>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <div class="container-fluid">
+            <h1 class="mb-4"><%= pageTitle %></h1>
+            <!-- Content will be injected here -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Highlight active menu item
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                    // If it's a submenu item, show the parent menu
+                    const parentCollapse = link.closest('.collapse');
+                    if (parentCollapse) {
+                        parentCollapse.classList.add('show');
+                        const parentLink = parentCollapse.previousElementSibling;
+                        if (parentLink) {
+                            parentLink.classList.add('active');
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

@@ -4,18 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>Confirm Delete Destination</title>
 </head>
 <body>
-    
     <%- include('../header', { pageTitle: 'Confirm Delete Destination' }) %>
-    <div class="container mt-5">
-        <h1 class="mt-5">Confirm Delete Destination</h1>
-        <p>Are you sure you want to delete the destination: <strong><%= destination.name %></strong>?</p>
-        <form action="/admin/destinations/delete/<%= destination._id %>" method="POST">
-            <button type="submit" class="btn btn-danger">Delete</button>
-            <a href="/destinations" class="btn btn-secondary">Cancel</a>
-        </form>
+    
+    <div class="page-header">
+        <div class="container">
+            <h1 class="display-4">Confirm Delete Destination</h1>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="card p-4">
+            <div class="text-center mb-4">
+                <p class="mb-4">Are you sure you want to delete the destination: <strong><%= destination.name %></strong>?</p>
+                <form action="/admin/destinations/delete/<%= destination._id %>" method="POST">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                        <a href="/destinations" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </body>
 </html>

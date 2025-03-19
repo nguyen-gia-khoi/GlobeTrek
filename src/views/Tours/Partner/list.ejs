@@ -5,13 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách Tour của Partner</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        .page-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+        }
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .table thead th {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-weight: 500;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .table td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+        .btn {
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-toggle {
+            min-width: 80px;
+        }
+        .btn-warning {
+            background-color: #f39c12;
+            border-color: #f39c12;
+            color: white;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .schedule-item, .availability-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .schedule-item:last-child, .availability-item:last-child {
+            border-bottom: none;
+        }
+        .toggle-link {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .toggle-link:hover {
+            color: #2980b9;
+            text-decoration: none;
+        }
+        .pagination {
+            margin-top: 2rem;
+        }
+        .pagination .btn {
+            margin: 0 5px;
+            min-width: 100px;
+        }
+        .pagination span {
+            padding: 0 15px;
+            color: #2c3e50;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .status-active {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .status-inactive {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
-    <%- include('../../DashboardPN', { pageTitle: 'Danh sách Tour của Partner' }) %>
-    <div class="container mt-4">
-        <h1 class="text-center">Danh sách Tour của Partner</h1>
-        <!-- Kiểm tra nếu không có tour nào -->
-        <table class="table table-striped">
+    <%- include('../../DashboardPN', { pageTitle: '' }) %>
+    <div class="container">
+        <h1 class="text-center page-title">Danh sách Tour của Partner</h1>
+        <table class="table">
             <thead>
                 <tr>
                     <th>Tiêu đề</th>
@@ -28,63 +143,96 @@
             <tbody>
                 <% if (tours.length === 0) { %>
                     <tr>
-                        <td colspan="9" class="text-center">Không có tour nào.</td>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
+                            <p class="text-muted">Không có tour nào.</p>
+                        </td>
                     </tr>
                 <% } else { %>
                     <% tours.forEach(tour => { %>
                         <tr>
-                            <td><%= tour.title %></td>
+                            <td><strong><%= tour.title %></strong></td>
                             <td><%= tour.description %></td>
-                            <td><%= tour.price %> VNĐ</td>
-                            <td><%= tour.location %></td>
-                            <td><%= tour.duration %> ngày</td>
+                            <td><strong><%= tour.price.toLocaleString('vi-VN') %> VNĐ</strong></td>
+                            <td><i class="fas fa-map-marker-alt text-danger"></i> <%= tour.location %></td>
+                            <td><i class="far fa-clock"></i> <%= tour.duration %> ngày</td>
                             <td>
-                                <% 
-                                    let displayedSchedules = tour.schedules.slice(0, 2);
-                                    displayedSchedules.forEach((schedule, index) => { 
-                                %>
-                                    <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
-                                <% }) %>
-                                <% if (tour.schedules.length > 5) { %>
-                                    <div id="schedules-<%= tour._id %>" class="additional-schedules" style="display:none;">
-                                        <% tour.schedules.slice(2).forEach((schedule) => { %>
-                                            <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
-                                        <% }) %>
-                                    </div>
-                                    <div><a href="javascript:void(0);" onclick="toggleSchedules('<%= tour._id %>')">Xem thêm...</a></div>
+                                <div class="schedules-container">
+                                    <% let displayedSchedules = tour.schedules.slice(0, 2); %>
+                                    <% displayedSchedules.forEach((schedule, index) => { %>
+                                        <div class="schedule-item">
+                                            <i class="far fa-calendar-alt text-primary"></i>
+                                            Ngày <%= schedule.date %>: <%= schedule.activity %>
+                                        </div>
+                                    <% }) %>
+                                    <% if (tour.schedules.length > 2) { %>
+                                        <div id="schedules-<%= tour._id %>" class="additional-schedules" style="display:none;">
+                                            <% tour.schedules.slice(2).forEach((schedule) => { %>
+                                                <div class="schedule-item">
+                                                    <i class="far fa-calendar-alt text-primary"></i>
+                                                    Ngày <%= schedule.date %>: <%= schedule.activity %>
+                                                </div>
+                                            <% }) %>
+                                        </div>
+                                        <a href="javascript:void(0);" onclick="toggleSchedules('<%= tour._id %>')" class="toggle-link">
+                                            <i class="fas fa-chevron-down"></i> Xem thêm...
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="availabilities-container">
+                                    <% let displayedAvailabilities = tour.availabilities.slice(0, 3); %>
+                                    <% displayedAvailabilities.forEach((availability) => { %>
+                                        <div class="availability-item">
+                                            <i class="fas fa-users text-success"></i>
+                                            <%= availability.date.toLocaleDateString() %>: <%= availability.availableSeats %> chỗ
+                                        </div>
+                                    <% }) %>
+                                    <% if (tour.availabilities.length > 3) { %>
+                                        <div id="availabilities-<%= tour._id %>" class="additional-availabilities" style="display:none;">
+                                            <% tour.availabilities.slice(3).forEach((availability) => { %>
+                                                <div class="availability-item">
+                                                    <i class="fas fa-users text-success"></i>
+                                                    <%= availability.date.toLocaleDateString() %>: <%= availability.availableSeats %> chỗ
+                                                </div>
+                                            <% }) %>
+                                        </div>
+                                        <a href="javascript:void(0);" onclick="toggleAvailabilities('<%= tour._id %>')" class="toggle-link">
+                                            <i class="fas fa-chevron-down"></i> Xem thêm...
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </td>
+                            <td>
+                                <% let hasOrders = tour.hasOrders || false; %>
+                                <% if (!hasOrders) { %>
+                                    <form action="/partner/tours/toggle-status/<%= tour._id %>" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-toggle <%= tour.isDisabled ? 'btn-success' : 'btn-danger' %>">
+                                            <i class="fas <%= tour.isDisabled ? 'fa-play' : 'fa-pause' %>"></i>
+                                            <%= tour.isDisabled ? 'Bật' : 'Tắt' %>
+                                        </button>
+                                    </form>
+                                <% } else { %>
+                                    <span class="status-badge <%= tour.isDisabled ? 'status-inactive' : 'status-active' %>">
+                                        <i class="fas fa-shopping-cart"></i> Đã có đơn hàng
+                                    </span>
                                 <% } %>
                             </td>
-                            
                             <td>
-                                <% 
-                                    let displayedAvailabilities = tour.availabilities.slice(0, 10);
-                                    displayedAvailabilities.forEach((availabilities, index) => { 
-                                %>
-                                    <div> <%= availabilities.date.toLocaleDateString() %>: <%= availabilities.availableSeats %> chỗ</div>
-                                <% }) %>
-                                <% if (tour.availabilities.length > 5) { %>
-                                    <div id="availabilities-<%= tour._id %>" class="additional-availabilities" style="display:none;">
-                                        <% tour.availabilities.slice(5).forEach((availabilities) => { %>
-                                            <div> <%= availabilities.date.toLocaleDateString() %>: <%= availabilities.availableSeats %> chỗ</div>
-                                        <% }) %>
-                                    </div>
-                                    <div><a href="javascript:void(0);" onclick="toggleAvailabilities('<%= tour._id %>')">Xem thêm...</a></div>
-                                <% } %>
-                            </td>
-                            <td>
-                                <form action="/partner/tours/toggle-status/<%= tour._id %>" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-toggle <%= tour.isDisabled ? 'btn-success' : 'btn-danger' %>">
-                                        <%= tour.isDisabled ? 'Bật' : 'Tắt' %>
-                                    </button>
-                                </form>
-                            </td>
-                            <td>
-                                <a href="/partner/tours/edit/<%= tour._id %>" class="btn btn-warning btn-sm">Chỉnh sửa</a>
-                                <form action="/partner/tours/requestDeleteTour/<%= tour._id %>" method="POST" style="display:inline;">
-                                    <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn gửi yêu cầu xóa tour này không?');" class="btn btn-danger btn-sm">
-                                        Yêu cầu xóa
-                                    </button>
-                                </form>
+                                <div class="action-buttons">
+                                    <% if (!hasOrders) { %>
+                                        <a href="/partner/tours/edit/<%= tour._id %>" class="btn btn-warning">
+                                            <i class="fas fa-edit"></i> Chỉnh sửa
+                                        </a>
+                                        <form action="/partner/tours/requestDeleteTour/<%= tour._id %>" method="POST">
+                                            <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn gửi yêu cầu xóa tour này không?');" 
+                                                    class="btn btn-danger">
+                                                <i class="fas fa-trash-alt"></i> Xóa
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                </div>
                             </td>
                         </tr>
                     <% }) %>
@@ -92,42 +240,52 @@
             </tbody>
         </table>
 
-   <!-- Pagination Controls -->
-<div class="pagination d-flex justify-content-center align-items-center mt-4">
-    <% if (currentPage > 1) { %>
-        <a href="?page=1" class="btn btn-outline-primary mx-2">Đầu</a>
-        <a href="?page=<%= currentPage - 1 %>" class="btn btn-outline-primary mx-2">Trước</a>
-    <% } %>
-
-    <span class="d-flex align-items-center">
-        <span class="font-weight-bold">Trang <%= currentPage %> / <%= totalPages %></span>
-    </span>
-
-    <% if (currentPage < totalPages) { %>
-        <a href="?page=<%= currentPage + 1 %>" class="btn btn-outline-primary mx-2">Tiếp theo</a>
-        <a href="?page=<%= totalPages %>" class="btn btn-outline-primary mx-2">Cuối</a>
-    <% } %>
-</div>
-
+        <!-- Pagination Controls -->
+        <div class="pagination d-flex justify-content-center align-items-center">
+            <% if (currentPage > 1) { %>
+                <a href="?page=1" class="btn btn-outline-primary">
+                    <i class="fas fa-angle-double-left"></i> Đầu
+                </a>
+                <a href="?page=<%= currentPage - 1 %>" class="btn btn-outline-primary">
+                    <i class="fas fa-angle-left"></i> Trước
+                </a>
+            <% } %>
+            <span class="d-flex align-items-center font-weight-bold">
+                Trang <%= currentPage %> / <%= totalPages %>
+            </span>
+            <% if (currentPage < totalPages) { %>
+                <a href="?page=<%= currentPage + 1 %>" class="btn btn-outline-primary">
+                    Tiếp theo <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page=<%= totalPages %>" class="btn btn-outline-primary">
+                    Cuối <i class="fas fa-angle-double-right"></i>
+                </a>
+            <% } %>
+        </div>
+    </div>
 
     <script>
-        // Hàm để hiển thị thêm lịch trình
         function toggleSchedules(tourId) {
             var schedulesDiv = document.getElementById("schedules-" + tourId);
+            var link = event.target.closest('.toggle-link');
             if (schedulesDiv.style.display === "none") {
                 schedulesDiv.style.display = "block";
+                link.innerHTML = '<i class="fas fa-chevron-up"></i> Thu gọn';
             } else {
                 schedulesDiv.style.display = "none";
+                link.innerHTML = '<i class="fas fa-chevron-down"></i> Xem thêm...';
             }
         }
 
-        // Hàm để hiển thị thêm số lượng chỗ ngồi
         function toggleAvailabilities(tourId) {
             var availabilitiesDiv = document.getElementById("availabilities-" + tourId);
+            var link = event.target.closest('.toggle-link');
             if (availabilitiesDiv.style.display === "none") {
                 availabilitiesDiv.style.display = "block";
+                link.innerHTML = '<i class="fas fa-chevron-up"></i> Thu gọn';
             } else {
                 availabilitiesDiv.style.display = "none";
+                link.innerHTML = '<i class="fas fa-chevron-down"></i> Xem thêm...';
             }
         }
     </script>

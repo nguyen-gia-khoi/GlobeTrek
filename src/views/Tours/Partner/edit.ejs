@@ -3,98 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cập Nhật Tour</title>
+    <title>Chỉnh sửa Tour - GlobeTrek</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .edit-tour-container {
+            background: var(--glass-bg);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 2rem;
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-section-title {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .form-group label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border-radius: var(--border-radius);
+            padding: 0.8rem 1rem;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .btn-submit {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: var(--transition);
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .schedule-day {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .schedule-day label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .file-upload {
+            border: 2px dashed rgba(16, 185, 129, 0.2);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary-color);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .current-files {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: var(--border-radius);
+        }
+
+        .current-files h6 {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .current-files ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .current-files li {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+    </style>
 </head>
 <body>
-    <%- include('../../DashboardPN', { pageTitle: 'Cập Nhật Tour' }) %>  
+    <%- include('../../DashboardPN', { pageTitle: 'Chỉnh sửa Tour' }) %>
 
-    <div class="container mt-4">
-        <h2 class="text-center">Cập Nhật Tour</h2>
+    <div class="container">
+        <div class="edit-tour-container">
+            <h1 class="page-title">Chỉnh sửa Tour Du Lịch</h1>
 
-        <form action="/partner/tours/edit/<%= tour._id %>" method="POST" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label for="title" class="form-label">Tiêu đề Tour</label>
-                <input type="text" class="form-control" id="title" name="title" value="<%= tour.title %>" required>
-            </div>
+            <form action="/partner/tours/edit/<%= tour._id %>" method="POST" enctype="multipart/form-data">
+                <!-- Thông tin cơ bản -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Thông tin cơ bản</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="title">Tên Tour</label>
+                                <input type="text" class="form-control" id="title" name="title" value="<%= tour.title %>" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="location">Địa điểm</label>
+                                <input type="text" class="form-control" id="location" name="location" value="<%= tour.location %>" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Mô tả Tour</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required><%= tour.description %></textarea>
+                    </div>
+                </div>
 
-            <div class="mb-3">
-                <label for="description" class="form-label">Mô tả Tour</label>
-                <textarea class="form-control" id="description" name="description" rows="4" required><%= tour.description %></textarea>
-            </div>
+                <!-- Thông tin chi tiết -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Chi tiết Tour</h3>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="price">Giá Tour (VND)</label>
+                                <input type="number" class="form-control" id="price" name="price" value="<%= tour.price %>" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="duration">Thời gian (Ngày)</label>
+                                <input type="number" class="form-control" id="duration" name="duration" value="<%= tour.duration %>" required min="1" oninput="generateScheduleFields()">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="tourType">Loại Tour</label>
+                                <select class="form-control" id="tourType" name="tourType" required>
+                                    <% tourTypes.forEach(function(type) { %>
+                                        <option value="<%= type._id %>" <%= type._id == tour.tourType ? 'selected' : '' %>><%= type.name %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="destination">Điểm đến</label>
+                                <select class="form-control" id="destination" name="destination" required>
+                                    <% destinations.forEach(function(dest) { %>
+                                        <option value="<%= dest._id %>" <%= dest._id == tour.destination ? 'selected' : '' %>><%= dest.name %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="mb-3">
-                <label for="price" class="form-label">Giá Tour (VND)</label>
-                <input type="number" class="form-control" id="price" name="price" value="<%= tour.price %>" required>
-            </div>
+                <!-- Lịch trình -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Lịch trình Tour</h3>
+                    <div id="scheduleFields"></div>
+                </div>
 
-            <div class="mb-3">
-                <label for="location" class="form-label">Địa điểm</label>
-                <input type="text" class="form-control" id="location" name="location" value="<%= tour.location %>" required>
-            </div>
+                <!-- Hình ảnh và Video -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Hình ảnh & Video</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Hình ảnh Tour</label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control-file" id="images" name="images" multiple>
+                                    <p class="text-muted mt-2">Kéo thả hoặc click để chọn nhiều ảnh</p>
+                                </div>
+                                <% if (tour.images && tour.images.length > 0) { %>
+                                    <div class="current-files">
+                                        <h6>Hình ảnh hiện tại:</h6>
+                                        <ul>
+                                            <% tour.images.forEach(function(image) { %>
+                                                <li><%= image %></li>
+                                            <% }) %>
+                                        </ul>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Video Tour</label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control-file" id="videos" name="videos" multiple>
+                                    <p class="text-muted mt-2">Kéo thả hoặc click để chọn video</p>
+                                </div>
+                                <% if (tour.videos && tour.videos.length > 0) { %>
+                                    <div class="current-files">
+                                        <h6>Video hiện tại:</h6>
+                                        <ul>
+                                            <% tour.videos.forEach(function(video) { %>
+                                                <li><%= video %></li>
+                                            <% }) %>
+                                        </ul>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="mb-3">
-                <label for="duration" class="form-label">Thời gian (Số ngày)</label>
-                <input type="number" class="form-control" id="duration" name="duration" value="<%= tour.duration %>" required min="1" oninput="generateScheduleFields()">
-            </div>
-
-            <div class="mb-3">
-                <label for="tourType" class="form-label">Loại Tour</label>
-                <select class="form-control" id="tourType" name="tourType" required>
-                    <% tourTypes.forEach(function(type) { %>
-                        <option value="<%= type._id %>" <%= type._id == tour.tourType ? 'selected' : '' %>><%= type.name %></option>
-                    <% }) %>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label for="destination" class="form-label">Địa điểm Tour</label>
-                <select class="form-control" id="destination" name="destination" required>
-                    <% destinations.forEach(function(dest) { %>
-                        <option value="<%= dest._id %>" <%= dest._id == tour.destination ? 'selected' : '' %>><%= dest.name %></option>
-                    <% }) %>
-                </select>
-            </div>
-
-            <div class="mb-3" id="scheduleFields"></div>
-
-            <div class="mb-3">
-                <label for="images" class="form-label">Hình ảnh (Chọn nhiều ảnh nếu cần)</label>
-                <input type="file" class="form-control" id="images" name="images" multiple>
-            </div>
-
-            <div class="mb-3">
-                <label for="videos" class="form-label">Video</label>
-                <input type="file" class="form-control" id="videos" name="videos" multiple>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Cập Nhật Tour</button>
-        </form>
+                <button type="submit" class="btn btn-submit">
+                    <i class="fas fa-save"></i> Lưu thay đổi
+                </button>
+            </form>
+        </div>
     </div>
 
     <script>
         function generateScheduleFields() {
             let duration = document.getElementById('duration').value;
-            let scheduleFieldsContainer = document.getElementById('scheduleFields');
-            scheduleFieldsContainer.innerHTML = '';
+            let container = document.getElementById('scheduleFields');
+            container.innerHTML = '';
 
-            // Get schedules from EJS passed to the template
             const schedules = <%- JSON.stringify(tour.schedules) %>;
 
             for (let i = 1; i <= duration; i++) {
                 let activity = schedules[i - 1] ? schedules[i - 1].activity : '';
-                let inputGroup = document.createElement('div');
-                inputGroup.classList.add('mb-3');
-                inputGroup.innerHTML = `
-                    <label for="schedules_${i}" class="form-label">Ngày ${i}: Mô tả hoạt động</label>
-                    <textarea class="form-control" name="schedules[${i}]" id="schedules_${i}">${activity}</textarea>
+                let scheduleDay = document.createElement('div');
+                scheduleDay.className = 'schedule-day';
+                scheduleDay.innerHTML = `
+                    <label for="schedules_${i}">Ngày ${i}</label>
+                    <textarea class="form-control" name="schedules[${i}]" 
+                              id="schedules_${i}" 
+                              placeholder="Mô tả hoạt động cho ngày ${i}">${activity}</textarea>
                 `;
-                scheduleFieldsContainer.appendChild(inputGroup);
+                container.appendChild(scheduleDay);
             }
         }
 
         // Initialize schedule fields on page load
-        generateScheduleFields();
+        document.addEventListener('DOMContentLoaded', function() {
+            generateScheduleFields();
+        });
     </script>
 </body>
 </html>

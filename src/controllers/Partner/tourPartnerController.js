@@ -29,7 +29,7 @@ const getUserIdFromToken = (PartneraccessToken) => {
 const getTourList = async (req, res) => {
   try {
     const token = req.cookies.PartneraccessToken;
-    const partnerId = getUserIdFromToken(token);
+    const partnerId = getUserIdFromToken(token); // Giả sử bạn có hàm này để lấy partnerId từ token
     if (!partnerId) {
       return res.status(401).send('Unauthorized');
     }
@@ -39,21 +39,35 @@ const getTourList = async (req, res) => {
     const limit = 4; // Number of tours per page
     const skip = (page - 1) * limit;
 
+    // Lấy danh sách tour của partner
     const tours = await Tour.find({ partner: partnerId })
       .populate('tourType')
       .populate('destination')
       .skip(skip)
       .limit(limit);
 
-    const totalTours = await Tour.countDocuments({ partner: partnerId }); // Get the total number of tours for pagination
-    const totalPages = Math.ceil(totalTours / limit); // Calculate the total number of pages
+    const totalTours = await Tour.countDocuments({ partner: partnerId }); // Tổng số tour của partner
+    const totalPages = Math.ceil(totalTours / limit); // Tính tổng số trang
 
     if (!tours || tours.length === 0) {
-      return res.render('Tours/Partner/list', { tours: [], currentPage: page, totalPages: totalPages });
+      return res.render('Tours/Partner/list', { 
+        tours: [], 
+        currentPage: page, 
+        totalPages: totalPages 
+      });
     }
 
+    // Kiểm tra đơn hàng cho từng tour
+    const toursWithOrders = await Promise.all(
+      tours.map(async (tour) => {
+        const existingOrders = await Order.find({ tour: tour._id }); // Kiểm tra đơn hàng cho tour
+        tour.hasOrders = existingOrders.length > 0; // Thêm thuộc tính hasOrders vào tour
+        return tour;
+      })
+    );
+
     res.render('Tours/Partner/list', {
-      tours,
+      tours: toursWithOrders, // Truyền danh sách tour đã được bổ sung hasOrders
       currentPage: page,
       totalPages: totalPages
     });
@@ -62,7 +76,6 @@ const getTourList = async (req, res) => {
     res.status(500).send('Error fetching tour list');
   }
 };
-
 // Get create tour page
 const getCreateTour = async (req, res) => {
   try {

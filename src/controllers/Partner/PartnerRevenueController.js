@@ -4,26 +4,31 @@ const { Tour } = require('../../models/Tour');
 const User = require('../../models/User');
 const moment = require('moment');
 
-// Hàm tính doanh thu theo khoảng thời gian
+// Hàm tính doanh thu theo khoảng thời gian (tái sử dụng và tối ưu)
 const getRevenueByTimePeriod = async (tourIds, startDate, endDate) => {
-  return Order.aggregate([
+  const result = await Order.aggregate([
     {
       $match: {
         tour: { $in: tourIds },
-        status: 'paid', // Chỉ tính đơn hàng đã thanh toán
-        createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }, // Lọc theo khoảng thời gian
+        status: 'paid',
+        createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
       },
     },
     {
       $group: {
-        _id: '$tour', // Nhóm theo tour ID
+        _id: '$tour',
         totalRevenue: { $sum: '$totalValue' },
         ordersCount: { $sum: 1 },
       },
     },
-  ]);
+  ]).exec();
+  return result.reduce((acc, item) => {
+    acc[item._id] = { totalRevenue: item.totalRevenue, ordersCount: item.ordersCount };
+    return acc;
+  }, {});
 };
 
+// Hàm chính lấy doanh thu đối tác
 const getPartnerRevenue = async (req, res) => {
   try {
     const token = req.cookies.PartneraccessToken;
@@ -34,19 +39,21 @@ const getPartnerRevenue = async (req, res) => {
     // Giải mã token
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const partnerId = decoded.userId;
-
     if (!partnerId) {
       return res.status(400).json({ message: 'Partner ID not found in token' });
     }
 
-    // Lấy danh sách tours của đối tác
-    const tours = await Tour.find({ partner: partnerId }).select('_id title');
+    // Lấy thông tin đối tác và tours cùng lúc (giảm truy vấn)
+    const [partner, tours] = await Promise.all([
+      User.findById(partnerId).select('name email').lean(),
+      Tour.find({ partner: partnerId }).select('_id title').lean(),
+    ]);
 
     if (!tours.length) {
       return res.render('Revenue/Partner/PartnerRevenue', {
         success: true,
-        partnerName: '',
-        partnerEmail: '',
+        partnerName: partner?.name || '',
+        partnerEmail: partner?.email || '',
         revenueData: [],
         totalRevenue: 0,
         totalActualRevenue: 0,
@@ -57,83 +64,74 @@ const getPartnerRevenue = async (req, res) => {
       });
     }
 
-    // Lấy danh sách tour ID
     const tourIds = tours.map(tour => tour._id);
 
-    // Tính tổng doanh thu và doanh thu thực tế
-    const orders = await Order.aggregate([
-      {
-        $match: {
-          tour: { $in: tourIds },
-          status: 'paid',
+    // Tính toán tất cả doanh thu trong một truy vấn duy nhất
+    const revenuePeriods = await Promise.all([
+      Order.aggregate([
+        { $match: { tour: { $in: tourIds }, status: 'paid' } },
+        {
+          $group: {
+            _id: '$tour',
+            totalRevenue: { $sum: '$totalValue' },
+            ordersCount: { $sum: 1 },
+          },
         },
-      },
-      {
-        $group: {
-          _id: '$tour', // Nhóm theo tour ID
-          totalRevenue: { $sum: '$totalValue' },
-          ordersCount: { $sum: 1 },
-        },
-      },
+      ]).exec(),
+      getRevenueByTimePeriod(tourIds, moment().startOf('day').toISOString(), moment().endOf('day').toISOString()),
+      getRevenueByTimePeriod(tourIds, moment().startOf('week').toISOString(), moment().endOf('week').toISOString()),
+      getRevenueByTimePeriod(tourIds, moment().startOf('month').toISOString(), moment().endOf('month').toISOString()),
+      getRevenueByTimePeriod(tourIds, moment().startOf('year').toISOString(), moment().endOf('year').toISOString()),
     ]);
+
+    const [totalRevenueData, dailyRevenue, weeklyRevenue, monthlyRevenue, yearlyRevenue] = revenuePeriods;
+
+    // Tạo map từ totalRevenueData để tra cứu nhanh
+    const revenueMap = totalRevenueData.reduce((acc, item) => {
+      acc[item._id] = { totalRevenue: item.totalRevenue, ordersCount: item.ordersCount };
+      return acc;
+    }, {});
 
     let totalRevenue = 0;
     let totalActualRevenue = 0;
     const revenueData = tours.map(tour => {
-      const order = orders.find(o => o._id.toString() === tour._id.toString());
-      if (order) {
-        const tourRevenue = order.totalRevenue;
-        const actualRevenue = tourRevenue * 0.7; // Giả sử tỷ lệ thực tế là 70%
-        totalRevenue += tourRevenue;
-        totalActualRevenue += actualRevenue;
+      const revenueInfo = revenueMap[tour._id] || { totalRevenue: 0, ordersCount: 0 };
+      const tourRevenue = revenueInfo.totalRevenue;
+      const actualRevenue = tourRevenue * 0.7; // Tỷ lệ thực tế 70%
+      totalRevenue += tourRevenue;
+      totalActualRevenue += actualRevenue;
 
-        return {
-          tourName: tour.title,
-          revenue: tourRevenue,
-          actualRevenue: actualRevenue,
-          ordersCount: order.ordersCount,
-        };
-      }
       return {
         tourName: tour.title,
-        revenue: 0,
-        actualRevenue: 0,
-        ordersCount: 0,
+        revenue: tourRevenue,
+        actualRevenue,
+        ordersCount: revenueInfo.ordersCount,
       };
     });
 
-    // Tính doanh thu theo ngày, tuần, tháng, năm
-    const dailyRevenue = await getRevenueByTimePeriod(tourIds, moment().startOf('day').toISOString(), moment().endOf('day').toISOString());
-    const weeklyRevenue = await getRevenueByTimePeriod(tourIds, moment().startOf('week').toISOString(), moment().endOf('week').toISOString());
-    const monthlyRevenue = await getRevenueByTimePeriod(tourIds, moment().startOf('month').toISOString(), moment().endOf('month').toISOString());
-    const yearlyRevenue = await getRevenueByTimePeriod(tourIds, moment().startOf('year').toISOString(), moment().endOf('year').toISOString());
-
-    const partner = await User.findById(partnerId).select('name email');
-
+    // Render kết quả
     res.render('Revenue/Partner/PartnerRevenue', {
       success: true,
       partnerName: partner.name,
       partnerEmail: partner.email,
-      revenueData: revenueData,
-      totalRevenue: totalRevenue,
-      totalActualRevenue: totalActualRevenue,
-      dailyRevenue: dailyRevenue,
-      weeklyRevenue: weeklyRevenue,
-      monthlyRevenue: monthlyRevenue,
-      yearlyRevenue: yearlyRevenue,
+      revenueData,
+      totalRevenue,
+      totalActualRevenue,
+      dailyRevenue: Object.entries(dailyRevenue),
+      weeklyRevenue: Object.entries(weeklyRevenue),
+      monthlyRevenue: Object.entries(monthlyRevenue),
+      yearlyRevenue: Object.entries(yearlyRevenue),
     });
   } catch (err) {
-    console.error(err);
+    console.error('Error in getPartnerRevenue:', err);
     if (err instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
     res.status(500).json({
       success: false,
-      message: 'Lỗi khi tính toán doanh thu',
+      message: `Error calculating revenue: ${err.message}`,
     });
   }
 };
 
-module.exports = {
-  getPartnerRevenue
-};
+module.exports = { getPartnerRevenue };
