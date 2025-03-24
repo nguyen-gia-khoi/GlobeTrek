@@ -1,19 +1,290 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Revenue by Partner</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    .chart-container {
-      width: 80%;
-      margin: auto;
-      padding-top: 50px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ Đối Tác</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #34d399;
+            --secondary-color: #06b6d4;
+            --accent-color: #a7f3d0;
+            --background-color: #f0fdfa;
+            --card-background: #ffffff;
+            --text-primary: #064e3b;
+            --text-secondary: #065f46;
+            --border-radius: 24px;
+            --border-radius-lg: 30px;
+            --shadow-sm: 0 4px 6px rgba(16, 185, 129, 0.05);
+            --shadow-md: 0 8px 20px rgba(16, 185, 129, 0.1);
+            --shadow-lg: 0 20px 40px rgba(16, 185, 129, 0.15);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --gradient-primary: linear-gradient(135deg, #10b981, #06b6d4);
+            --gradient-hover: linear-gradient(135deg, #059669, #0891b2);
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            line-height: 1.7;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 50% 50%, rgba(167, 243, 208, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 30%);
+            pointer-events: none;
+            z-index: -1;
+            animation: gradientAnimation 15s ease infinite;
+        }
+
+        @keyframes gradientAnimation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .dashboard-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding:14rem 0 6rem;
+            margin-bottom: -3rem;
+            border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
+            background-size: 60px 60px;
+            animation: headerPattern 60s linear infinite;
+            opacity: 0.6;
+        }
+
+        .dashboard-header h1 {
+            font-weight: 800;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #ffffff, #e0ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) scale(1.005);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stats-card {
+            padding: 2rem;
+            text-align: center;
+            height: 100%;
+        }
+
+        .stats-card i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .stats-card p {
+            color: var(--text-secondary);
+            margin-bottom: 0;
+            font-size: 1.1rem;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
 </head>
 <body>
-  <%- include('DashboardPN', { pageTitle: 'Home Partner' }) %>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <%- include('DashboardPN', { pageTitle: 'Home Partner' }) %>
+
+    <div class="container mt-5">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header text-center">
+            <h1 class="mb-3">Chào Mừng Đối Tác</h1>
+            <p class="lead mb-0">Quản lý và theo dõi hoạt động của bạn</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mt-5">
+            <div class="col-md-4 mb-4">
+                <div class="card fade-in">
+                    <div class="stats-card">
+                        <i class="fas fa-route"></i>
+                        <h3>Tour Du Lịch</h3>
+                        <p>Quản lý các tour của bạn</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card fade-in">
+                    <div class="stats-card">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Doanh Thu</h3>
+                        <p>Theo dõi doanh thu của bạn</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card fade-in">
+                    <div class="stats-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Khách Hàng</h3>
+                        <p>Quản lý đơn đặt tour</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="card fade-in">
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Loading overlay
+        window.addEventListener('load', function() {
+            const loadingOverlay = document.querySelector('.loading-overlay');
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 500);
+        });
+
+        // Sample chart data
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+                datasets: [{
+                    label: 'Doanh Thu Theo Tháng',
+                    data: [0, 0, 0, 0, 0, 0],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => value.toLocaleString('vi-VN') + ' VND'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
-</html> -->
+</html>

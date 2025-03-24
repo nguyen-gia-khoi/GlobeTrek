@@ -1,77 +1,305 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= pageTitle %></title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #34d399;
+            --secondary-color: #06b6d4;
+            --accent-color: #a7f3d0;
+            --background-color: #f0fdfa;
+            --card-background: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #374151;
+            --border-radius: 24px;
+            --border-radius-lg: 30px;
+            --shadow-sm: 0 4px 6px rgba(16, 185, 129, 0.05);
+            --shadow-md: 0 8px 20px rgba(16, 185, 129, 0.1);
+            --shadow-lg: 0 20px 40px rgba(16, 185, 129, 0.15);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --gradient-primary: linear-gradient(135deg, #10b981, #06b6d4);
+            --gradient-hover: linear-gradient(135deg, #059669, #0891b2);
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            line-height: 1.7;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 50% 50%, rgba(167, 243, 208, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 30%);
+            pointer-events: none;
+            z-index: -1;
+            animation: gradientAnimation 15s ease infinite;
+        }
+
+        @keyframes gradientAnimation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .dashboard-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 4rem 0 6rem;
+            margin-bottom: -3rem;
+            border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
+            background-size: 60px 60px;
+            animation: headerPattern 60s linear infinite;
+            opacity: 0.6;
+        }
+
+        .dashboard-header h1 {
+            font-weight: 800;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #ffffff, #e0ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+        }
+
+         .card:hover {
+             transform: translateY(-5px) scale(1.005); 
+             box-shadow: var(--shadow-lg); 
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--text-secondary);
+            font-weight: 700;
+            border: none;
+            padding: 1.5rem;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .table td {
+            padding: 1.5rem;
+            vertical-align: middle;
+            color: var(--text-primary);
+            border-color: rgba(16, 185, 129, 0.1);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .table-hover tbody tr {
+            transition: var(--transition);
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(16, 185, 129, 0.05);
+            transform: scale(1.01);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: var(--transition);
+            letter-spacing: 0.5px;
+        }
+
+        .btn-success {
+            background: var(--gradient-primary);
+            border: none;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: none;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            border-radius: var(--border-radius);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
 
-  <%- include('header', { pageTitle: 'Home' }) %>
+    <%- include('header', { pageTitle: 'Home' }) %>
 
-  <div class="container mt-5">
-    <h1 class="text-center mt-5 mb-4">Unverified Partners</h1>
-      
-    <% if (unverifiedPartners && unverifiedPartners.length > 0) { %>
-      <table class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% unverifiedPartners.forEach(partner => { %>
-            <tr>
-              <td><%= partner.name %></td>
-              <td><%= partner.email %></td>
-              <td><%= partner.status %></td>
-              <td>
-                <form action="/api/auth/partner/verify" method="POST" class="d-inline">
-                  <input type="hidden" name="partnerId" value="<%= partner._id %>">
-                  <input type="hidden" name="action" value="accept"> <!-- Add this line -->
-                  <button type="submit" class="btn btn-success btn-sm">Approve</button>
-                </form>
-                <form action="/api/auth/partner/verify" method="POST" class="d-inline"> <!-- Update the action URL for decline -->
-                  <input type="hidden" name="partnerId" value="<%= partner._id %>">
-                  <input type="hidden" name="action" value="decline"> <!-- Add this line -->
-                  <button type="submit" class="btn btn-danger btn-sm">Decline</button>
-                </form>
-              </td>
-              
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-      <!-- <% if (typeof totalPages !== 'undefined' && totalPages > 0) { %>
-        <nav>
-          <ul class="pagination justify-content-center">
-            <% for (let i = 1; i <= totalPages; i++) { %>
-              <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                <a class="page-link" href="/unverified-partners?page=<%= i %>&limit=10"><%= i %></a>
-              </li>
-            <% } %>
-          </ul>
-        </nav>
-      <% } %> -->
-    <% } else { %>
-      <p class="text-center">No unverified partners available.</p>
-    <% } %>
-    
-    <% if (typeof message !== 'undefined' && message) { %>
-      <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        <%= message %>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-    <% } %>
-  </div>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <div class="container mt-5">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header text-center">
+            <h1 class="mb-3">Quản Lý Đối Tác</h1>
+            <p class="lead mb-0">Danh sách đối tác chờ xác thực</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="">
+            <div class="card-body">
+                <% if (unverifiedPartners && unverifiedPartners.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tên Đối Tác</th>
+                                    <th>Email</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% unverifiedPartners.forEach(partner => { %>
+                                    <tr class="">
+                                        <td><strong><%= partner.name %></strong></td>
+                                        <td><%= partner.email %></td>
+                                        <td><span class="badge badge-warning"><%= partner.status %></span></td>
+                                        <td>
+                                            <form action="/api/auth/partner/verify" method="POST" class="d-inline">
+                                                <input type="hidden" name="partnerId" value="<%= partner._id %>">
+                                                <input type="hidden" name="action" value="accept">
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check mr-1"></i>Phê duyệt
+                                                </button>
+                                            </form>
+                                            <form action="/api/auth/partner/verify" method="POST" class="d-inline ml-2">
+                                                <input type="hidden" name="partnerId" value="<%= partner._id %>">
+                                                <input type="hidden" name="action" value="decline">
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-times mr-1"></i>Từ chối
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
+                        <p class="lead text-muted">Không có đối tác nào chờ xác thực.</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle mr-2"></i><%= message %>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        <% } %>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Loading overlay
+        window.addEventListener('load', function() {
+            const loadingOverlay = document.querySelector('.loading-overlay');
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 500);
+        });
+    </script>
 </body>
 </html>

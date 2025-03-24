@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         body {
@@ -15,82 +16,98 @@
             flex-direction: column;
             height: 100vh;
             margin: 0;
-            padding-top: 60px; /* To prevent content from being hidden under the fixed header */
+            padding-top: 70px;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
         }
 
         .header {
-            background-color: #e9f5e9;
+            background-color: #ffffff;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             z-index: 100;
-            padding: 15px;
+            padding: 12px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .header .logo-container {
             display: flex;
             align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .header .logo-container:hover {
+            transform: scale(1.02);
         }
 
         .header .logo-container img {
-            width: 50px;
+            width: 45px;
             height: auto;
-            margin-right: 10px;
+            margin-right: 12px;
+            border-radius: 8px;
         }
 
         .header .namelogo {
             text-decoration: none;
-            font-size: 1.5rem; 
-            font-weight: bold;
-            color: #28a745;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #2c3e50;
+            letter-spacing: 0.5px;
         }
 
         .sidebar {
             min-height: 100vh;
-            background-color: #e9f5e9;
-            padding: 15px;
+            background-color: #ffffff;
+            padding: 20px;
             position: fixed;
-            top: 60px; /* Align with header */
-            width: 250px;
+            top: 70px;
+            width: 260px;
             transition: all 0.3s;
             z-index: 90;
             display: flex;
             flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .content {
-            margin-left: 250px;
-            padding: 15px;
+            margin-left: 260px;
+            padding: 25px;
             flex-grow: 1;
-            padding-top: 20px; /* Additional padding for content below the header */
+            background-color: #f8f9fa;
         }
 
         .active {
-            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-            color: #3c763d;
+            font-family: 'Poppins', sans-serif;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 20px;
         }
 
         .nav-link {
-            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-            color: #3c763d;
-            padding: 10px;
+            font-family: 'Poppins', sans-serif;
+            color: #576574;
+            padding: 12px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.95rem;
         }
 
         .nav-link:hover {
-            background-color: #d4edda;
-            color: #155724;
-            text-decoration: none;
-
+            background-color: #f1f2f6;
+            color: #2c3e50;
+            transform: translateX(5px);
         }
 
         .nav-link.active {
-            background-color: #c3e6cb;
-            color: #155724;
+            background-color: #e3f2fd;
+            color: #1e88e5;
         }
 
         .nav-item {
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .navbar-nav {
@@ -100,12 +117,49 @@
         }
 
         .navbar-nav .nav-item {
-            margin-left: 10px;
-        }
-        a{
-            text-decoration: none;
+            margin-left: 15px;
         }
 
+        .btn-success {
+            background-color: #1e88e5;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            background-color: #1565c0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(30, 136, 229, 0.2);
+        }
+
+        .collapse {
+            margin-left: 15px;
+        }
+
+        .collapse .nav-link {
+            font-size: 0.9rem;
+            padding: 8px 15px;
+        }
+
+        /* Submenu styling */
+        .nav-link[data-bs-toggle="collapse"] {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-link[data-bs-toggle="collapse"]::after {
+            content: '▼';
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link[aria-expanded="true"]::after {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 

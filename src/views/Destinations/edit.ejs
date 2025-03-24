@@ -4,21 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>Edit Destination</title>
 </head>
 <body>
-    
     <%- include('../header', { pageTitle: 'Edit Destination' }) %>
-    <div class="container mt-5">
-        <h1 class="mt-5">Edit Destination</h1>
-        <form action="/admin/destinations/edit/<%= destination._id %>" method="POST">
-            <div class="form-group">
-                <label for="name">Destination Name</label>
-                <input type="text" class="form-control" id="name" name="name" value="<%= destination.name %>" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Update</button>
-            <a href="/destinations" class="btn btn-secondary">Cancel</a>
-        </form>
+    
+    <div class="page-header">
+        <div class="container">
+            <h1 class="display-4">Edit Destination</h1>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="card p-4">
+            <form action="/admin/destinations/edit/<%= destination._id %>" method="POST">
+                <div class="form-group mb-4">
+                    <label for="name" class="form-label">Destination Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="<%= destination.name %>" required>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <a href="/destinations" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>

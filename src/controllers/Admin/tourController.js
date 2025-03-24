@@ -5,16 +5,30 @@ const Order = require('../../models/Order');
 // GET: Hiển thị danh sách tour (Admin)
 const getTours = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; 
-    const limit = 5; 
-    const skip = (page - 1) * limit;  
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
 
-    const tours = await Tour.find().skip(skip).limit(limit).populate('partner', 'name email');
-    const totalTours = await Tour.countDocuments();  // Tổng số tour trong DB
-    const totalPages = Math.ceil(totalTours / limit);  // Tổng số trang
+    // Lấy danh sách tour
+    const tours = await Tour.find()
+      .skip(skip)
+      .limit(limit)
+      .populate('partner', 'name email');
+
+    const totalTours = await Tour.countDocuments(); // Tổng số tour trong DB
+    const totalPages = Math.ceil(totalTours / limit); // Tổng số trang
+
+    // Kiểm tra đơn hàng cho từng tour
+    const toursWithOrders = await Promise.all(
+      tours.map(async (tour) => {
+        const existingOrders = await Order.find({ tour: tour._id }); // Kiểm tra đơn hàng
+        tour.hasOrders = existingOrders.length > 0; // Thêm thuộc tính hasOrders
+        return tour;
+      })
+    );
 
     res.render('Tours/Admin/list', {
-      tours,
+      tours: toursWithOrders, // Truyền danh sách tour đã bổ sung hasOrders
       currentPage: page,
       totalPages,
     });

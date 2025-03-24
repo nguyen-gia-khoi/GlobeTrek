@@ -3,99 +3,182 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>Đăng nhập - GlobeTrek</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
 
   <style>
     .login-container {
-      max-width: 800px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 900px;
+      margin: 2rem auto;
+      background: var(--glass-bg);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
     }
+
     .left-section {
-      color: #fff;
+      background: var(--gradient-primary);
+      padding: 3rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-top-left-radius: 8px;
-      border-bottom-left-radius: 8px;
+      position: relative;
+      overflow: hidden;
     }
+
+    .left-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
+      background-size: 60px 60px;
+      animation: headerPattern 60s linear infinite;
+      opacity: 0.6;
+    }
+
     .left-section img {
       max-width: 80%;
       height: auto;
-      object-fit: contain;
-      border-radius: 8px;
+      position: relative;
+      z-index: 1;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-lg);
+      transition: var(--transition);
     }
+
+    .left-section img:hover {
+      transform: scale(1.05);
+    }
+
     .right-section {
-      padding: 2rem;
+      padding: 3rem;
     }
-    .btn-green {
-      background-color: #4caf50;
-      color: #fff;
+
+    .login-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 2rem;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+
+    .form-group label {
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+      height: auto;
+      padding: 1rem;
+    }
+
+    .btn-auth {
+      width: 100%;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 50px;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .btn-login {
+      background: var(--gradient-primary);
       border: none;
+      color: white;
     }
-    .btn-green:hover {
-      background-color: #45a049;
+
+    .btn-register {
+      background: transparent;
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
     }
+
+    .btn-sso {
+      background: var(--gradient-hover);
+      border: none;
+      color: white;
+    }
+
+    .btn-auth:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
     .error-message {
-      color: #f44336;
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      text-align: center;
+      margin-top: 1rem;
     }
   </style>
 </head>
-<body class="bg-light d-flex justify-content-center align-items-center vh-100">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-8 col-md-10">
-        <div class="login-container row">
-          <!-- Left Section for Logo or Branding -->
-          <div class="left-section col-md-5 d-none d-md-flex">
-            <img src="/images/logo.jpg" alt="Logo" />
-          </div>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
 
-          <!-- Right Section for Login Form -->
-          <div class="right-section col-md-7 col-12">
-            <div class="form-container">
-              <h2 class="mb-4 text-center" style="
-             font-family: 'Poppins', sans-serif;
-              color: #4caf50;
-              font-size: 2.5rem;
-              font-weight: bold;
-              letter-spacing: 1px;
-              background: linear-gradient(45deg, #baf1bc, #81c784);
-              -webkit-background-clip: text; /* Safari 3+ and Chrome */
-              background-clip: text; /* Standard Property */
-              -webkit-text-fill-color: transparent; /* Safari, Chrome */
-              text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
-            ">
-          Login
-        </h2>
-              <form action="/api/auth/signin" method="POST">
-                <div class="form-group">
-                  <label for="email">Email:</label>
-                  <input type="email" id="email" name="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                  <label for="password">Password:</label>
-                  <input type="password" id="password" name="password" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-green btn-block mt-4">Đăng nhập</button>
-              </form>
-              <button type="button" class="btn btn-green btn-block mt-4" onclick="window.location.href='/api/auth/register'">Đăng ký</button>
-              <button type="button" class="btn btn-green btn-block mt-4" onclick="window.location.href='/api/auth/checkSSO'">Đăng nhập SSO</button>
-              <% if (message) { %>
-                <p class="error-message mt-3 text-center"><%= message %></p>
-              <% } %>
-            </div>
+  <div class="container d-flex align-items-center min-vh-100">
+    <div class="login-container row">
+      <!-- Left Section -->
+      <div class="col-md-6 left-section d-none d-md-flex">
+        <img src="/images/logo.jpg" alt="GlobeTrek Logo" class="img-fluid" />
+      </div>
+
+      <!-- Right Section -->
+      <div class="col-md-6 right-section">
+        <h1 class="login-title">Đăng nhập</h1>
+        <form action="/api/auth/signin" method="POST">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email" required>
           </div>
-        </div>
+          <div class="form-group">
+            <label for="password">Mật khẩu</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+          </div>
+          <button type="submit" class="btn btn-auth btn-login">Đăng nhập</button>
+        </form>
+        
+        <button onclick="window.location.href='/api/auth/register'" class="btn btn-auth btn-register">
+          Đăng ký tài khoản
+        </button>
+        
+        <button onclick="window.location.href='/api/auth/checkSSO'" class="btn btn-auth btn-sso">
+          Đăng nhập với SSO
+        </button>
+
+        <% if (message) { %>
+          <div class="error-message">
+            <%= message %>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>
 
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+  <script>
+    // Remove loading overlay when page is loaded
+    window.addEventListener('load', function() {
+      const loadingOverlay = document.querySelector('.loading-overlay');
+      loadingOverlay.style.opacity = '0';
+      setTimeout(() => {
+        loadingOverlay.style.display = 'none';
+      }, 500);
+    });
+  </script>
 </body>
 </html>

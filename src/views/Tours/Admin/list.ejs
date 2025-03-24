@@ -15,14 +15,13 @@
         }
         .ant-table {
             width: 100%;
-            table-layout: fixed; /* Ensures fixed column widths */
+            table-layout: fixed;
         }
         .ant-table-thead th, .ant-table-tbody td {
             text-overflow: ellipsis;
             overflow: hidden;
-            white-space: nowrap; /* Prevents text from wrapping */
+            white-space: nowrap;
         }
-        /* Set specific column widths */
         .col-title { width: 150px; }
         .col-description { width: 200px; }
         .col-price { width: 100px; }
@@ -33,7 +32,6 @@
         .col-availability { width: 150px; }
         .col-status { width: 100px; }
         .col-action { width: 120px; }
-        /* Responsive adjustments */
         @media (max-width: 768px) {
             .ant-table-thead th, .ant-table-tbody td {
                 font-size: 0.9rem;
@@ -113,11 +111,15 @@
                                     </span>
                                 </td>
                                 <td class="ant-table-cell">
-                                    <form action="/admin/tours/toggle-status/<%= tour._id %>" method="POST" class="d-inline">
-                                        <button type="submit" class="ant-btn <%= tour.isDisabled ? 'ant-btn-primary' : 'ant-btn-danger' %>">
-                                            <%= tour.isDisabled ? 'Bật' : 'Tắt' %>
-                                        </button>
-                                    </form>
+                                    <% if (!tour.hasOrders) { %>
+                                        <form action="/admin/tours/toggle-status/<%= tour._id %>" method="POST" class="d-inline">
+                                            <button type="submit" class="ant-btn <%= tour.isDisabled ? 'ant-btn-primary' : 'ant-btn-danger' %>">
+                                                <%= tour.isDisabled ? 'Bật' : 'Tắt' %>
+                                            </button>
+                                        </form>
+                                    <% } else { %>
+                                        <span class="ant-tag ant-tag-blue">Đã có đơn hàng</span>
+                                    <% } %>
                                 </td>
                             </tr>
                         <% }) %>
@@ -128,7 +130,7 @@
         <div class="pagination mt-3">
             <ul class="ant-pagination">
                 <li class="ant-pagination-prev <%= currentPage === 1 ? 'ant-pagination-disabled' : '' %>">
-                    <a href="?page=<%= currentPage - 1 %>">&laquo;</a>
+                    <a href="?page=<%= currentPage - 1 %>">«</a>
                 </li>
                 <% for (let i = 1; i <= totalPages; i++) { %>
                     <li class="ant-pagination-item <%= i === currentPage ? 'ant-pagination-item-active' : '' %>">
@@ -136,7 +138,7 @@
                     </li>
                 <% } %>
                 <li class="ant-pagination-next <%= currentPage === totalPages ? 'ant-pagination-disabled' : '' %>">
-                    <a href="?page=<%= currentPage + 1 %>">&raquo;</a>
+                    <a href="?page=<%= currentPage + 1 %>">»</a>
                 </li>
             </ul>
         </div>
