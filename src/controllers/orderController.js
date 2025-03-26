@@ -5,6 +5,8 @@ const User = require('../models/User');
 const { Tour } = require('../models/Tour');
 const { sendOrderConfirmationEmail } = require('../service/mailtrap/email');
 const { Pointer } = require("pointer-wallet");
+const {  paypalClient } = require('../config/payment');
+const paypal = require('@paypal/checkout-server-sdk');
 
 
 const secretKey = process.env.VITE_POINTER_SECRET_KEY; 
@@ -376,6 +378,107 @@ const handelEvent = async (req, res) => {
   }
 };
 
+
+const createPaypalPayment = async (req, res) => {
+  try {
+    const { orderID } = req.body;
+    const order = await Order.findById(orderID);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    console.log('Client ID:', process.env.PAYPAL_CLIENT_ID);
+    console.log('Client Secret:', process.env.PAYPAL_CLIENT_SECRET);
+    const request = new paypal.orders.OrdersCreateRequest();
+    request.prefer("return=representation");
+    request.requestBody({
+      intent: "CAPTURE",
+      purchase_units: [{
+        amount: {
+          currency_code: "USD",
+          value: (order.totalValue / 25000).toFixed(2)
+        },
+        description: `Payment for Tour Booking #${order._id}`,
+        reference_id: order._id.toString()
+      }]
+    });
+
+    const response = await paypalClient.execute(request);
+    const approvalLink = response.result.links.find(link => link.rel === 'approve');
+
+    order.paymentDetails = {
+      paypalOrderId: response.result.id,
+      provider: 'paypal',
+      status: 'pending'
+    };
+    await order.save();
+
+    res.json({
+      orderID: order._id,
+      paypalOrderId: response.result.id,
+      paypalUrl: approvalLink.href
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Sửa lại hàm capturePaypalPayment
+const capturePaypalPayment = async (req, res) => {
+  try {
+    const { orderID, paypalOrderId } = req.body;
+    
+    const order = await Order.findById(orderID);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const request = new paypal.orders.OrdersCaptureRequest(paypalOrderId);
+    const response = await paypalClient.execute(request);
+    
+    if (response.result.status === "COMPLETED") {
+      order.status = 'paid';
+      order.paymentDetails = {
+        transactionId: response.result.id,
+        provider: 'paypal',
+        status: 'completed',
+        captureId: response.result.purchase_units[0].payments.captures[0].id
+      };
+      await order.save();
+
+      // Gửi email xác nhận
+      const tour = await Tour.findById(order.tour);
+      const emailContent = {
+        orderId: order._id,
+        totalValue: order.totalValue.toLocaleString(),
+        bookingDate: order.bookingDate,
+        tour: tour,
+        status: order.status,
+      };
+      
+      try {
+        await sendOrderConfirmationEmail(order.user.email, emailContent);
+      } catch (emailError) {
+        console.error("Error sending email:", emailError.message);
+      }
+      
+      res.json({ 
+        success: true,
+        message: "Payment completed successfully",
+        order: order
+      });
+    } else {
+      res.status(400).json({ 
+        message: "Payment not completed",
+        status: response.result.status
+      });
+    }
+  } catch (error) {
+    console.error("PayPal capture error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Add these to your exports
 module.exports = {
   createOrder,
   getUserOrders,
@@ -384,5 +487,7 @@ module.exports = {
   Refund,
   weekhookRefund,
   connectWallet,
-  handelEvent
+  handelEvent,
+  createPaypalPayment,
+  capturePaypalPayment,
 };
