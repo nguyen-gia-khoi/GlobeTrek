@@ -381,13 +381,12 @@ const handelEvent = async (req, res) => {
 
 const createPaypalPayment = async (req, res) => {
   try {
-    const { orderID } = req.body;
+    const { orderID, returnUrl, cancelUrl } = req.body; // Lấy returnUrl từ body
     const order = await Order.findById(orderID);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    console.log('Client ID:', process.env.PAYPAL_CLIENT_ID);
-    console.log('Client Secret:', process.env.PAYPAL_CLIENT_SECRET);
+
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
     request.requestBody({
@@ -395,11 +394,15 @@ const createPaypalPayment = async (req, res) => {
       purchase_units: [{
         amount: {
           currency_code: "USD",
-          value: (order.totalValue / 25000).toFixed(2)
+          value: (order.totalValue / 25000).toFixed(2),
         },
         description: `Payment for Tour Booking #${order._id}`,
-        reference_id: order._id.toString()
-      }]
+        reference_id: order._id.toString(),
+      }],
+      application_context: {
+        return_url: returnUrl, // Thêm returnUrl
+        cancel_url: cancelUrl || `${VITE_REDIRECT_URL}/payment/${orderID}`, // Thêm cancelUrl nếu cần
+      },
     });
 
     const response = await paypalClient.execute(request);
@@ -408,25 +411,25 @@ const createPaypalPayment = async (req, res) => {
     order.paymentDetails = {
       paypalOrderId: response.result.id,
       provider: 'paypal',
-      status: 'pending'
+      status: 'pending',
     };
     await order.save();
 
     res.json({
       orderID: order._id,
       paypalOrderId: response.result.id,
-      paypalUrl: approvalLink.href
+      paypalUrl: approvalLink.href,
     });
   } catch (error) {
+    console.error("PayPal create error:", error);
     res.status(500).json({ error: error.message });
   }
 };
-
 // Sửa lại hàm capturePaypalPayment
 const capturePaypalPayment = async (req, res) => {
   try {
     const { orderID, paypalOrderId } = req.body;
-    
+
     const order = await Order.findById(orderID);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -434,14 +437,17 @@ const capturePaypalPayment = async (req, res) => {
 
     const request = new paypal.orders.OrdersCaptureRequest(paypalOrderId);
     const response = await paypalClient.execute(request);
-    
+
+    console.log('PayPal Capture Response:', response.result); // Log để kiểm tra
+
+   
     if (response.result.status === "COMPLETED") {
       order.status = 'paid';
       order.paymentDetails = {
         transactionId: response.result.id,
         provider: 'paypal',
         status: 'completed',
-        captureId: response.result.purchase_units[0].payments.captures[0].id
+        captureId: response.result.purchase_units[0].payments.captures[0].id,
       };
       await order.save();
 
@@ -454,27 +460,27 @@ const capturePaypalPayment = async (req, res) => {
         tour: tour,
         status: order.status,
       };
-      
+
       try {
         await sendOrderConfirmationEmail(order.user.email, emailContent);
       } catch (emailError) {
         console.error("Error sending email:", emailError.message);
       }
-      
-      res.json({ 
+
+      return res.json({
         success: true,
         message: "Payment completed successfully",
-        order: order
+        order: order,
       });
     } else {
-      res.status(400).json({ 
+      return res.status(400).json({
         message: "Payment not completed",
-        status: response.result.status
+        status: response.result.status,
       });
     }
   } catch (error) {
-    console.error("PayPal capture error:", error);
-    res.status(500).json({ error: error.message });
+    console.error("PayPal capture error:", error.message);
+    return res.status(500).json({ error: error.message });
   }
 };
 
