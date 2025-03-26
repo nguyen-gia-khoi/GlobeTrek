@@ -14,6 +14,7 @@
   "author": "khoi",
   "license": "ISC",
   "dependencies": {
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.6",
@@ -37,7 +38,8 @@
     "nodemailer": "^6.9.16",
     "oauth-pointer": "^1.0.3",
     "pointer-wallet": "^2.0.1",
-    "sso-pointer": "^1.0.7"
+    "sso-pointer": "^1.0.7",
+    "stripe": "^17.7.0"
   },
   "devDependencies": {
     "nodemon": "3.1.4"
