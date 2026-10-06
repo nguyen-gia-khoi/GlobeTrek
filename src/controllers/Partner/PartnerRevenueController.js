@@ -1,7 +1,5 @@
-const jwt = require('jsonwebtoken');
 const Order = require('../../models/Order');
 const { Tour } = require('../../models/Tour');
-const User = require('../../models/User');
 const moment = require('moment');
 
 // Hàm tính doanh thu theo khoảng thời gian (tái sử dụng và tối ưu)
@@ -31,23 +29,9 @@ const getRevenueByTimePeriod = async (tourIds, startDate, endDate) => {
 // Hàm chính lấy doanh thu đối tác
 const getPartnerRevenue = async (req, res) => {
   try {
-    const token = req.cookies.PartneraccessToken;
-    if (!token) {
-      return res.status(401).json({ message: 'Token not found, please login' });
-    }
-
-    // Giải mã token
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    const partnerId = decoded.userId;
-    if (!partnerId) {
-      return res.status(400).json({ message: 'Partner ID not found in token' });
-    }
-
-    // Lấy thông tin đối tác và tours cùng lúc (giảm truy vấn)
-    const [partner, tours] = await Promise.all([
-      User.findById(partnerId).select('name email').lean(),
-      Tour.find({ partner: partnerId }).select('_id title').lean(),
-    ]);
+    const partnerId = req.user._id;
+    const partner = req.user;
+    const tours = await Tour.find({ partner: partnerId }).select('_id title').lean();
 
     if (!tours.length) {
       return res.render('Revenue/Partner/PartnerRevenue', {
@@ -109,6 +93,8 @@ const getPartnerRevenue = async (req, res) => {
       };
     });
 
+    revenueData.sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
+
     // Render kết quả
     res.render('Revenue/Partner/PartnerRevenue', {
       success: true,
@@ -124,9 +110,6 @@ const getPartnerRevenue = async (req, res) => {
     });
   } catch (err) {
     console.error('Error in getPartnerRevenue:', err);
-    if (err instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({ message: 'Invalid or expired token' });
-    }
     res.status(500).json({
       success: false,
       message: `Error calculating revenue: ${err.message}`,

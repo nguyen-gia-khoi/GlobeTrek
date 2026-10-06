@@ -3,23 +3,36 @@ const {Revenue} = require("../../models/Revenue");
 const Order = require("../../models/Order"); 
 const {Tour} = require("../../models/Tour"); 
 const Transaction = require("../../models/Transaction"); 
-const User = require("../../models/User"); 
+const User = require("../../models/User");
+const { recordAudit } = require("../../service/auditService");
+const startOfDay = (date) => {
+  const value = new Date(date);
+  value.setHours(0, 0, 0, 0);
+  return value;
+};
 
-const { Pointer } = require("pointer-wallet");
+const endOfDay = (date) => {
+  const value = new Date(date);
+  value.setHours(23, 59, 59, 999);
+  return value;
+};
 
+const formatDayKey = (date) => {
+  const value = new Date(date);
+  const day = String(value.getDate()).padStart(2, '0');
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}/${value.getFullYear()}`;
+};
 
-const secretKey = process.env.VITE_POINTER_SECRET_KEY; 
-const pointerPayment = new Pointer(secretKey);
 // Lấy doanh thu hàng ngày cho admin trong một tuần
 const getDailyRevenue = async (req, res) => {
   try {
     const today = new Date();
+    const startOfWeek = startOfDay(today);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
 
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay()); 
-
-    const endOfWeek = new Date(today);
-    endOfWeek.setDate(today.getDate() + (6 - today.getDay())); 
+    const endOfWeek = endOfDay(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
 
     const orders = await Order.find({
       status: "paid",
@@ -32,32 +45,26 @@ const getDailyRevenue = async (req, res) => {
     };
 
     for (let order of orders) {
-      const orderDate = new Date(order.createdAt).toLocaleDateString(); 
+      const orderDate = formatDayKey(order.createdAt);
 
-      const partnerRevenue = order.totalValue * 0.7;  
-      const adminRevenue = order.totalValue * 0.3;  
+      const partnerRevenue = order.totalValue * 0.7;
+      const adminRevenue = order.totalValue * 0.3;
 
       dailyRevenues.partner[orderDate] = (dailyRevenues.partner[orderDate] || 0) + partnerRevenue;
       dailyRevenues.admin[orderDate] = (dailyRevenues.admin[orderDate] || 0) + adminRevenue;
     }
+
     const allDatesInRange = [];
-    let currentDate = startOfWeek;
+    const currentDate = new Date(startOfWeek);
     while (currentDate <= endOfWeek) {
-      allDatesInRange.push(currentDate.toLocaleDateString());
+      allDatesInRange.push(formatDayKey(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    allDatesInRange.forEach(date => {
-      if (!dailyRevenues.partner[date]) {
-        dailyRevenues.partner[date] = 0;
-        dailyRevenues.admin[date] = 0;
-      }
-    });
-
     const revenueData = allDatesInRange.map(date => ({
       date,
-      admin: dailyRevenues.admin[date],
-      partner: dailyRevenues.partner[date],
+      admin: dailyRevenues.admin[date] || 0,
+      partner: dailyRevenues.partner[date] || 0,
     }));
 
     res.render('Revenue/dailyRevenue', { revenueData });
@@ -83,11 +90,13 @@ const getMonthlyRevenue = async (req, res) => {
       const year = month < 0 ? currentYear - 1 : currentYear;
       const monthIndex = month < 0 ? 12 + month : month;
 
+      const monthStart = new Date(year, monthIndex, 1);
+      const monthEnd = endOfDay(new Date(year, monthIndex + 1, 0));
       const orders = await Order.find({
         status: "paid",
         createdAt: {
-          $gte: new Date(year, monthIndex, 1),
-          $lte: new Date(year, monthIndex + 1, 0),
+          $gte: monthStart,
+          $lte: monthEnd,
         },
       });
 
@@ -163,12 +172,13 @@ const getYearlyRevenue = async (req, res) => {
 
 const getWeeklyRevenueForAllPartners = async (req, res) => {
   try {
-    const today = new Date();
-    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay())); 
-    const endOfWeek = new Date(today.setDate(today.getDate() + 6 - today.getDay())); 
+    const startOfWeek = startOfDay(new Date());
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const endOfWeek = endOfDay(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-    const formattedStartOfWeek = startOfWeek.toLocaleDateString('vi-VN');
-    const formattedEndOfWeek = endOfWeek.toLocaleDateString('vi-VN');
+    const formattedStartOfWeek = formatDayKey(startOfWeek);
+    const formattedEndOfWeek = formatDayKey(endOfWeek);
 
     const orders = await Order.find({
       status: "paid",
@@ -336,71 +346,13 @@ const getMonthlyRevenueForEachPartner = async (req, res) => {
 
 
 const processMonthlyPayments = async (req, res) => {
-  try {
-    const { partneremail, partnerAmount } = req.body;
-
-    // Kiểm tra dữ liệu đầu vào
-    if (!partneremail || !partnerAmount) {
-      return res.status(400).json({ message: "Thiếu dữ liệu cần thiết" });
-    }
-
-    console.log("Dữ liệu nhận được:", { partneremail, partnerAmount });
-
-    // Tìm đối tác theo email
-    const partner = await User.findOne({ email: partneremail });
-    if (!partner) {
-      return res.status(404).json({ message: "Không tìm thấy đối tác với email đã cung cấp" });
-    }
-
-    console.log("Thông tin đối tác tìm được:", partner);
-
-    // Gọi hàm thanh toán từ Pointer Wallet
-    const paymentResponse = await pointerPayment.withdrawMoney({
-      email: partneremail,
-      currency: "VND",
-      amount: partnerAmount,
-    });
-
-    // Kiểm tra phản hồi từ Pointer Wallet
-    if (paymentResponse?.status === 200) {
-      console.log(`Thanh toán thành công cho đối tác: ${partneremail}`);
-
-      // Lưu thông tin giao dịch thành công vào DB
-      await Transaction.create({
-        partner: partner._id,
-        amount: partnerAmount,
-        status: "success",
-        date: new Date(),
-      });
-
-      return res.status(200).json({ message: "Thanh toán thành công" });
-    } else {
-      console.error("Thanh toán thất bại:", paymentResponse?.data);
-
-      // Lưu giao dịch thất bại vào DB
-      await Transaction.create({
-        partner: partner._id,
-        amount: partnerAmount,
-        status: "failed",
-        date: new Date(),
-      });
-
-      return res.status(500).json({
-        message: "Thanh toán thất bại",
-        error: paymentResponse?.data || "Không nhận được phản hồi từ dịch vụ thanh toán",
-      });
-    }
-  } catch (error) {
-    // Xử lý lỗi khi thanh toán hoặc lưu giao dịch
-    console.error("Chi tiết lỗi xử lý thanh toán:", error.response?.data || error.message || error);
-
-    return res.status(500).json({
-      message: "Lỗi xử lý thanh toán",
-      error: error.response?.data || error.message || error,
-    });
-  }
+  await recordAudit(req, 'payout.blocked', {
+    type: 'Partner',
+    id: req.body?.partneremail || '',
+  }, { reason: 'payout-disabled' });
+  return res.status(403).json({ message: 'Đối soát đang tạm khóa' });
 };
-  
+
 const getTotalRevenueForAllPartners = async (req, res) => {
   try {
     const today = new Date();

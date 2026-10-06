@@ -1,9 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { getPartnerOrders,renderPartnerOrdersPage } = require('../../controllers/Partner/PartnerOrderController'); // Import controller
-const {verifyAdmin} = require('../../Middleware/authMiddleware');
+const { getPartnerOrders, renderPartnerOrdersPage, getTourPassengers, renderPurchaseHistoryPage } = require('../../controllers/Partner/PartnerOrderController');
+const {requireVerifiedPartner} = require('../../Middleware/authMiddleware');
 
-router.get('/api/orders' , getPartnerOrders);
+router.use(requireVerifiedPartner);
+
+router.get('/api/orders', getPartnerOrders);
+router.get('/api/tours/:tourId/passengers', getTourPassengers);
+router.get('/history', renderPurchaseHistoryPage);
 router.get('/', renderPartnerOrdersPage);
 
 module.exports = router;

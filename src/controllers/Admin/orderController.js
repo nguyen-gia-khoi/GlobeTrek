@@ -1,4 +1,10 @@
 const Order = require("../../models/Order");
+const {
+  confirmHeldOrder,
+  releaseHeldOrder,
+  releaseSoldOrder,
+} = require('../../service/departureService');
+const { recordAudit } = require('../../service/auditService');
 
 const getAllOrders = async (req, res) => {
   try {
@@ -61,10 +67,20 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    order.status = status;
-    const savedOrder = await order.save();
+    let savedOrder;
+    if (status === 'paid') {
+      savedOrder = await confirmHeldOrder(orderId);
+    } else if (status === 'canceled' && order.seatState === 'sold') {
+      savedOrder = await releaseSoldOrder(orderId);
+    } else if (status === 'canceled') {
+      savedOrder = await releaseHeldOrder(orderId);
+    } else {
+      order.status = status;
+      savedOrder = await order.save();
+    }
 
     res.status(200).json({ message: "Order status updated successfully", order: savedOrder });
+    await recordAudit(req, 'order.status', { type: 'Order', id: orderId }, { status });
   } catch (error) {
     console.log("Error in updateOrderStatus controller", error.message);
     res.status(500).json({ message: "Server Error!", error: error.message });
@@ -76,10 +92,17 @@ const deleteOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const order = await Order.findByIdAndDelete(orderId);
+    let order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+    if (order.seatState === 'sold') {
+      order = await releaseSoldOrder(orderId);
+    } else if (order.seatState === 'held') {
+      order = await releaseHeldOrder(orderId);
+    }
+    await Order.deleteOne({ _id: orderId });
+    await recordAudit(req, 'order.delete', { type: 'Order', id: orderId });
 
     res.status(200).json({ message: "Order deleted successfully" });
   } catch (error) {

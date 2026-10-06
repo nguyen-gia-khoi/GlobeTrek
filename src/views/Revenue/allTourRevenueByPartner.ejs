@@ -1,47 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doanh thu của tất cả các Tour thuộc các Đối tác</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Doanh Thu Tour Đối Tác Hàng Tuần - GlobeTrek Admin</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
     <%- include('../header', { pageTitle: 'Doanh thu hàng của các Đối tác' }) %>
-    <div class="container mt-5">
-        <h2 class="mt-5">Doanh thu hàng tuần của tất cả các Tour thuộc các Đối tác</h2>
-        <p>
-            <strong>Thời gian:</strong> Từ <%= formattedStartOfWeek %> đến <%= formattedEndOfWeek %>
-        </p>
-        
-        <% if (groupedRevenues && groupedRevenues.length > 0) { %>
-            <% groupedRevenues.forEach(partner => { %>
-                <div class="mt-4">
-                    <h3>Đối tác: <%= partner.partnerName %></h3>
-                    <table class="table table-bordered">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Tour name</th>
-                                <th>Doanh thu (VNĐ)</th>
-                                <th>Số đơn hàng</th>
-                            </tr>   
-                        </thead>
-                        <tbody>
-                            <% partner.tours.forEach(tour => { %>
-                                <tr>
-                                    <td><%= tour.title %></td>
-                                    <td><%= tour.sales.toLocaleString() %> VNĐ</td>
-                                    <td><%= tour.orders %></td>
-                                </tr>
-                            <% }); %>
-                        </tbody>
-                    </table>
+
+    <div class="main-content-layout">
+        <div class="hero-header-gt d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="hero-badge-pill">
+                    <i class="fas fa-calendar-week text-warning me-1"></i> Báo Cáo Hàng Tuần
+                </span>
+                <h1 class="text-white mb-2">Doanh Thu Theo Tuần Của Các Đối Tác</h1>
+                <p class="mb-0">
+                    Thời gian áp dụng: từ <strong><%= typeof formattedStartOfWeek !== 'undefined' ? formattedStartOfWeek : '' %></strong> đến <strong><%= typeof formattedEndOfWeek !== 'undefined' ? formattedEndOfWeek : '' %></strong>
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light rounded-pill px-3 py-2 fw-bold text-primary shadow-sm" onclick="location.reload()">
+                    <i class="fas fa-arrows-rotate me-1"></i> Làm Mới
+                </button>
+            </div>
+        </div>
+
+        <% if (!groupedRevenues || groupedRevenues.length === 0) { %>
+            <div class="card-gt p-5 text-center">
+                <div class="empty-state-icon mx-auto">
+                    <i class="fas fa-calendar-xmark"></i>
                 </div>
-            <% }); %>
+                <h5 class="fw-bold text-main">Không Có Dữ Liệu Doanh Thu Tuần Này</h5>
+                <p class="text-muted fs-sm mb-0">Chưa có giao dịch phát sinh trong khung thời gian này.</p>
+            </div>
         <% } else { %>
-            <p>Không có dữ liệu doanh thu cho các đối tác trong tuần này.</p>
+            <div class="d-flex flex-column gap-4">
+                <% groupedRevenues.forEach(partner => { %>
+                    <div class="card-gt p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle p-2 bg-emerald text-white fs-xs">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <h4 class="fw-bold text-main mb-0 fs-5">Đối tác: <%= partner.partnerName %></h4>
+                            </div>
+                            <span class="badge-gt badge-gt-info"><%= partner.tours ? partner.tours.length : 0 %> Tour</span>
+                        </div>
+
+                        <div class="table-gt-container border-0 shadow-none">
+                            <div class="table-responsive">
+                                <table class="table-gt">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên Tour</th>
+                                            <th class="text-center">Số Đơn Hàng</th>
+                                            <th class="text-end">Doanh Thu (VNĐ)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% partner.tours.forEach(tour => { %>
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold text-main fs-sm"><%= tour.title %></div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge-gt badge-gt-neutral"><%= tour.orders %> đơn</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <strong class="text-primary font-display fs-6"><%= (tour.sales || 0).toLocaleString('vi-VN') %> VNĐ</strong>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
         <% } %>
     </div>
-    
 </body>
 </html>

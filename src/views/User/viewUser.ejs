@@ -1,56 +1,239 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= pageTitle %></title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Khách Hàng - GlobeTrek Admin</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
-  <%- include('../header', { pageTitle: 'Create New Schedule ' }) %>
+    <%- include('../header', { pageTitle: 'viewUser' }) %>
 
-  <div class="container mt-5">
-    <h1 class="text-center mt-5 mb-4">Users</h1>
-    <table class="table table-striped table-hover">
-      <thead>
-        <tr>
-          <th>User Name</th>
-          <th>User Email</th>
-          <th>Status</th>
-          <th>Cancellation Count</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% users.forEach(user => { %>
-          <tr>
-            <td><%= user.name %></td>
-            <td><%= user.email %></td>
-            <td><span class="badge badge-success"><%= user.UserStatus %></span></td>
-            <td><%= user.cancellationCount || 0 %></td> <!-- Display cancellationCount, defaulting to 0 if undefined -->
-            <td>
-              <% if (user.UserStatus === 'ban') { %>
-                <form action="/admin/banAndUnban" method="POST" class="d-inline">
-                  <input type="hidden" name="userId" value="<%= user._id %>">
-                  <input type="hidden" name="action" value="unban">
-                  <button type="submit" class="btn btn-success btn-sm">Unban</button>
-                </form>
-              <% } else { %>
-                <form action="/admin/banAndUnban" method="POST" class="d-inline">
-                  <input type="hidden" name="userId" value="<%= user._id %>">
-                  <input type="hidden" name="action" value="ban">
-                  <button type="submit" class="btn btn-danger btn-sm">Ban</button>
-                </form>
-              <% } %>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
+    <div class="main-content-layout">
+        <!-- Header -->
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold text-main mb-1">Quản Lý Tài Khoản Khách Hàng</h2>
+                <p class="text-muted fs-sm mb-0">Theo dõi thông tin du khách, số lần hủy tour và trạng thái tài khoản</p>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge-gt badge-gt-info">
+                    <i class="fas fa-users"></i> Tổng: <%= users ? users.length : 0 %> thành viên
+                </span>
+            </div>
+        </div>
 
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <!-- Users Table -->
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
+                        <tr>
+                            <th>Họ Tên Khách Hàng</th>
+                            <th>Địa Chỉ Email</th>
+                            <th>Trạng Thái</th>
+                            <th>Số Lần Hủy Tour</th>
+                            <th class="text-end">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!users || users.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">Chưa có khách hàng nào đăng ký trong hệ thống.</td>
+                            </tr>
+                        <% } else { %>
+                            <% users.forEach(user => { %>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold fs-xs" style="width: 38px; height: 38px; background: var(--gradient-primary);">
+                                                <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+                                            </div>
+                                            <div class="fw-bold text-main fs-sm"><%= user.name || 'Chưa đặt tên' %></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fs-sm text-muted"><%= user.email %></span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt <%= user.UserStatus === 'ban' ? 'badge-gt-danger' : 'badge-gt-success' %>">
+                                            <i class="fas <%= user.UserStatus === 'ban' ? 'fa-ban' : 'fa-check' %>"></i>
+                                            <%= user.UserStatus === 'ban' ? 'Đã khóa (Ban)' : 'Hoạt động' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt <%= (user.cancellationCount || 0) > 3 ? 'badge-gt-warning' : 'badge-gt-neutral' %>">
+                                            <i class="fas fa-clock-rotate-left"></i> <%= user.cancellationCount || 0 %> lần
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex align-items-center gap-1">
+                                            <button type="button" 
+                                                    class="btn btn-gt-ghost text-primary btn-gt-sm btn-user-detail" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#detailUserModal"
+                                                    data-id="<%= user._id %>"
+                                                    data-name="<%= user.name || 'Chưa đặt tên' %>"
+                                                    data-email="<%= user.email || '' %>"
+                                                    data-phone="<%= user.phone || user.phoneNumber || 'Chưa cập nhật' %>"
+                                                    data-gender="<%= user.gender || 'Chưa cập nhật' %>"
+                                                    data-dob="<%= user.dob ? new Date(user.dob).toLocaleDateString('vi-VN') : (user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa cập nhật') %>"
+                                                    data-address="<%= user.address || 'Chưa cập nhật' %>"
+                                                    data-status="<%= user.UserStatus === 'ban' ? 'ban' : 'active' %>"
+                                                    data-cancels="<%= user.cancellationCount || 0 %>"
+                                                    data-created="<%= user.createdAt ? new Date(user.createdAt).toLocaleString('vi-VN') : 'Thành viên lâu năm' %>"
+                                                    title="Xem chi tiết tài khoản">
+                                                <i class="fas fa-eye me-1"></i> Chi tiết
+                                            </button>
+                                            <% if (user.UserStatus === 'ban') { %>
+                                                <form action="/admin/banAndUnban" method="POST" class="d-inline m-0">
+                                                    <input type="hidden" name="userId" value="<%= user._id %>">
+                                                    <input type="hidden" name="action" value="unban">
+                                                    <button type="submit" class="btn btn-gt-primary btn-gt-sm">
+                                                        <i class="fas fa-unlock me-1"></i> Mở Khóa
+                                                    </button>
+                                                </form>
+                                            <% } else { %>
+                                                <form action="/admin/banAndUnban" method="POST" class="d-inline m-0">
+                                                    <input type="hidden" name="userId" value="<%= user._id %>">
+                                                    <input type="hidden" name="action" value="ban">
+                                                    <button type="submit" class="btn btn-gt-danger btn-gt-sm">
+                                                        <i class="fas fa-ban me-1"></i> Khóa
+                                                    </button>
+                                                </form>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div class="modal fade" id="detailUserModal" tabindex="-1" aria-labelledby="detailUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 pb-0" style="background: var(--gradient-primary); color: #fff;">
+                    <h5 class="modal-title fw-bold text-white fs-6" id="detailUserModalLabel">
+                        <i class="fas fa-user-circle me-2"></i>Chi Tiết Khách Hàng
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <!-- User Header in Modal -->
+                    <div class="d-flex align-items-center gap-3 p-3 bg-white rounded-3 shadow-sm mb-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold fs-4 flex-shrink-0" id="detailUserAvatar" style="width: 54px; height: 54px; background: var(--gradient-primary);">
+                            U
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-main" id="detailUserName">—</h5>
+                            <span class="badge-gt badge-gt-neutral fs-xs mt-1" id="detailUserStatusBadge">Trạng thái</span>
+                        </div>
+                    </div>
+
+                    <!-- Details Grid -->
+                    <div class="bg-white p-3 rounded-3 shadow-sm d-flex flex-column gap-2">
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Email:</span>
+                            <span class="detail-field-value fw-semibold text-primary" id="detailUserEmail">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Số Điện Thoại:</span>
+                            <span class="detail-field-value" id="detailUserPhone">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Giới Tính:</span>
+                            <span class="detail-field-value" id="detailUserGender">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Ngày Sinh (DOB):</span>
+                            <span class="detail-field-value fw-semibold" id="detailUserDob">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Địa Chỉ:</span>
+                            <span class="detail-field-value" id="detailUserAddress">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Số Lần Hủy Tour:</span>
+                            <span class="detail-field-value" id="detailUserCancels">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Ngày Tham Gia:</span>
+                            <span class="detail-field-value text-muted fs-xs" id="detailUserCreated">—</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-white">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const detailUserModal = document.getElementById('detailUserModal');
+        if (detailUserModal) {
+            detailUserModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                const id = button.getAttribute('data-id') || '';
+                const name = button.getAttribute('data-name') || 'Khách Hàng';
+                const email = button.getAttribute('data-email') || '—';
+                const phone = button.getAttribute('data-phone') || 'Chưa cập nhật';
+                const gender = button.getAttribute('data-gender') || 'Chưa cập nhật';
+                const dob = button.getAttribute('data-dob') || 'Chưa cập nhật';
+                const address = button.getAttribute('data-address') || 'Chưa cập nhật';
+                const status = button.getAttribute('data-status') || '';
+                const cancels = button.getAttribute('data-cancels') || '0';
+                const created = button.getAttribute('data-created') || '—';
+
+                const nameEl = document.getElementById('detailUserName');
+                if (nameEl) nameEl.textContent = name;
+
+                const avatarEl = document.getElementById('detailUserAvatar');
+                if (avatarEl) avatarEl.textContent = name ? name.charAt(0).toUpperCase() : 'U';
+
+                const emailEl = document.getElementById('detailUserEmail');
+                if (emailEl) emailEl.textContent = email;
+
+                const phoneEl = document.getElementById('detailUserPhone');
+                if (phoneEl) phoneEl.textContent = phone;
+
+                const genderEl = document.getElementById('detailUserGender');
+                if (genderEl) genderEl.textContent = gender;
+
+                const dobEl = document.getElementById('detailUserDob');
+                if (dobEl) dobEl.textContent = dob;
+
+                const addressEl = document.getElementById('detailUserAddress');
+                if (addressEl) addressEl.textContent = address;
+
+                const cancelsEl = document.getElementById('detailUserCancels');
+                if (cancelsEl) cancelsEl.textContent = `${cancels} lần`;
+
+                const createdEl = document.getElementById('detailUserCreated');
+                if (createdEl) createdEl.textContent = created;
+
+                const statusBadge = document.getElementById('detailUserStatusBadge');
+                if (statusBadge) {
+                    if (status === 'ban') {
+                        statusBadge.className = 'badge-gt badge-gt-danger fs-xs mt-1';
+                        statusBadge.innerHTML = '<i class="fas fa-ban me-1"></i> Đã bị khóa';
+                    } else {
+                        statusBadge.className = 'badge-gt badge-gt-success fs-xs mt-1';
+                        statusBadge.innerHTML = '<i class="fas fa-check me-1"></i> Đang hoạt động';
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>

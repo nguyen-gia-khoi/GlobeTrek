@@ -1,184 +1,163 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng nhập - GlobeTrek</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - GlobeTrek</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- GlobeTrek Design System -->
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background-color: var(--bg-body);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
 
-  <style>
-    .login-container {
-      max-width: 900px;
-      margin: 2rem auto;
-      background: var(--glass-bg);
-      border-radius: var(--border-radius-lg);
-      box-shadow: var(--shadow-lg);
-      overflow: hidden;
-      backdrop-filter: blur(10px);
-    }
+        .auth-card {
+            width: 100%;
+            max-width: 960px;
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
 
-    .left-section {
-      background: var(--gradient-primary);
-      padding: 3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-    }
+        .auth-hero-side {
+            background: linear-gradient(135deg, rgba(6, 78, 59, 0.88) 0%, rgba(6, 182, 212, 0.85) 100%), 
+                        url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+            padding: 3.5rem 3rem;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
-    .left-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
-      background-size: 60px 60px;
-      animation: headerPattern 60s linear infinite;
-      opacity: 0.6;
-    }
+        .auth-form-side {
+            padding: 3.5rem 3rem;
+            background: #ffffff;
+        }
 
-    .left-section img {
-      max-width: 80%;
-      height: auto;
-      position: relative;
-      z-index: 1;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow-lg);
-      transition: var(--transition);
-    }
+        .password-toggle-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+        }
 
-    .left-section img:hover {
-      transform: scale(1.05);
-    }
-
-    .right-section {
-      padding: 3rem;
-    }
-
-    .login-title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 2rem;
-      background: var(--gradient-primary);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-align: center;
-    }
-
-    .form-group label {
-      color: var(--text-secondary);
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-    }
-
-    .form-control {
-      height: auto;
-      padding: 1rem;
-    }
-
-    .btn-auth {
-      width: 100%;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 50px;
-      font-weight: 600;
-      transition: var(--transition);
-    }
-
-    .btn-login {
-      background: var(--gradient-primary);
-      border: none;
-      color: white;
-    }
-
-    .btn-register {
-      background: transparent;
-      border: 2px solid var(--primary-color);
-      color: var(--primary-color);
-    }
-
-    .btn-sso {
-      background: var(--gradient-hover);
-      border: none;
-      color: white;
-    }
-
-    .btn-auth:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .error-message {
-      color: #ef4444;
-      background: rgba(239, 68, 68, 0.1);
-      padding: 1rem;
-      border-radius: var(--border-radius);
-      text-align: center;
-      margin-top: 1rem;
-    }
-  </style>
+        .password-toggle-btn:hover {
+            color: var(--primary-600);
+        }
+    </style>
 </head>
 <body>
-  <!-- Loading Overlay -->
-  <div class="loading-overlay">
-    <div class="loading-spinner"></div>
-  </div>
+    <div class="auth-card row g-0">
+        <!-- Left Side: Clean Branding & Visual -->
+        <div class="col-lg-5 auth-hero-side d-none d-lg-flex">
+            <div>
+                <div class="brand-logo-wrap text-white mb-4">
+                    <img src="/images/logo.jpg" alt="Logo GlobeTrek" class="brand-logo-img">
+                    <span class="brand-name text-white fs-3">GlobeTrek</span>
+                </div>
+                <h2 class="display-6 fw-bold text-white mb-3">Hệ Thống Quản Lý & Điều Hành Tour</h2>
+                <p class="text-white-50 fs-sm mb-0">Nền tảng tích hợp dành cho Ban Quản Trị và Đối Tác Cung Cấp Tour.</p>
+            </div>
 
-  <div class="container d-flex align-items-center min-vh-100">
-    <div class="login-container row">
-      <!-- Left Section -->
-      <div class="col-md-6 left-section d-none d-md-flex">
-        <img src="/images/logo.jpg" alt="GlobeTrek Logo" class="img-fluid" />
-      </div>
+            <div class="text-white-50 fs-xs">
+                © <%= new Date().getFullYear() %> GlobeTrek Management Platform.
+            </div>
+        </div>
 
-      <!-- Right Section -->
-      <div class="col-md-6 right-section">
-        <h1 class="login-title">Đăng nhập</h1>
-        <form action="/api/auth/signin" method="POST">
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" class="form-control" id="email" name="email" required>
-          </div>
-          <div class="form-group">
-            <label for="password">Mật khẩu</label>
-            <input type="password" class="form-control" id="password" name="password" required>
-          </div>
-          <button type="submit" class="btn btn-auth btn-login">Đăng nhập</button>
-        </form>
-        
-        <button onclick="window.location.href='/api/auth/register'" class="btn btn-auth btn-register">
-          Đăng ký tài khoản
-        </button>
-        
-        <button onclick="window.location.href='/api/auth/checkSSO'" class="btn btn-auth btn-sso">
-          Đăng nhập với SSO
-        </button>
+        <!-- Right Side: Clean Login Form -->
+        <div class="col-lg-7 auth-form-side d-flex flex-column justify-content-center">
+            <div class="mb-4">
+                <div class="d-inline-flex d-lg-none brand-logo-wrap mb-3">
+                    <img src="/images/logo.jpg" alt="Logo GlobeTrek" class="brand-logo-img">
+                    <span class="brand-name">GlobeTrek</span>
+                </div>
+                <h3 class="fw-bold text-main mb-1">Đăng Nhập</h3>
+                <p class="text-muted fs-sm">Cổng quản trị dành cho Admin & Đối tác</p>
+            </div>
 
-        <% if (message) { %>
-          <div class="error-message">
-            <%= message %>
-          </div>
-        <% } %>
-      </div>
+            <% if (typeof message !== 'undefined' && message) { %>
+                <% const isSuccess = message.toLowerCase().includes('thành công') || message.toLowerCase().includes('success'); %>
+                <div class="alert <%= isSuccess ? 'alert-success text-success' : 'alert-danger text-danger' %> d-flex align-items-center gap-2 rounded-4 py-2 px-3 mb-4" role="alert">
+                    <i class="fas <%= isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation' %> flex-shrink-0"></i>
+                    <div class="fs-sm"><%= message %></div>
+                </div>
+            <% } %>
+
+            <form action="/api/auth/signin" method="POST">
+                <div class="form-group-gt mb-3">
+                    <label for="email" class="form-label-gt">Email</label>
+                    <input type="email" class="form-control-gt" id="email" name="email" placeholder="Nhập địa chỉ email của bạn" maxlength="50" required autocomplete="email">
+                </div>
+
+                <div class="form-group-gt mb-3">
+                    <label for="password" class="form-label-gt">Mật Khẩu</label>
+                    <div class="position-relative">
+                        <input type="password" class="form-control-gt pe-5" id="password" name="password" placeholder="Nhập mật khẩu" maxlength="50" required autocomplete="current-password">
+                        <button type="button" class="password-toggle-btn" id="passwordToggleBtn" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye" id="passwordEyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rememberMe" checked>
+                        <label class="form-check-label fs-xs text-muted" for="rememberMe">
+                            Ghi nhớ đăng nhập
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-gt-primary w-100 btn-gt-lg mb-3">
+                    Đăng Nhập
+                </button>
+            </form>
+
+            <div class="text-center pt-3 border-top">
+                <p class="fs-sm text-muted mb-0">
+                    Chưa có tài khoản đối tác? 
+                    <a href="/api/auth/register" class="fw-bold text-primary">Đăng ký tài khoản</a>
+                </p>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    // Remove loading overlay when page is loaded
-    window.addEventListener('load', function() {
-      const loadingOverlay = document.querySelector('.loading-overlay');
-      loadingOverlay.style.opacity = '0';
-      setTimeout(() => {
-        loadingOverlay.style.display = 'none';
-      }, 500);
-    });
-  </script>
+    <script src="/js/csrf.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('passwordToggleBtn');
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('passwordEyeIcon');
+
+            if (toggleBtn && passwordInput) {
+                toggleBtn.addEventListener('click', function () {
+                    const isPassword = passwordInput.getAttribute('type') === 'password';
+                    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                    eyeIcon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+                });
+            }
+        });
+    </script>
 </body>
 </html>

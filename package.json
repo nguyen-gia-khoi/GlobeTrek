@@ -4,8 +4,10 @@
   "description": "Test server BE",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "test": "node --test tests/accessControl.test.js tests/securityControls.test.js",
+    "start": "nodemon server.js",
+    "migrate:departures": "node scripts/migrateDepartures.js",
+    "audit:departures": "node scripts/auditDepartures.js"
   },
   "keywords": [
     "nodejs",
@@ -25,11 +27,14 @@
     "dotenv": "^16.0.3",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
     "ioredis": "^5.4.1",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "mailtrap": "^3.4.0",
     "method-override": "^3.0.0",
+    "minio": "^8.0.7",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.46",
     "mongoose": "^6.13.0",
@@ -38,6 +43,7 @@
     "nodemailer": "^6.9.16",
     "oauth-pointer": "^1.0.3",
     "pointer-wallet": "^2.0.1",
+    "sharp": "^0.35.4",
     "sso-pointer": "^1.0.7",
     "stripe": "^17.7.0"
   },

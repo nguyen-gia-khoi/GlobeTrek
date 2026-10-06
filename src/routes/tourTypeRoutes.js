@@ -2,12 +2,14 @@
 const express = require('express');
 const router = express.Router();
 const tourTypeController = require('../controllers/Admin/tourtypeController');
-const {verifyAdmin} = require('../Middleware/authMiddleware');
+const { requireAdmin } = require('../Middleware/authMiddleware');
 
 // Định nghĩa các route cho TourType
-router.get('/', tourTypeController.getAllTourTypes); 
-router.get('/api',tourTypeController.getAllTourTypesAPI);
-
-
+router.get('/', requireAdmin, tourTypeController.getAllTourTypes); 
+router.get('/api', tourTypeController.getAllTourTypesAPI);
+router.post('/', requireAdmin, tourTypeController.createTourType);
+router.post('/create', requireAdmin, tourTypeController.createTourType);
+router.post('/edit/:id', requireAdmin, tourTypeController.updateTourType);
+router.post('/:id', requireAdmin, tourTypeController.updateTourType);
 
 module.exports = router;

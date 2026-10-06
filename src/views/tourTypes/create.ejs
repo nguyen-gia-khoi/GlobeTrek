@@ -1,23 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <title>Create Tour Type</title>
+    <meta http-equiv="refresh" content="0; url=/tourTypes">
+    <title>Chuyển hướng - Quản Lý Loại Tour</title>
+    <script>window.location.href = '/tourTypes';</script>
 </head>
 <body>
-    <%- include('../header', { pageTitle: ' ' }) %>
-    <div class="container mt-5">
-        <h1 class="mt-5">Create Tour Type</h1>
-        <form action="/admin/tourtypes" method="POST">
-            <div class="form-group">
-                <label for="name">Tour Type Name:</label>
-                <input type="text" id="name" name="name" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Create</button>
-            <a href="/admin/tourtypes" class="btn btn-secondary">Cancel</a>
-        </form>
-    </div>
+    <p>Đang chuyển hướng tới trang Quản lý Loại Tour... <a href="/tourTypes">Nhấp vào đây nếu không tự chuyển</a></p>
 </body>
 </html>

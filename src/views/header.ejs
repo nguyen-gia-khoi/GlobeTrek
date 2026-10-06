@@ -1,294 +1,420 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= pageTitle || 'Trang Web' %></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title><%= typeof pageTitle !== 'undefined' && pageTitle ? pageTitle + ' - GlobeTrek Admin' : 'GlobeTrek Admin Portal' %></title>
     
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            margin: 0;
-            padding-top: 70px;
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa;
-        }
-
-        .header {
-            background-color: #ffffff;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 100;
-            padding: 12px 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header .logo-container {
-            display: flex;
-            align-items: center;
-            transition: transform 0.3s ease;
-        }
-
-        .header .logo-container:hover {
-            transform: scale(1.02);
-        }
-
-        .header .logo-container img {
-            width: 45px;
-            height: auto;
-            margin-right: 12px;
-            border-radius: 8px;
-        }
-
-        .header .namelogo {
-            text-decoration: none;
-            font-size: 1.6rem;
-            font-weight: 600;
-            color: #2c3e50;
-            letter-spacing: 0.5px;
-        }
-
-        .sidebar {
-            min-height: 100vh;
-            background-color: #ffffff;
-            padding: 20px;
-            position: fixed;
-            top: 70px;
-            width: 260px;
-            transition: all 0.3s;
-            z-index: 90;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .content {
-            margin-left: 260px;
-            padding: 25px;
-            flex-grow: 1;
-            background-color: #f8f9fa;
-        }
-
-        .active {
-            font-family: 'Poppins', sans-serif;
-            color: #2c3e50;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-        .nav-link {
-            font-family: 'Poppins', sans-serif;
-            color: #576574;
-            padding: 12px 15px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            font-size: 0.95rem;
-        }
-
-        .nav-link:hover {
-            background-color: #f1f2f6;
-            color: #2c3e50;
-            transform: translateX(5px);
-        }
-
-        .nav-link.active {
-            background-color: #e3f2fd;
-            color: #1e88e5;
-        }
-
-        .nav-item {
-            margin-bottom: 5px;
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0;
-        }
-
-        .navbar-nav .nav-item {
-            margin-left: 15px;
-        }
-
-        .btn-success {
-            background-color: #1e88e5;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-success:hover {
-            background-color: #1565c0;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(30, 136, 229, 0.2);
-        }
-
-        .collapse {
-            margin-left: 15px;
-        }
-
-        .collapse .nav-link {
-            font-size: 0.9rem;
-            padding: 8px 15px;
-        }
-
-        /* Submenu styling */
-        .nav-link[data-bs-toggle="collapse"] {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav-link[data-bs-toggle="collapse"]::after {
-            content: '▼';
-            font-size: 0.8rem;
-            transition: transform 0.3s ease;
-        }
-
-        .nav-link[aria-expanded="true"]::after {
-            transform: rotate(180deg);
-        }
-    </style>
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts (Plus Jakarta Sans & Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+    <!-- GlobeTrek Design System -->
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
-
-    <!-- Header Section -->
-    <header class="header py-3 fixed-top w-100">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="logo-container d-flex align-items-center" href="/home">
-                <img src="/images/logo.jpg" alt="Logo">
-                <span class="namelogo">GlobeTek</span>
+    <!-- Top Glass Navbar -->
+    <nav class="navbar-gt">
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-gt-ghost btn-gt-icon d-lg-none" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <a class="brand-logo-wrap" href="/home">
+                <img src="/images/logo.jpg" alt="Logo GlobeTrek" class="brand-logo-img">
+                <div class="d-flex align-items-center">
+                    <span class="brand-name">GlobeTrek</span>
+                    <span class="brand-badge">Admin</span>
+                </div>
             </a>
-            <ul class="navbar-nav d-flex align-items-center mb-0">
-                <li class="nav-item">
-                    <form action="/api/auth/signout" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-success">Logout</button>
-                    </form>
-                </li>
-            </ul>
         </div>
-    </header>
 
-    <!-- Sidebar Section -->
-    <div class="sidebar">
-        <h2 class="active">Dashboard</h2>
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" href="/home">Home</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/admin/orders/view">Orders</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#tourMenu" role="button" aria-expanded="false" aria-controls="tourMenu">
-                    Tours
-                </a>
-                <div class="collapse" id="tourMenu">
-                    <ul class="nav flex-column ml-3">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/tours/list">Xem Tour</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/tours/add-requests">Duyệt Tour</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/tours/delete-requests">Duyệt Xóa Tour</a>
-                        </li>
-                    </ul>
+        <div class="d-flex align-items-center gap-3">
+            <div class="dropdown">
+                <button class="btn btn-gt-ghost d-flex align-items-center gap-2 p-1 pe-3 rounded-pill dropdown-toggle" type="button" id="adminUserDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 36px; height: 36px; background: var(--gradient-primary); font-size: 0.9rem;">
+                        AD
+                    </div>
+                    <span class="d-none d-md-inline fw-semibold text-main" style="font-size: 0.9rem;">Quản Trị Viên</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-2" aria-labelledby="adminUserDropdown" style="min-width: 220px;">
+                    <li class="px-3 py-2 border-bottom mb-2">
+                        <p class="mb-0 fw-bold text-main" style="font-size: 0.9rem;">Administrator</p>
+                        <small class="text-muted">admin@globetrek.com</small>
+                    </li>
+                    <li>
+                        <a class="dropdown-item rounded-3 py-2 text-main" href="/home">
+                            <i class="fas fa-chart-pie me-2 text-primary"></i> Tổng quan
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item rounded-3 py-2 text-main" href="/admin/users">
+                            <i class="fas fa-users-cog me-2 text-secondary"></i> Người dùng
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form action="/api/auth/signout" method="POST" class="m-0">
+                            <button type="submit" class="dropdown-item rounded-3 py-2 text-danger fw-semibold">
+                                <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- Admin Sidebar Navigation -->
+    <aside class="sidebar-gt" id="adminSidebar">
+        <div class="sidebar-heading">Bảng Điều Khiển</div>
+        <a class="nav-link-gt <%= (typeof pageTitle !== 'undefined' && pageTitle === 'Home') ? 'active' : '' %>" href="/home">
+            <i class="fas fa-shield-alt"></i>
+            <span>Duyệt Đối Tác</span>
+        </a>
+
+        <a class="nav-link-gt <%= (typeof pageTitle !== 'undefined' && pageTitle.includes('Đơn hàng')) ? 'active' : '' %>" href="/admin/orders/view">
+            <i class="fas fa-receipt"></i>
+            <span>Quản Lý Đơn Hàng</span>
+        </a>
+
+        <div class="sidebar-heading">Quản Lý Tour</div>
+        
+        <a class="nav-link-gt d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#toursCollapse" role="button" aria-expanded="false" aria-controls="toursCollapse">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>Tất Cả Tour</span>
+            </div>
+            <i class="fas fa-chevron-down fs-xs text-muted"></i>
+        </a>
+        <div class="collapse sidebar-submenu" id="toursCollapse">
+            <a class="nav-link-gt" href="/admin/tours/list">
+                <i class="fas fa-list-ul"></i>
+                <span>Danh Sách Tour</span>
+            </a>
+            <a class="nav-link-gt" href="/admin/tours/add-requests">
+                <i class="fas fa-plus-circle"></i>
+                <span>Duyệt Thêm Tour</span>
+            </a>
+            <a class="nav-link-gt" href="/admin/tours/delete-requests">
+                <i class="fas fa-trash-alt"></i>
+                <span>Duyệt Xóa Tour</span>
+            </a>
+        </div>
+
+        <div class="sidebar-heading">Danh Mục & Địa Điểm</div>
+        <a class="nav-link-gt" href="/tourTypes">
+            <i class="fas fa-tags"></i>
+            <span>Loại Tour</span>
+        </a>
+        <a class="nav-link-gt" href="/admin/destinations">
+            <i class="fas fa-location-dot"></i>
+            <span>Điểm Đến</span>
+        </a>
+        <a class="nav-link-gt" href="/admin/countries">
+            <i class="fas fa-globe"></i>
+            <span>Quốc Gia</span>
+        </a>
+        <a class="nav-link-gt" href="/admin/regions">
+            <i class="fas fa-map-location-dot"></i>
+            <span>Vùng Miền</span>
+        </a>
+
+        <div class="sidebar-heading">Tài Chính & Doanh Thu</div>
+        
+        <a class="nav-link-gt d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#revenueCollapse" role="button" aria-expanded="false" aria-controls="revenueCollapse">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-chart-line"></i>
+                <span>Báo Cáo Doanh Thu</span>
+            </div>
+            <i class="fas fa-chevron-down fs-xs text-muted"></i>
+        </a>
+        <div class="collapse sidebar-submenu" id="revenueCollapse">
+            <a class="nav-link-gt" href="/admin/revenue/daily">
+                <i class="fas fa-calendar-day"></i>
+                <span>Theo Ngày</span>
+            </a>
+            <a class="nav-link-gt" href="/admin/revenue/monthly">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Theo Tháng</span>
+            </a>
+            <a class="nav-link-gt" href="/admin/revenue/yearly">
+                <i class="fas fa-calendar"></i>
+                <span>Theo Năm</span>
+            </a>
+            <a class="nav-link-gt" href="/admin/revenue/partner/weekly-revenue">
+                <i class="fas fa-chart-bar"></i>
+                <span>Đối Tác Hàng Tuần</span>
+            </a>
+            <a class="nav-link-gt" href="/admin/revenue/partner/monthly-revenue">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Chi Trả Đối Tác</span>
+            </a>
+            <a class="nav-link-gt" href="/admin/revenue/partner/total-revenue">
+                <i class="fas fa-coins"></i>
+                <span>Tổng Doanh Thu Đối Tác</span>
+            </a>
+        </div>
+
+        <div class="sidebar-heading">Thành Viên Hệ Thống</div>
+        
+        <a class="nav-link-gt" href="/admin/users">
+            <i class="fas fa-user-friends"></i>
+            <span>Khách Hàng</span>
+        </a>
+        <a class="nav-link-gt" href="/admin/partners">
+            <i class="fas fa-handshake"></i>
+            <span>Đối Tác Đã Duyệt</span>
+        </a>
+
+        <div class="mt-auto pt-4 border-top">
+            <form action="/api/auth/signout" method="POST" class="m-0">
+                <button type="submit" class="btn btn-gt-ghost text-danger w-100 justify-content-start gap-2">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng Xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <script>
+        // Synchronously restore sidebar collapse state from localStorage immediately to avoid layout shifts
+        (function() {
+            try {
+                const currentPath = window.location.pathname;
+                const collapseIds = ['toursCollapse', 'revenueCollapse'];
+                
+                collapseIds.forEach(function(id) {
+                    const el = document.getElementById(id);
+                    const toggle = document.querySelector('[data-bs-toggle="collapse"][href="#' + id + '"]');
+                    if (!el) return;
+                    
+                    let hasCurrentChild = false;
+                    const links = el.querySelectorAll('a.nav-link-gt');
+                    links.forEach(function(link) {
+                        const href = link.getAttribute('href');
+                        if (href && (href === currentPath || (href !== '/' && href !== '/home' && currentPath.startsWith(href)))) {
+                            hasCurrentChild = true;
+                        }
+                    });
+
+                    const savedState = localStorage.getItem('gt_sidebar_' + id);
+                    const shouldShow = hasCurrentChild || savedState === 'true';
+
+                    if (shouldShow) {
+                        el.classList.add('show');
+                        if (toggle) {
+                            toggle.classList.remove('collapsed');
+                            toggle.setAttribute('aria-expanded', 'true');
+                        }
+                    } else {
+                        el.classList.remove('show');
+                        if (toggle) {
+                            toggle.classList.add('collapsed');
+                            toggle.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error('Sidebar state restore error:', err);
+            }
+        })();
+    </script>
+
+    <!-- Global Universal High-Resolution Image Lightbox Modal -->
+    <div class="modal fade" id="gtGlobalImageModal" tabindex="-1" aria-labelledby="gtGlobalImageModalTitle" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content shadow-2xl">
+                <div class="modal-header border-0 pb-2 px-4 pt-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle p-2 bg-emerald text-white fs-xs" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div>
+                            <h6 class="modal-title fw-bold text-white mb-0 fs-6" id="gtGlobalImageModalTitle">Xem Ảnh Gốc</h6>
+                            <small class="text-white-50 fs-xs" id="gtGlobalImageModalMeta">Độ phân giải chất lượng cao</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="lightbox-toolbar">
+                            <button type="button" class="lightbox-btn" id="gtLightboxZoomOut" title="Thu nhỏ">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <button type="button" class="lightbox-btn" id="gtLightboxReset" title="Tỷ lệ 100%">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                            <button type="button" class="lightbox-btn" id="gtLightboxZoomIn" title="Phóng to">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <a href="#" target="_blank" class="lightbox-btn" id="gtLightboxOpenOriginal" title="Mở trong tab mới">
+                                <i class="fas fa-arrow-up-right-from-square"></i>
+                            </a>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
                 </div>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#tourTypesMenu" role="button" aria-expanded="false" aria-controls="tourTypesMenu">
-                    Tour Types
-                </a>
-                <div class="collapse" id="tourTypesMenu">
-                    <ul class="nav flex-column ml-3">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/tourTypes">View Tour Types</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/tourTypes/create">Create Tour Type</a>
-                        </li>
-                    </ul>
+                <div class="modal-body p-3">
+                    <div class="lightbox-img-wrapper" id="gtLightboxWrapper">
+                        <img src="" alt="Full Preview" class="lightbox-img" id="gtGlobalImageModalImg">
+                    </div>
                 </div>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#destinationsMenu" role="button" aria-expanded="false" aria-controls="destinationsMenu">
-                    Destinations
-                </a>
-                <div class="collapse" id="destinationsMenu">
-                    <ul class="nav flex-column ml-3">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/destinations/">View Destinations</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/destinations/create">Create Destination</a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#revenueMenu" role="button" aria-expanded="false" aria-controls="revenueMenu">
-                    Revenue
-                </a>
-                <div class="collapse" id="revenueMenu">
-                    <ul class="nav flex-column ml-3">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/revenue/daily">Daily Revenue</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/revenue/monthly">Monthly Revenue</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/revenue/yearly">Yearly Revenue</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/revenue/partner/weekly-revenue">Weekly revenue of Partners</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/revenue/partner/monthly-revenue">Monthly revenue of Partners</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/revenue/partner/total-revenue">Total revenue of Partners</a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#userMenu" role="button" aria-expanded="false" aria-controls="userMenu">
-                    View User
-                </a>
-                <div class="collapse" id="userMenu">
-                    <ul class="nav flex-column ml-3">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/users">View customer account</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/partners">View partner account</a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-
-        </ul>
+            </div>
+        </div>
     </div>
 
+    <!-- Bootstrap 5 JS & Custom Navigation Script -->
+    <script src="/js/csrf.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global Image Lightbox Handler
+        let currentZoom = 1;
+        window.openImageLightbox = function(imageUrl, title, meta) {
+            if (!imageUrl) return;
+            const modalEl = document.getElementById('gtGlobalImageModal');
+            if (!modalEl) return;
+            const imgEl = document.getElementById('gtGlobalImageModalImg');
+            const titleEl = document.getElementById('gtGlobalImageModalTitle');
+            const metaEl = document.getElementById('gtGlobalImageModalMeta');
+            const openLinkEl = document.getElementById('gtLightboxOpenOriginal');
+
+            currentZoom = 1;
+            imgEl.src = imageUrl;
+            imgEl.style.transform = `scale(${currentZoom})`;
+            if (title && titleEl) titleEl.textContent = title;
+            if (meta && metaEl) metaEl.textContent = meta;
+            if (openLinkEl) openLinkEl.href = imageUrl;
+
+            const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            bsModal.show();
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile sidebar toggles
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function () {
+                    sidebar.classList.toggle('show');
+                    if (backdrop) backdrop.classList.toggle('show');
+                });
+            }
+
+            if (backdrop) {
+                backdrop.addEventListener('click', function () {
+                    sidebar.classList.remove('show');
+                    backdrop.classList.remove('show');
+                });
+            }
+
+            // Lightbox zoom buttons
+            const imgEl = document.getElementById('gtGlobalImageModalImg');
+            document.getElementById('gtLightboxZoomIn')?.addEventListener('click', () => {
+                if (currentZoom < 3) {
+                    currentZoom += 0.25;
+                    if (imgEl) imgEl.style.transform = `scale(${currentZoom})`;
+                }
+            });
+            document.getElementById('gtLightboxZoomOut')?.addEventListener('click', () => {
+                if (currentZoom > 0.5) {
+                    currentZoom -= 0.25;
+                    if (imgEl) imgEl.style.transform = `scale(${currentZoom})`;
+                }
+            });
+            document.getElementById('gtLightboxReset')?.addEventListener('click', () => {
+                currentZoom = 1;
+                if (imgEl) imgEl.style.transform = `scale(1)`;
+            });
+
+            // Delegate auto preview on all .gt-img-preview
+            document.body.addEventListener('click', function(e) {
+                const target = e.target.closest('.gt-img-preview');
+                if (target) {
+                    const imgUrl = target.getAttribute('data-gt-preview') || target.querySelector('img')?.src || target.src;
+                    const title = target.getAttribute('data-gt-title') || 'Xem ảnh gốc';
+                    if (imgUrl) {
+                        e.preventDefault();
+                        window.openImageLightbox(imgUrl, title);
+                    }
+                }
+            });
+
+            // Persist sidebar collapse state when user toggles manually
+            const sidebarCollapses = document.querySelectorAll('.sidebar-gt .collapse');
+            sidebarCollapses.forEach(collapseEl => {
+                collapseEl.addEventListener('shown.bs.collapse', function () {
+                    localStorage.setItem('gt_sidebar_' + this.id, 'true');
+                });
+                collapseEl.addEventListener('hidden.bs.collapse', function () {
+                    localStorage.setItem('gt_sidebar_' + this.id, 'false');
+                });
+            });
+
+            // Highlight current active link based on window pathname
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.sidebar-gt .nav-link-gt');
+            let matchedLink = null;
+
+            // 1. Exact match
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (!href || href === '#' || href.startsWith('javascript:')) return;
+                if (href === currentPath) {
+                    matchedLink = link;
+                }
+            });
+
+            // 2. Prefix match for sub-routes (e.g. edit/delete/create pages), picking longest match
+            if (!matchedLink) {
+                let longestHrefLength = 0;
+                navLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (!href || href === '/' || href === '/home' || href.startsWith('javascript:')) return;
+                    if (currentPath.startsWith(href) && href.length > longestHrefLength) {
+                        matchedLink = link;
+                        longestHrefLength = href.length;
+                    }
+                });
+            }
+
+            // Fallback for root / home
+            if (!matchedLink && (currentPath === '/' || currentPath === '/home')) {
+                matchedLink = document.querySelector('.sidebar-gt .nav-link-gt[href="/home"]');
+            }
+
+            if (matchedLink) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                matchedLink.classList.add('active');
+
+                // If matched link is inside a collapse submenu, ensure it is expanded and saved
+                const parentCollapse = matchedLink.closest('.collapse');
+                if (parentCollapse) {
+                    parentCollapse.classList.add('show');
+                    const collapseToggle = document.querySelector(`[data-bs-toggle="collapse"][href="#${parentCollapse.id}"]`);
+                    if (collapseToggle) {
+                        collapseToggle.setAttribute('aria-expanded', 'true');
+                        collapseToggle.classList.remove('collapsed');
+                    }
+                    localStorage.setItem('gt_sidebar_' + parentCollapse.id, 'true');
+                }
+            }
+        });
+    </script>
 </body>
 </html>

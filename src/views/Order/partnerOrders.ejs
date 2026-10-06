@@ -1,110 +1,314 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Danh sách đơn hàng của đối tác</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn Đặt Tour - GlobeTrek Partner</title>
+
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
-  <%- include('../DashboardPN', { pageTitle: '' }) %>
-  
-  <div class="page-header">
-    <div class="container">
-      <h1 class="display-4">Danh sách đơn hàng của bạn</h1>
-    </div>
-  </div>
+    <%- include('../DashboardPN', { pageTitle: 'Đơn Hàng' }) %>
 
-  <div class="container mt-4">
-    <% if (orders.length === 0) { %>
-      <div class="card p-4 text-center">
-        <p class="mb-0">Không có đơn hàng nào cho đối tác.</p>
-      </div>
-    <% } else { %>
-      <div class="card">
-        <div class="table-responsive">
-          <table class="table mb-0">
-            <thead>
-              <tr>
-                <th>Mã đơn hàng</th>
-                <th>Email khách hàng</th>
-                <th>Tour</th>
-                <th>Số lượng người lớn</th>
-                <th>Số lượng trẻ em</th>
-                <th>Tổng giá trị</th>
-                <th>Trạng thái</th>
-                <th>Ngày đặt</th>
-                <th>Ngày tạo</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% orders.forEach(order => { %>
-                <tr>
-                  <td><%= order.id %></td>
-                  <td><%= order.user.email %></td>
-                  <td>
-                    <% if (order.tour) { %>
-                      <span class="badge" style="background: var(--gradient-primary)"><%= order.tour.title %></span>
-                    <% } else { %>
-                      <span class="text-muted">Không có sản phẩm</span>
-                    <% } %>
-                  </td>
-                  <td><%= order.adultCount %></td>
-                  <td><%= order.childCount %></td>
-                  <td><%= order.totalValue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></td>
-                  <td>
-                    <span class="badge <%= 
-                      order.status === 'pending' ? 'bg-warning' : 
-                      order.status === 'processing' ? 'bg-primary' : 
-                      order.status === 'paid' ? 'bg-success' : 
-                      order.status === 'canceled' ? 'bg-danger' : '' 
-                    %>">
-                      <%= order.status %>
-                    </span>
-                  </td>
-                  <td><%= new Date(order.bookingDate).toLocaleDateString('vi-VN') %></td>
-                  <td><%= new Date(order.createdAt).toLocaleDateString('vi-VN') %></td>
-                </tr>
-              <% }); %>
-            </tbody>
-          </table>
+    <div class="main-content-layout">
+        <!-- Page Header -->
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold text-main mb-1">Đơn Đặt Tour Của Khách Hàng</h2>
+                <p class="text-muted fs-sm mb-0">Mỗi dòng là một tour. Bấm chi tiết để xem khách đã đặt tour đó.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-gt-outline btn-gt-sm" onclick="location.reload()">
+                    <i class="fas fa-arrows-rotate me-1"></i> Làm Mới
+                </button>
+            </div>
         </div>
-      </div>
 
-      <nav class="mt-4" aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-          <% if (currentPage > 1) { %>
-            <li class="page-item">
-              <a class="btn btn-primary me-2" href="?page=<%= currentPage - 1 %>&limit=10">
-                <span>&laquo; Trước</span>
-              </a>
-            </li>
-          <% } %>
+        <div class="d-flex gap-2 mb-4">
+            <a class="btn btn-gt-primary btn-gt-sm" href="/partner/orders">Theo tour</a>
+            <a class="btn btn-gt-outline btn-gt-sm" href="/partner/orders/history">Lịch sử mua hàng</a>
+        </div>
 
-          <% for (let i = 1; i <= totalPages; i++) { %>
-            <li class="page-item">
-              <a class="btn <%= currentPage === i ? 'btn-primary' : 'btn-outline-primary' %> mx-1" 
-                 href="?page=<%= i %>&limit=10">
-                <%= i %>
-              </a>
-            </li>
-          <% } %>
+        <form method="GET" action="/partner/orders" class="card-gt p-3 mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-5">
+                    <label for="tourSearch" class="form-label fs-xs fw-bold text-main">Tìm theo tên tour</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="search"
+                               class="form-control border-start-0"
+                               id="tourSearch"
+                               name="search"
+                               value="<%= filters.search %>"
+                               placeholder="Nhập tên tour...">
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <label for="departureDate" class="form-label fs-xs fw-bold text-main">Ngày khởi hành</label>
+                    <input type="date"
+                           class="form-control"
+                           id="departureDate"
+                           name="departureDate"
+                           value="<%= filters.departureDate %>">
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <label for="orderSort" class="form-label fs-xs fw-bold text-main">Sắp xếp</label>
+                    <select class="form-select" id="orderSort" name="sort">
+                        <option value="departure_asc" <%= filters.sort === 'departure_asc' ? 'selected' : '' %>>Ngày khởi hành tăng dần</option>
+                        <option value="departure_desc" <%= filters.sort === 'departure_desc' ? 'selected' : '' %>>Ngày khởi hành giảm dần</option>
+                        <option value="orders_desc" <%= filters.sort === 'orders_desc' ? 'selected' : '' %>>Số đơn giảm dần</option>
+                        <option value="orders_asc" <%= filters.sort === 'orders_asc' ? 'selected' : '' %>>Số đơn tăng dần</option>
+                        <option value="revenue_desc" <%= filters.sort === 'revenue_desc' ? 'selected' : '' %>>Tổng giá trị giảm dần</option>
+                        <option value="revenue_asc" <%= filters.sort === 'revenue_asc' ? 'selected' : '' %>>Tổng giá trị tăng dần</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-gt-primary btn-gt-sm flex-grow-1">
+                        <i class="fas fa-filter me-1"></i> Áp dụng
+                    </button>
+                    <a href="/partner/orders" class="btn btn-gt-outline btn-gt-sm" title="Xóa bộ lọc">
+                        <i class="fas fa-rotate-left"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
 
-          <% if (currentPage < totalPages) { %>
-            <li class="page-item">
-              <a class="btn btn-primary ms-2" href="?page=<%= currentPage + 1 %>&limit=10">
-                <span>Sau &raquo;</span>
-              </a>
-            </li>
-          <% } %>
-        </ul>
-      </nav>
-    <% } %>
-  </div>
+        <!-- Orders Table -->
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
+                        <tr>
+                            <th>Tour Du Lịch</th>
+                            <th class="text-center">Số Đơn</th>
+                            <th>Số Khách</th>
+                            <th>Tổng Giá Trị</th>
+                            <th>Ngày Khởi Hành</th>
+                            <th class="text-end">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!tourGroups || tourGroups.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="empty-state-gt border-0 py-4">
+                                        <div class="empty-state-icon">
+                                            <i class="fas fa-receipt"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-main">Chưa Có Đơn Hàng Nào</h5>
+                                        <p class="empty-state-desc mb-0">Khi khách hàng đặt tour do bạn quản lý, danh sách sẽ hiển thị tại đây.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% tourGroups.forEach(group => { %>
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-main fs-sm">
+                                            <i class="fas fa-route text-primary me-1"></i><%= group.title %>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge-gt badge-gt-neutral"><%= group.orderCount %> đơn</span>
+                                    </td>
+                                    <td>
+                                        <div class="fs-xs">
+                                            <div><i class="fas fa-user-tie text-muted me-1"></i><%= group.adultCount %> người lớn</div>
+                                            <div class="text-secondary"><i class="fas fa-child text-muted me-1"></i><%= group.childCount %> trẻ em</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-primary font-display fs-6"><%= group.totalText %></div>
+                                    </td>
+                                    <td>
+                                        <div class="fs-xs fw-semibold text-main">
+                                            <i class="fas fa-calendar-day text-primary me-1"></i><%= group.departureText %>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="button"
+                                                class="btn btn-gt-ghost text-primary btn-gt-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#detailPartnerOrderModal"
+                                                data-tour-id="<%= group.tourId %>"
+                                                data-departure-id="<%= group.departureId %>"
+                                                data-departure-date="<%= group.departureDate %>"
+                                                data-title="<%= group.title %>"
+                                                data-summary="<%= group.departureText %> · <%= group.orderCount %> đơn · <%= group.guestCount %> khách · <%= group.totalText %>"
+                                                title="Xem khách đã đặt tour này">
+                                            <i class="fas fa-eye me-1"></i> Chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+        <% if (typeof totalTours !== 'undefined' && totalTours > 0) { %>
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-4">
+                <span class="text-muted fs-xs">
+                    <%= (currentPage - 1) * pageSize + 1 %>–<%= Math.min(currentPage * pageSize, totalTours) %> của <%= totalTours %> lịch khởi hành
+                </span>
+                <% if (totalPages > 1) { %>
+                    <div class="d-flex flex-wrap gap-2">
+                        <% if (currentPage > 1) { %>
+                            <a href="?<%= paginationQuery ? paginationQuery + '&' : '' %>page=<%= currentPage - 1 %>" class="btn btn-gt-outline btn-gt-sm">Trước</a>
+                        <% } else { %>
+                            <span class="btn btn-gt-outline btn-gt-sm disabled">Trước</span>
+                        <% } %>
+                        <% for (let p = 1; p <= totalPages; p++) { %>
+                            <a href="?<%= paginationQuery ? paginationQuery + '&' : '' %>page=<%= p %>" class="btn <%= p === currentPage ? 'btn-gt-primary' : 'btn-gt-outline' %> btn-gt-sm"><%= p %></a>
+                        <% } %>
+                        <% if (currentPage < totalPages) { %>
+                            <a href="?<%= paginationQuery ? paginationQuery + '&' : '' %>page=<%= currentPage + 1 %>" class="btn btn-gt-outline btn-gt-sm">Sau</a>
+                        <% } else { %>
+                            <span class="btn btn-gt-outline btn-gt-sm disabled">Sau</span>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+
+    <div class="modal fade" id="detailPartnerOrderModal" tabindex="-1" aria-labelledby="detailPartnerOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge emerald">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main mb-0" id="tourDetailTitle">Chi tiết tour</h5>
+                            <p class="text-muted fs-xs mb-0" id="tourDetailSummary"></p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body p-4 bg-body">
+                    <div class="table-responsive">
+                        <table class="table-gt mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Hành khách</th>
+                                    <th>Liên hệ</th>
+                                    <th>Vé</th>
+                                    <th>Ngày khởi hành</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Tổng tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tourPassengerBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-white d-flex flex-wrap justify-content-between gap-2">
+                    <div id="tourPassengerPager" class="d-flex flex-wrap align-items-center gap-2"></div>
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const escapeHtml = (value) => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+
+        const passengerBody = document.getElementById('tourPassengerBody');
+        const passengerPager = document.getElementById('tourPassengerPager');
+        let activeTourId = '';
+        let activeDepartureId = '';
+        let activeDepartureDate = '';
+        let passengerRequest = 0;
+
+        const renderPassengers = (passengers) => {
+            if (!passengers.length) {
+                passengerBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Không có khách đặt tour này.</td></tr>';
+                return;
+            }
+            passengerBody.innerHTML = passengers.map((passenger) => `
+                <tr>
+                    <td>
+                        <div class="fw-bold text-main fs-sm">${escapeHtml(passenger.name)}</div>
+                        <div class="text-muted fs-xs">#${escapeHtml(passenger.id)}</div>
+                    </td>
+                    <td>
+                        <div class="fs-xs">${escapeHtml(passenger.email)}</div>
+                        <div class="text-muted fs-xs">${escapeHtml(passenger.phone)}</div>
+                    </td>
+                    <td class="fs-xs">${passenger.adults} người lớn<br>${passenger.children} trẻ em</td>
+                    <td class="fs-xs">
+                        <div>${escapeHtml(passenger.bookingText)}</div>
+                        <div class="text-muted">Đặt lúc ${escapeHtml(passenger.createdText)}</div>
+                    </td>
+                    <td><span class="badge-gt ${escapeHtml(passenger.statusBadge)}">${escapeHtml(passenger.statusText)}</span></td>
+                    <td class="text-end fw-bold text-primary">${escapeHtml(passenger.totalText)}</td>
+                </tr>
+            `).join('');
+        };
+
+        const renderPassengerPager = (payload) => {
+            if (!payload.total) {
+                passengerPager.innerHTML = '';
+                return;
+            }
+            const from = (payload.page - 1) * payload.pageSize + 1;
+            const to = Math.min(payload.page * payload.pageSize, payload.total);
+            const buttons = [`<span class="text-muted fs-xs">${from}–${to} của ${payload.total} khách</span>`];
+            if (payload.totalPages > 1) {
+                buttons.push(`<button type="button" class="btn btn-gt-outline btn-gt-sm" data-passenger-page="${payload.page - 1}" ${payload.page === 1 ? 'disabled' : ''}>Trước</button>`);
+                buttons.push(`<button type="button" class="btn btn-gt-outline btn-gt-sm" data-passenger-page="${payload.page + 1}" ${payload.page === payload.totalPages ? 'disabled' : ''}>Sau</button>`);
+            }
+            passengerPager.innerHTML = buttons.join('');
+        };
+
+        const loadPassengers = async (tourId, departureId, departureDate, page) => {
+            const requestId = ++passengerRequest;
+            passengerBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Đang tải danh sách khách...</td></tr>';
+            passengerPager.innerHTML = '';
+            try {
+                const response = await fetch(`/partner/orders/api/tours/${encodeURIComponent(tourId)}/passengers?departureId=${encodeURIComponent(departureId)}&departureDate=${encodeURIComponent(departureDate)}&page=${page}`, {
+                    headers: { Accept: 'application/json' },
+                });
+                if (requestId !== passengerRequest) return;
+                if (!response.ok) throw new Error('Không tải được danh sách khách');
+                const payload = await response.json();
+                if (requestId !== passengerRequest) return;
+                document.getElementById('tourDetailTitle').textContent = payload.title || 'Chi tiết tour';
+                renderPassengers(payload.passengers || []);
+                renderPassengerPager(payload);
+            } catch (error) {
+                if (requestId !== passengerRequest) return;
+                passengerBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${escapeHtml(error.message)}</td></tr>`;
+            }
+        };
+
+        const detailPartnerOrderModal = document.getElementById('detailPartnerOrderModal');
+        if (detailPartnerOrderModal) {
+            detailPartnerOrderModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                activeTourId = button?.getAttribute('data-tour-id') || '';
+                activeDepartureId = button?.getAttribute('data-departure-id') || '';
+                activeDepartureDate = button?.getAttribute('data-departure-date') || '';
+                document.getElementById('tourDetailTitle').textContent = button?.getAttribute('data-title') || 'Chi tiết tour';
+                document.getElementById('tourDetailSummary').textContent = button?.getAttribute('data-summary') || '';
+                if (activeTourId && (activeDepartureId || activeDepartureDate)) loadPassengers(activeTourId, activeDepartureId, activeDepartureDate, 1);
+            });
+            passengerPager.addEventListener('click', function (event) {
+                const button = event.target.closest('button[data-passenger-page]');
+                if (!button || button.disabled || !activeTourId) return;
+                loadPassengers(activeTourId, activeDepartureId, activeDepartureDate, Number(button.dataset.passengerPage));
+            });
+        }
+    </script>
 </body>
 </html>

@@ -1,35 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>Edit Destination</title>
+    <title>Chỉnh Sửa Điểm Đến - GlobeTrek Admin</title>
 </head>
 <body>
     <%- include('../header', { pageTitle: 'Edit Destination' }) %>
     
-    <div class="page-header">
-        <div class="container">
-            <h1 class="display-4">Edit Destination</h1>
+    <div class="main-content-layout">
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <a href="/admin/destinations" class="text-muted fs-sm fw-semibold d-inline-flex align-items-center gap-1">
+                <i class="fas fa-arrow-left"></i> Danh sách điểm đến
+            </a>
         </div>
-    </div>
 
-    <div class="container mt-4">
-        <div class="card p-4">
-            <form action="/admin/destinations/edit/<%= destination._id %>" method="POST">
-                <div class="form-group mb-4">
-                    <label for="name" class="form-label">Destination Name</label>
-                    <input type="text" class="form-control" id="name" name="name" value="<%= destination.name %>" required>
+        <div class="card-gt p-4" style="max-width: 650px;">
+            <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                <div class="rounded-circle p-2 bg-emerald text-white fs-xs">
+                    <i class="fas fa-location-dot"></i>
                 </div>
+                <h4 class="fw-bold text-main mb-0 fs-5">Chỉnh Sửa Điểm Đến</h4>
+            </div>
+
+            <form action="/admin/destinations/edit/<%= destination._id %>" method="POST" enctype="multipart/form-data">
+                <div class="form-group-gt mb-3">
+                    <label for="name" class="form-label-gt">Tên Điểm Đến <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control-gt" id="name" name="name" value="<%= destination.name %>" maxlength="100" required>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="country" class="form-label-gt">Quốc Gia <span class="text-danger">*</span></label>
+                        <select class="form-select form-control-gt" id="country" name="country" required>
+                            <option value="">-- Chọn Quốc Gia --</option>
+                            <% if (typeof countries !== 'undefined' && countries) { %>
+                                <% countries.forEach(c => { %>
+                                    <option value="<%= c._id %>" <%= (destination.country && destination.country._id.toString() == c._id.toString()) ? 'selected' : '' %>><%= c.name %></option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="region" class="form-label-gt">Khu Vực / Vùng Miền <span class="text-danger">*</span></label>
+                        <select class="form-select form-control-gt" id="region" name="region" required>
+                            <option value="">-- Chọn Vùng Miền --</option>
+                            <% if (typeof regions !== 'undefined' && regions) { %>
+                                <% regions.forEach(r => { %>
+                                    <option value="<%= r._id %>" <%= (destination.region && destination.region._id.toString() == r._id.toString()) ? 'selected' : '' %>><%= r.name %> (<%= r.country ? r.country.name : '' %>)</option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group-gt mb-3">
+                    <label class="form-label-gt">Hình Ảnh Điểm Đến</label>
+                    <% if (destination.image) { %>
+                        <div class="mb-2 text-center p-2 border rounded-3 bg-white">
+                            <p class="fs-xs text-muted mb-1">Ảnh hiện tại:</p>
+                            <img src="<%= destination.image %>" alt="<%= destination.name %>" class="rounded-3 shadow-xs border" style="max-height: 120px; max-width: 100%; object-fit: cover;">
+                        </div>
+                    <% } %>
+                    <div class="p-3 border rounded-4 text-center bg-light border-dashed position-relative">
+                        <i class="fas fa-cloud-arrow-up text-primary fs-3 mb-1 d-block"></i>
+                        <p class="fs-xs text-muted mb-2">Kéo thả ảnh mới vào đây hoặc nhấp để chọn tệp</p>
+                        <input type="file" class="form-control-gt" id="destImageFile" name="image" accept="image/*" onchange="previewImage(this, 'editPageImgPreview', 'editPageImgPreviewWrap')">
+                        <div id="editPageImgPreviewWrap" class="mt-2 d-none text-center">
+                            <p class="fs-xs text-success fw-semibold mb-1">Ảnh mới đã chọn:</p>
+                            <img id="editPageImgPreview" src="" alt="Ảnh mới" class="rounded-3 shadow-sm border" style="max-height: 120px; max-width: 100%; object-fit: cover;">
+                        </div>
+                    </div>
+                    <small class="text-muted fs-xs">Để trống nếu muốn giữ nguyên ảnh hiện tại.</small>
+                </div>
+
+                <div class="form-group-gt mb-3">
+                    <label for="description" class="form-label-gt">Mô Tả Điểm Đến (Tùy chọn)</label>
+                    <textarea class="form-control-gt" id="description" name="description" rows="3" maxlength="500"><%= destination.description || '' %></textarea>
+                </div>
+
+                <div class="form-check form-switch mb-4">
+                    <input class="form-check-input" type="checkbox" id="isPopular" name="isPopular" <%= destination.isPopular ? 'checked' : '' %>>
+                    <label class="form-check-label fs-sm fw-semibold text-main" for="isPopular">
+                        Đánh dấu là điểm đến thịnh hành / nổi bật
+                    </label>
+                </div>
+
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Update</button>
-                    <a href="/destinations" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-gt-primary">
+                        <i class="fas fa-save me-1"></i> Lưu Cập Nhật
+                    </button>
+                    <a href="/admin/destinations" class="btn btn-gt-ghost">Hủy</a>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        function previewImage(input, previewImgId, previewWrapId) {
+            const file = input.files && input.files[0];
+            const previewImg = document.getElementById(previewImgId);
+            const previewWrap = document.getElementById(previewWrapId);
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (previewImg) previewImg.src = e.target.result;
+                    if (previewWrap) previewWrap.classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                if (previewWrap) previewWrap.classList.add('d-none');
+            }
+        }
+    </script>
 </body>
 </html>

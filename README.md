@@ -1,123 +1,204 @@
 # GlobeTrek
-> A comprehensive travel and tour management platform connecting travelers, tour partners, and administrators.
 
-## Overview
-GlobeTrek is an integrated web platform designed to streamline the process of booking and managing travel experiences. It serves three main audiences: End Users (travelers looking for tours), Partners (agencies or individuals providing tours), and Administrators (system managers). The system handles everything from tour discovery and booking to payment processing and revenue tracking.
+Nền tảng quản lý và điều hành tour du lịch. Đối tác đăng tour và theo dõi lịch khởi hành, ban quản trị duyệt nội dung và xem doanh thu, khách đặt tour qua ứng dụng riêng.
 
-## Features
+Cổng trong repo này dành cho **Admin** và **Đối tác**. Ảnh bên dưới chụp từ dữ liệu thử trên máy local.
 
-**Traveler (User) Features**
-* **Tour Discovery:** Browse, search, and filter destinations and available tours.
-* **Booking & Payments:** Book tours securely with integrated PayPal and Stripe payment gateways.
-* **Favorites:** Save tours to a personalized favorites list for future reference.
-* **Reviews & Ratings:** Leave feedback on completed tours.
+## Cổng vào
 
-**Partner Features**
-* **Tour Management:** Create, edit, and manage tour offerings.
-* **Order Tracking:** View and manage bookings specific to the partner's tours.
-* **Revenue Dashboard:** Track daily, monthly, and yearly earnings, including visual charts.
+Admin và đối tác dùng chung trang đăng nhập. Sau khi đăng nhập, hệ thống mở đúng khu vực của từng vai trò.
 
-**Admin Features**
-* **System Oversight:** Manage users, partners, and user roles.
-* **Content Moderation:** Approve, edit, or delete tours, destinations, and tour types across the platform.
-* **Global Revenue Tracking:** Monitor overall system transactions and platform revenue.
+![Đăng nhập](docs/screenshots/login.png)
 
-## Tech Stack
+Đối tác chưa có tài khoản đăng ký hồ sơ tại đây. Tài khoản chỉ vào được khu vực đối tác sau khi Admin duyệt.
 
-* **Backend:** Node.js, Express.js
-* **Database:** MongoDB (via Mongoose), Redis (via ioredis) for caching/session management
-* **Authentication:** JWT (JSON Web Tokens), bcryptjs
-* **Views/Template Engine:** EJS (Embedded JavaScript templating)
-* **External Services:** 
-  * Payments: PayPal Checkout SDK, Stripe
-  * Storage: Cloudinary (for image uploads via Multer)
-  * Email: Mailtrap / Nodemailer
-* **Deployment/Environment:** Requires Node running `nodemon` for local development.
+![Đăng ký đối tác](docs/screenshots/register.png)
 
-## Architecture
+## Admin
 
-GlobeTrek follows a classic **MVC (Model-View-Controller)** architecture to separate concerns clearly:
-* **Models:** Define MongoDB schemas for Users, Tours, Orders, Revenues, Transactions, etc.
-* **Controllers:** Contains the business logic, organized by role (`Admin/`, `Partner/`, external users).
-* **Routes:** Route definitions mapping HTTP requests to corresponding controllers.
-* **Services:** Reusable logic sets for CRUD operations, Token handling, and Email templating.
-* **Views:** EJS templates for server-side rendering of dashboards and user interfaces.
+### Duyệt đối tác
 
-## API & Routing Overview
+Trang chủ Admin. Hồ sơ đối tác mới hiện trong hàng chờ để phê duyệt hoặc từ chối. Các thẻ dẫn nhanh sang đối tác đã duyệt, danh sách tour và báo cáo doanh thu.
 
-While the application primarily serves server-rendered EJS pages for dashboards, the routing structure implies a REST-like organization.
+![Duyệt đối tác](docs/screenshots/admin-approve-partners.png)
 
-* **Base routes:** `/auth`, `/tours`, `/orders`, `/destinations`
-* **Admin routes:** `/admin/tours`, `/admin/users`, `/admin/revenue`
-* **Partner routes:** `/partner/tours`, `/partner/orders`, `/partner/revenue`
-* **Authentication:** Handled via JWT stored in HTTP-only cookies and Authorization headers.
+### Đơn hàng
 
-## Installation & Setup
+Đơn đặt tour của toàn hệ thống, gom theo tour và ngày khởi hành: số khách, số vé và chi tiết từng đơn.
 
-1. **Clone the repository**
-```bash
-git clone <repository-url>
-cd GlobeTrek
-```
+![Đơn hàng Admin](docs/screenshots/admin-orders.png)
 
-2. **Install dependencies**
+### Danh sách tour
+
+Mọi tour trên nền tảng, lọc theo đối tác, trạng thái, quốc gia, vùng miền, điểm đến, ngày có lịch và số ngày. Từ đây Admin xem chi tiết hoặc sang hàng chờ duyệt.
+
+![Danh sách tour Admin](docs/screenshots/admin-tours.png)
+
+### Duyệt thêm tour
+
+Tour đối tác vừa tạo, chờ Admin kiểm tra giá, lịch trình và điểm đến trước khi mở bán.
+
+![Duyệt thêm tour](docs/screenshots/admin-tour-add-requests.png)
+
+### Duyệt xóa tour
+
+Yêu cầu gỡ tour do đối tác gửi. Admin xác nhận rồi tour mới bị xóa.
+
+![Duyệt xóa tour](docs/screenshots/admin-tour-delete-requests.png)
+
+### Loại tour
+
+Danh sách phân loại tour. Thêm và sửa mở ngay trên trang. Nút xóa dẫn sang trang xác nhận riêng.
+
+![Loại tour](docs/screenshots/admin-tour-types.png)
+
+![Xác nhận xóa loại tour](docs/screenshots/admin-tour-type-delete.png)
+
+### Điểm đến
+
+Điểm đến gắn với quốc gia và vùng miền, kèm số tour đang dùng. Có lọc, tìm kiếm, thêm mới, sửa và xóa.
+
+![Điểm đến](docs/screenshots/admin-destinations.png)
+
+![Sửa điểm đến](docs/screenshots/admin-destination-edit.png)
+
+![Xác nhận xóa điểm đến](docs/screenshots/admin-destination-delete.png)
+
+### Quốc gia và vùng miền
+
+Hai danh mục nền cho điểm đến và tour. Mỗi trang có thêm, sửa và tắt kích hoạt.
+
+![Quốc gia](docs/screenshots/admin-countries.png)
+
+![Vùng miền](docs/screenshots/admin-regions.png)
+
+### Doanh thu
+
+Doanh thu đơn đã thanh toán được chia **30%** cho nền tảng và **70%** cho đối tác.
+
+Theo ngày: bảy ngày gần nhất.
+
+![Doanh thu theo ngày](docs/screenshots/admin-revenue-daily.png)
+
+Theo tháng: sáu tháng gần nhất.
+
+![Doanh thu theo tháng](docs/screenshots/admin-revenue-monthly.png)
+
+Theo năm: hai năm gần nhất.
+
+![Doanh thu theo năm](docs/screenshots/admin-revenue-yearly.png)
+
+Theo tuần: doanh thu từng tour của mỗi đối tác trong tuần đang chọn.
+
+![Doanh thu đối tác theo tuần](docs/screenshots/admin-revenue-weekly.png)
+
+Quyết toán tháng: phần Admin, phần đối tác và trạng thái chi trả. Chi trả thật đang tạm khóa, trang chỉ dùng để đối soát.
+
+![Quyết toán tháng](docs/screenshots/admin-revenue-payout.png)
+
+Tổng tích lũy của từng đối tác đến ngày xem báo cáo.
+
+![Tổng doanh thu đối tác](docs/screenshots/admin-revenue-total.png)
+
+### Khách hàng và đối tác đã duyệt
+
+Khách hàng: email, trạng thái tài khoản, số lần hủy tour, xem chi tiết và khóa tài khoản.
+
+![Khách hàng](docs/screenshots/admin-users.png)
+
+Đối tác đã duyệt: hồ sơ doanh nghiệp và nút hủy quyền nếu cần thu hồi.
+
+![Đối tác đã duyệt](docs/screenshots/admin-partners.png)
+
+## Đối tác
+
+Hai mục trên menu chưa có trang riêng: **Đối soát & Rút tiền** và **Đánh giá từ khách**. Cả hai sắp ra mắt.
+
+### Doanh thu
+
+Tổng doanh thu đến ngày hiện tại, số tour đang giao dịch, bảng doanh thu từng tour và biểu đồ tỷ trọng.
+
+![Doanh thu đối tác](docs/screenshots/partner-revenue.png)
+
+### Đơn hàng
+
+Đơn khách đặt, gom theo tour và ngày khởi hành. Lọc theo tên tour, ngày khởi hành và xem chi tiết khách của từng đợt.
+
+![Đơn hàng đối tác](docs/screenshots/partner-orders.png)
+
+### Danh sách tour
+
+Tour của chính đối tác đang đăng nhập: giá, thời lượng, trạng thái bán, sửa, tạm dừng hoặc gửi yêu cầu xóa.
+
+![Danh sách tour đối tác](docs/screenshots/partner-tours.png)
+
+### Tạo tour và sửa tour
+
+Biểu mẫu ba bước: thông tin và bảng giá, lịch trình từng ngày, rồi hình ảnh và lịch khởi hành. Giá trẻ em và lễ được tính từ giá người lớn theo tỷ lệ.
+
+![Tạo tour](docs/screenshots/partner-tour-create.png)
+
+![Sửa tour](docs/screenshots/partner-tour-edit.png)
+
+### Lịch khởi hành và chỗ
+
+Từng ngày mở bán: sức chứa, chỗ đang giữ, chỗ đã bán, chỗ còn trống và trạng thái. Có thể thêm lịch theo ngày hoặc theo khoảng.
+
+![Lịch khởi hành](docs/screenshots/partner-departures.png)
+
+### Báo cáo hiệu suất tour
+
+Theo ngày khởi hành trong kỳ đang chọn. Các chỉ số gồm doanh thu, đơn đã thanh toán, số khách, công suất chỗ và tỷ lệ hủy, kèm kỳ liền trước để so sánh. Có biểu đồ theo ngày, xếp hạng tour và bảng chi tiết. Xuất được file Excel.
+
+![Hiệu suất tour](docs/screenshots/partner-performance.png)
+
+### Lịch sử mua hàng
+
+Từng đơn của khách trên tour của đối tác: người đặt, ngày khởi hành, ngày đặt, số khách, số tiền và trạng thái thanh toán.
+
+![Lịch sử mua hàng](docs/screenshots/partner-purchase-history.png)
+
+### Mã giảm giá và ưu đãi tự động
+
+Mã giảm giá là mã khách nhập lúc đặt. Mỗi đơn nhận một ưu đãi. Trang quản lý mức giảm, phạm vi tour, thời gian và số lượt đã dùng.
+
+![Mã giảm giá](docs/screenshots/partner-promotions.png)
+
+Ưu đãi tự động áp vào tour mà khách không cần nhập mã.
+
+![Ưu đãi tự động](docs/screenshots/partner-offers.png)
+
+## Công nghệ
+
+- Node.js, Express, EJS
+- MongoDB và Redis
+- JWT lưu trong cookie httpOnly cho cổng quản trị
+- MinIO cho ảnh tour
+- Chart.js cho biểu đồ doanh thu
+
+## Chạy trên máy
+
+Cần Node.js, MongoDB và Redis.
+
 ```bash
 npm install
-```
-
-3. **Setup environment variables**
-Duplicate `.env.example` (if present) or create a `.env` file in the root directory. Configure your database and third-party keys.
-
-4. **Run the project locally**
-```bash
+copy .env.example .env
 npm start
 ```
-*Note: `npm start` uses `nodemon server.js` for hot-reloading during development.*
 
-## Environment Variables
+Mở [http://localhost:8081](http://localhost:8081). Cổng mặc định trong `.env.example` là `8081`.
 
-Key variables required in your `.env` file:
+Điền chuỗi kết nối MongoDB, Redis và các khóa trong `.env`. Không commit file `.env`.
 
-```env
-PORT=3000
-MONGODB_URI=your_mongodb_connection_string
-REDIS_URL=your_redis_connection_string
+`docker-compose.yml` dựng kèm MongoDB, Redis và MinIO khi muốn chạy bằng Docker.
 
-# Authentication
-JWT_SECRET=your_jwt_secret
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-# Payments
-PAYPAL_CLIENT_ID=
-PAYPAL_CLIENT_SECRET=
-STRIPE_SECRET_KEY=
-
-# Email (Mailtrap)
-MAILTRAP_USER=
-MAILTRAP_PASS=
-```
-
-## Project Structure
+## Bố cục mã
 
 ```
-src/
- ├── config/            # External service and DB configurations
- ├── controllers/       # Route controllers (split by Admin, Partner, etc.)
- ├── Middleware/        # Auth, availability, and image upload middlewares
- ├── models/            # Mongoose schemas (Tour, User, Order, Revenue, etc.)
- ├── public/            # Static assets (CSS, images)
- ├── routes/            # Application routing logic
- ├── service/           # Helper services (Mailtrap, CRUD, Tokens)
- └── views/             # EJS view templates
+server.js                 # Điểm vào, cổng quản trị và API
+src/controllers           # Xử lý theo Admin, Partner và khách
+src/routes                # Đường dẫn /admin, /partner và API công khai
+src/models                # Tour, lịch khởi hành, đơn hàng, người dùng
+src/views                 # Giao diện EJS của Admin và Đối tác
+src/public                # CSS, ảnh và script phía trình duyệt
 ```
-
-## Future Improvements
-
-* **API Decoupling:** Fully separate the backend into a strict REST or GraphQL API and migrate the frontend to a modern SPA framework (React/Vue).
-* **Dockerization:** Add a `Dockerfile` and `docker-compose.yml` to spin up the Node app, MongoDB, and Redis simultaneously.
-* **Advanced Caching:** Expand Redis usage to cache query-heavy endpoints (like search and destination filtering) for better performance.
-* **Automated Testing:** Implement unit and integration tests using Jest or Mocha/Chai to ensure reliability across roles.

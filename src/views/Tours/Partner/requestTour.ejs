@@ -1,18 +1,31 @@
-<!-- views/partner/requestDeleteTour.ejs -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yêu Cầu Xóa Tour</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Yêu Cầu Xóa Tour - GlobeTrek Partner</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
-    <%- include('../../DashboardPN', { pageTitle: '' }) %>
-    <div class="container mt-4">
-        <h2>Yêu Cầu Xóa Tour</h2>
-        <p>yêu cầu của bạn đã được gửi về Admin. Vui lòng đợi Admin xử lý.</p>
-        <a href="/partner/tours/list" class="btn btn-primary">Quay lại danh sách tour</a>
+    <%- include('../../DashboardPN', { pageTitle: 'Yêu Cầu Xóa Tour' }) %>
+
+    <div class="main-content-layout">
+        <div class="card-gt p-5 text-center mx-auto" style="max-width: 550px; margin-top: 3rem;">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center p-3 bg-emerald bg-opacity-10 text-primary mb-3" style="width: 70px; height: 70px;">
+                <i class="fas fa-paper-plane fs-2"></i>
+            </div>
+            <h4 class="fw-bold text-main mb-2">Yêu Cầu Đã Được Gửi Đi!</h4>
+            <p class="text-muted fs-sm mb-4">
+                Yêu cầu xóa tour của bạn đã được chuyển tới Ban Quản Trị GlobeTrek. Chúng tôi sẽ xử lý và thông báo kết quả sớm nhất.
+            </p>
+            <a href="/partner/tours/list" class="btn btn-gt-primary">
+                <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách tour
+            </a>
+        </div>
     </div>
 </body>
 </html>

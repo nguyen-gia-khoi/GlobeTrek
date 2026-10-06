@@ -1,82 +1,123 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doanh thu hàng tháng</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Thêm Chart.js -->
+    <title>Doanh Thu Hàng Tháng - GlobeTrek Admin</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/formatRevenueAxis.js"></script>
 </head>
-
 <body>
     <%- include('../header', { pageTitle: 'Doanh thu hàng tháng' }) %>
-    <div class="container mt-5">
-        <h2 class="mt-5">Doanh thu hàng tháng 6 tháng gần nhất</h2>
 
-        <canvas id="monthlyRevenueChart" width="400" height="200"></canvas> <!-- Khung vẽ biểu đồ -->
+    <div class="main-content-layout">
+        <div class="hero-header-gt d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="hero-badge-pill">
+                    <i class="fas fa-calendar-alt text-warning me-1"></i> Báo Cáo Theo Tháng
+                </span>
+                <h1 class="text-white mb-2">Báo Cáo Doanh Thu 6 Tháng Gần Nhất</h1>
+                <p class="mb-0">Thống kê tăng trưởng tổng doanh thu và cơ cấu phân bổ giữa GlobeTrek và Đối Tác.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light rounded-pill px-3 py-2 fw-bold text-primary shadow-sm" onclick="location.reload()">
+                    <i class="fas fa-arrows-rotate me-1"></i> Làm Mới
+                </button>
+            </div>
+        </div>
 
-        <script>
-            // Dữ liệu doanh thu từ backend
-            const labels = <%- JSON.stringify(labels) %>; // Nhãn cho trục x (tháng)
-            const monthlyRevenues = <%- JSON.stringify(monthlyRevenues) %>; // Dữ liệu doanh thu tổng
-            const adminRevenues = <%- JSON.stringify(adminRevenues) %>; // Dữ liệu doanh thu của admin
-            const partnerRevenues = <%- JSON.stringify(partnerRevenues) %>; // Dữ liệu doanh thu của partner
+        <!-- Monthly Chart Card -->
+        <div class="card-gt p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h4 class="fw-bold text-main mb-1">Xu Hướng Doanh Thu Theo Tháng</h4>
+                    <p class="text-muted fs-xs mb-0">Doanh thu tổng cộng cùng phần chia của Admin (30%) và Đối Tác (70%)</p>
+                </div>
+            </div>
 
-            // Biểu đồ doanh thu hàng tháng
+            <div style="height: 400px;">
+                <canvas id="monthlyRevenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const labels = <%- JSON.stringify(labels || []) %>;
+            const monthlyRevenues = <%- JSON.stringify(monthlyRevenues || []) %>;
+            const adminRevenues = <%- JSON.stringify(adminRevenues || []) %>;
+            const partnerRevenues = <%- JSON.stringify(partnerRevenues || []) %>;
+
             const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
-            const monthlyRevenueChart = new Chart(ctx, {
-                type: 'bar', // Kiểu biểu đồ
+            new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: labels.reverse(), // Nhãn tháng (đảo ngược để hiển thị từ tháng mới nhất)
+                    labels: labels.slice().reverse(),
                     datasets: [
                         {
-                            label: 'Doanh thu tổng (VNĐ)', // Nhãn cho bộ dữ liệu tổng
-                            data: monthlyRevenues.reverse(), // Dữ liệu doanh thu tổng
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)', // Màu nền của cột tổng
-                            borderColor: 'rgba(75, 192, 192, 1)', // Màu viền của cột tổng
-                            borderWidth: 1 // Độ dày viền
+                            label: 'Tổng Doanh Thu (VNĐ)',
+                            data: monthlyRevenues.slice().reverse(),
+                            backgroundColor: 'rgba(16, 185, 129, 0.25)',
+                            borderColor: '#10b981',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            order: 2
                         },
                         {
-                            label: 'Doanh thu Admin (30%) (VNĐ)', // Nhãn cho bộ dữ liệu của admin
-                            data: adminRevenues.reverse(), // Dữ liệu doanh thu của admin
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)', // Màu nền của cột admin
-                            borderColor: 'rgba(255, 99, 132, 1)', // Màu viền của cột admin
-                            borderWidth: 1 // Độ dày viền
+                            label: 'Doanh Thu Admin (30%)',
+                            data: adminRevenues.slice().reverse(),
+                            backgroundColor: '#06b6d4',
+                            borderRadius: 8,
+                            order: 1
                         },
                         {
-                            label: 'Doanh thu Partner (70%) (VNĐ)', // Nhãn cho bộ dữ liệu của partner
-                            data: partnerRevenues.reverse(), // Dữ liệu doanh thu của partner
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)', // Màu nền của cột partner
-                            borderColor: 'rgba(54, 162, 235, 1)', // Màu viền của cột partner
-                            borderWidth: 1 // Độ dày viền
+                            label: 'Doanh Thu Partner (70%)',
+                            data: partnerRevenues.slice().reverse(),
+                            backgroundColor: '#8b5cf6',
+                            borderRadius: 8,
+                            order: 1
                         }
                     ]
                 },
                 options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true, // Bắt đầu từ 0 trên trục y
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString('vi-VN'); // Định dạng giá trị VNĐ
-                                }
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' } } },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            padding: 12,
+                            cornerRadius: 10,
+                            callbacks: {
+                                label: ctx => ` ${ctx.dataset.label}: ${Math.round(ctx.raw || 0).toLocaleString('vi-VN')} VNĐ`
                             }
                         }
                     },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(tooltipItem) {
-                                    return tooltipItem.raw.toLocaleString('vi-VN'); // Định dạng tooltip với VNĐ
-                                }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(15, 23, 42, 0.06)' },
+                            ticks: {
+                                font: { family: 'Plus Jakarta Sans', size: 11 },
+                                maxTicksLimit: 6,
+                                callback: (val) => formatRevenueAxis(val)
                             }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Plus Jakarta Sans', size: 12 } }
                         }
                     }
                 }
             });
-        </script>
-    </div>
+        });
+    </script>
 </body>
-
 </html>

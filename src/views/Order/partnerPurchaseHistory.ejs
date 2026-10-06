@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Mua Hàng - GlobeTrek Partner</title>
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+</head>
+<body>
+    <%- include('../DashboardPN', { pageTitle: 'Lịch Sử Khách Hàng' }) %>
+
+    <div class="main-content-layout">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold text-main mb-1">Lịch Sử Mua Hàng</h2>
+                <p class="text-muted fs-sm mb-0">Toàn bộ đơn khách đã đặt trên các tour của bạn, gồm cả đơn chờ thanh toán và đơn đã hủy.</p>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mb-4">
+            <a class="btn btn-gt-outline btn-gt-sm" href="/partner/orders">Theo tour</a>
+            <a class="btn btn-gt-primary btn-gt-sm" href="/partner/orders/history">Lịch sử mua hàng</a>
+        </div>
+
+        <form method="GET" action="/partner/orders/history" class="card-gt card-gt-static p-3 mb-4">
+            <div class="departure-filters">
+                <div class="filter-field">
+                    <label class="form-label fs-xs fw-bold">Khách hoặc tour</label>
+                    <input class="form-control" type="search" name="search" value="<%= filters.search %>" placeholder="Tên, email, số điện thoại hoặc tên tour">
+                </div>
+                <div class="filter-field">
+                    <label class="form-label fs-xs fw-bold">Trạng thái</label>
+                    <select class="form-select" name="status">
+                        <option value="">Tất cả</option>
+                        <option value="paid" <%= filters.status === 'paid' ? 'selected' : '' %>>Đã thanh toán</option>
+                        <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>Chờ xử lý</option>
+                        <option value="processing" <%= filters.status === 'processing' ? 'selected' : '' %>>Đang tiến hành</option>
+                        <option value="canceled" <%= filters.status === 'canceled' ? 'selected' : '' %>>Đã hủy</option>
+                    </select>
+                </div>
+                <div class="filter-field filter-field-sort">
+                    <label class="form-label fs-xs fw-bold">Sắp xếp</label>
+                    <select class="form-select" name="sort">
+                        <option value="created_desc" <%= filters.sort === 'created_desc' ? 'selected' : '' %>>Mới đặt nhất</option>
+                        <option value="created_asc" <%= filters.sort === 'created_asc' ? 'selected' : '' %>>Đặt lâu nhất</option>
+                        <option value="value_desc" <%= filters.sort === 'value_desc' ? 'selected' : '' %>>Giá trị giảm dần</option>
+                        <option value="value_asc" <%= filters.sort === 'value_asc' ? 'selected' : '' %>>Giá trị tăng dần</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-gt-primary btn-gt-sm" type="submit" title="Áp dụng"><i class="fas fa-filter"></i></button>
+                    <a class="btn btn-gt-outline btn-gt-sm" href="/partner/orders/history" title="Xóa lọc"><i class="fas fa-rotate-left"></i></a>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
+                        <tr>
+                            <th>Khách hàng</th>
+                            <th>Tour</th>
+                            <th>Khởi hành</th>
+                            <th>Ngày đặt</th>
+                            <th>Số khách</th>
+                            <th>Giảm giá</th>
+                            <th>Đã trả</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!purchases.length) { %>
+                            <tr><td colspan="8" class="text-center text-muted py-5">Chưa có lịch sử mua hàng.</td></tr>
+                        <% } %>
+                        <% purchases.forEach(purchase => { %>
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-main fs-sm"><%= purchase.customer %></div>
+                                    <div class="text-muted fs-xs"><%= purchase.email %></div>
+                                    <div class="text-muted fs-xs"><%= purchase.phone %></div>
+                                </td>
+                                <td class="fs-sm"><%= purchase.tour %></td>
+                                <td class="fs-xs text-nowrap"><%= purchase.departureText %></td>
+                                <td class="fs-xs text-nowrap"><%= purchase.createdText %></td>
+                                <td class="fs-xs"><%= purchase.guests %></td>
+                                <td class="fs-xs"><%= purchase.discountText %></td>
+                                <td class="fw-bold text-primary text-nowrap"><%= purchase.totalText %></td>
+                                <td><span class="badge-gt <%= purchase.statusBadge %>"><%= purchase.statusText %></span></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <% if (total > 0) { %>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
+                <span class="text-muted fs-xs"><%= (currentPage - 1) * pageSize + 1 %>–<%= Math.min(currentPage * pageSize, total) %> của <%= total %> đơn</span>
+                <% if (totalPages > 1) { %>
+                    <div class="d-flex gap-2">
+                        <% const startPage = Math.max(1, currentPage - 2); const endPage = Math.min(totalPages, currentPage + 2); %>
+                        <% const query = [filters.search ? 'search=' + encodeURIComponent(filters.search) : '', filters.status ? 'status=' + filters.status : '', filters.sort && filters.sort !== 'created_desc' ? 'sort=' + filters.sort : ''].filter(Boolean).join('&'); %>
+                        <% if (currentPage > 1) { %>
+                            <a class="btn btn-gt-outline btn-gt-sm" href="?<%= query ? query + '&' : '' %>page=<%= currentPage - 1 %>">Trước</a>
+                        <% } %>
+                        <% for (let page = startPage; page <= endPage; page++) { %>
+                            <a class="btn <%= page === currentPage ? 'btn-gt-primary' : 'btn-gt-outline' %> btn-gt-sm" href="?<%= query ? query + '&' : '' %>page=<%= page %>"><%= page %></a>
+                        <% } %>
+                        <% if (currentPage < totalPages) { %>
+                            <a class="btn btn-gt-outline btn-gt-sm" href="?<%= query ? query + '&' : '' %>page=<%= currentPage + 1 %>">Sau</a>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>
