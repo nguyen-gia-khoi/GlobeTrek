@@ -1,14 +1,14 @@
 const helmet = require('helmet');
 
-const isProduction = process.env.NODE_ENV === 'production';
+const useHttps = process.env.COOKIE_SECURE === 'true';
 
 const securityHeaders = helmet({
   crossOriginEmbedderPolicy: false,
-  strictTransportSecurity: isProduction,
+  strictTransportSecurity: useHttps,
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   contentSecurityPolicy: {
     directives: {
-      upgradeInsecureRequests: isProduction ? [] : null,
+      upgradeInsecureRequests: useHttps ? [] : null,
       defaultSrc: ["'self'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
@@ -17,7 +17,7 @@ const securityHeaders = helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com', 'https://cdn.sheetjs.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com', 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com', 'data:'],
-      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:', process.env.MINIO_PUBLIC_URL].filter(Boolean),
       connectSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://cdn.sheetjs.com'],
     },
   },

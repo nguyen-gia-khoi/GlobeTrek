@@ -6,7 +6,7 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const csrfCookieOptions = () => ({
   httpOnly: false,
   sameSite: 'strict',
-  secure: process.env.NODE_ENV === 'production',
+  secure: process.env.COOKIE_SECURE === 'true',
   path: '/',
   maxAge: 8 * 60 * 60 * 1000,
 });

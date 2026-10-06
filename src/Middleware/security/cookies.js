@@ -1,7 +1,7 @@
 const cookieBase = (maxAge) => ({
   httpOnly: true,
   sameSite: 'strict',
-  secure: process.env.NODE_ENV === 'production',
+  secure: process.env.COOKIE_SECURE === 'true',
   path: '/',
   ...(maxAge ? { maxAge } : {}),
 });
