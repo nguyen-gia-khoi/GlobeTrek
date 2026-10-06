@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 1. GlobeTrek Node.js Application
   app:
     build:
       context: .
@@ -9,99 +8,109 @@ services:
     container_name: globetrek_app
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      - "${APP_PORT:-8081}:8081"
     environment:
-      - PORT=8081
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://mongodb:27017/GlobeTrek
-      - REDIS_URL=redis://redis:6379
-      - MINIO_ENDPOINT=minio
-      - MINIO_PORT=9000
-      - MINIO_USE_SSL=false
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-      - MINIO_BUCKET_NAME=globetrek-media
-      - MINIO_PUBLIC_URL=http://localhost:9000
-      - USE_CLOUDINARY=false
+      PORT: 8081
+      NODE_ENV: ${NODE_ENV:-production}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      MONGODB_URI: mongodb://mongodb:27017/GlobeTrek
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-globetrek-media}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      USE_CLOUDINARY: "false"
     env_file:
       - .env
     depends_on:
-      - mongodb
-      - redis
-      - minio
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
       - globetrek_network
 
-  # 2. MongoDB Database
   mongodb:
     image: mongo:6.0
     container_name: globetrek_mongodb
     restart: unless-stopped
-    ports:
-      - "27017:27017"
     volumes:
       - ./data/mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     networks:
       - globetrek_network
 
-  # 3. Redis Cache & Session
   redis:
     image: redis:alpine
     container_name: globetrek_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - ./data/redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     networks:
       - globetrek_network
 
-  # 4. MinIO Object Storage (S3-compatible)
   minio:
     image: minio/minio:latest
     container_name: globetrek_minio
     restart: unless-stopped
     ports:
-      - "9000:9000" # S3 API Port
-      - "9001:9001" # Web Management Console Port
+      - "9000:9000"
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     volumes:
       - ./data/minio_data:/data
     command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     networks:
       - globetrek_network
 
-  # 5. MinIO Auto-Initialization (Bucket Creation & Public Access Policy)
   minio-init:
     image: minio/mc:latest
     container_name: globetrek_minio_init
+    restart: on-failure
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-    entrypoint: >
-      /bin/sh -c "
-      echo 'Waiting for MinIO server to start...';
-      sleep 3;
-      mc alias set local http://minio:9000 \"$${MINIO_ACCESS_KEY}\" \"$${MINIO_SECRET_KEY}\";
-      echo 'Creating bucket globetrek-media if not exists...';
-      mc mb --ignore-existing local/globetrek-media;
-      echo 'Setting public download policy on bucket...';
-      mc anonymous set download local/globetrek-media;
-      echo 'MinIO initialization complete!';
-      exit 0;
-      "
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-globetrek-media}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        until mc alias set local http://minio:9000 "$$MINIO_ACCESS_KEY" "$$MINIO_SECRET_KEY"; do
+          echo "Waiting for MinIO login..."
+          sleep 2
+        done
+        mc mb --ignore-existing "local/$$MINIO_BUCKET_NAME"
+        mc anonymous set download "local/$$MINIO_BUCKET_NAME"
+        echo "MinIO bucket is ready"
     networks:
       - globetrek_network
 
 networks:
   globetrek_network:
     driver: bridge
-
-volumes:
-  mongo_data:
-  redis_data:
-  minio_data:
