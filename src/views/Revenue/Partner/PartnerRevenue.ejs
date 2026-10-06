@@ -1,822 +1,251 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doanh Thu Các Tour</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Báo Cáo Doanh Thu Đối Tác - GlobeTrek</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
+    
+    <!-- Chart.js & SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Thêm thư viện SheetJS -->
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
-    <style>
-        :root {
-            /* Màu sắc chính */
-            --primary-color: #10b981;
-            --primary-dark: #059669;
-            --primary-light: #34d399;
-            --secondary-color: #06b6d4;
-            --accent-color: #a7f3d0;
-            
-            /* Màu nền và text */
-            --background-color: #f0fdfa;
-            --card-background: #ffffff;
-            --text-primary: #064e3b;
-            --text-secondary: #065f46;
-            
-            /* Hiệu ứng */
-            --border-radius: 24px;
-            --border-radius-lg: 30px;
-            --shadow-sm: 0 4px 6px rgba(16, 185, 129, 0.05);
-            --shadow-md: 0 8px 20px rgba(16, 185, 129, 0.1);
-            --shadow-lg: 0 20px 40px rgba(16, 185, 129, 0.15);
-            --glass-bg: rgba(255, 255, 255, 0.95);
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            
-            /* Gradient */
-            --gradient-primary: linear-gradient(135deg, #10b981, #06b6d4);
-            --gradient-hover: linear-gradient(135deg, #059669, #0891b2);
-        }
-
-        body {
-            background-color: var(--background-color);
-            font-family: 'Inter', sans-serif;
-            color: var(--text-primary);
-            line-height: 1.7;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Hiệu ứng nền động */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 30%),
-                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.1) 0%, transparent 30%),
-                radial-gradient(circle at 50% 50%, rgba(167, 243, 208, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 30%);
-            pointer-events: none;
-            z-index: -1;
-            animation: gradientAnimation 15s ease infinite;
-        }
-
-        @keyframes gradientAnimation {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .card {
-            background: var(--glass-bg);
-            border: 1px solid rgba(16, 185, 129, 0.1);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            transition: var(--transition);
-            backdrop-filter: blur(10px);
-            margin-bottom: 2.5rem;
-            overflow: hidden;
-        }
-
-        .card:hover {
-            transform: translateY(-5px) scale(1.005);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .dashboard-header {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 4rem 0 6rem;
-            margin-bottom: -3rem;
-            border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dashboard-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
-            background-size: 60px 60px;
-            animation: headerPattern 60s linear infinite;
-            opacity: 0.6;
-        }
-
-        .dashboard-header h1 {
-            font-weight: 800;
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            position: relative;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            background: linear-gradient(to right, #ffffff, #e0ffff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .dashboard-header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        .stats-card {
-            background: var(--glass-bg);
-            border-radius: var(--border-radius);
-            padding: 2.5rem;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            backdrop-filter: blur(10px);
-            transform: translateY(-30px);
-        }
-
-        .stats-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-primary);
-            opacity: 0;
-            transition: var(--transition);
-        }
-
-        .stats-card:hover::before {
-            opacity: 1;
-        }
-
-        .stats-card h3 {
-            color: var(--text-secondary);
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .stats-card h3 i {
-            font-size: 1.6rem;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stats-value {
-            font-size: 2.8rem;
-            font-weight: 800;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
-            line-height: 1.2;
-        }
-
-        .stats-card small {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            opacity: 0.8;
-        }
-
-        .button-group {
-            background: var(--glass-bg);
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-sm);
-            margin: 2rem 0 3rem;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(16, 185, 129, 0.1);
-            transform: translateY(-20px);
-        }
-
-        .button-group .btn {
-            padding: 1rem 2.5rem;
-            margin: 0.4rem;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: var(--transition);
-            border: 2px solid transparent;
-            letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .button-group .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--gradient-primary);
-            opacity: 0;
-            transition: var(--transition);
-            z-index: -1;
-        }
-
-        .button-group .btn-outline-primary {
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .button-group .btn.active {
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        .button-group .btn:hover::before {
-            opacity: 1;
-        }
-
-        .button-group .btn:hover {
-            color: white;
-            border-color: transparent;
-            transform: translateY(-2px);
-        }
-
-        .charts-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .chart-card {
-            background: var(--glass-bg);
-            border-radius: var(--border-radius);
-            padding: 2.5rem;
-            box-shadow: var(--shadow-md);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(16, 185, 129, 0.1);
-            height: 100%;
-        }
-
-        .chart-card h5 {
-            color: var(--text-primary);
-            font-weight: 700;
-            font-size: 1.4rem;
-            margin-bottom: 2.5rem;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-        }
-
-        .chart-card h5 i {
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 450px;
-            width: 100%;
-        }
-
-        .table-responsive {
-            border-radius: var(--border-radius);
-            overflow: hidden;
-        }
-
-        .table {
-            margin-bottom: 0;
-        }
-
-        .table th {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--text-secondary);
-            font-weight: 600;
-            border: none;
-            padding: 1.5rem;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-        }
-
-        .table td {
-            padding: 1.5rem;
-            vertical-align: middle;
-            color: var(--text-primary);
-            border-color: rgba(16, 185, 129, 0.1);
-            font-size: 1.1rem;
-        }
-
-        .table-hover tbody tr {
-            transition: var(--transition);
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: rgba(16, 185, 129, 0.05);
-            transform: scale(1.01);
-        }
-
-        .card-header {
-            background: var(--gradient-primary);
-            color: white;
-            border-bottom: none;
-            padding: 2rem;
-            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
-        }
-
-        .card-header h5 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .badge-info {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 50px;
-            font-weight: 500;
-            font-size: 1rem;
-            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
-        }
-
-        .btn-export, .btn-light {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            font-size: 1rem;
-            backdrop-filter: blur(5px);
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-export:hover, .btn-light:hover {
-            background: rgba(255,255,255,0.3);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(16, 185, 129, 0.1);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--gradient-primary);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--gradient-hover);
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-header {
-                padding: 3rem 0 5rem;
-            }
-
-            .dashboard-header h1 {
-                font-size: 2.2rem;
-            }
-
-            .stats-value {
-                font-size: 2rem;
-            }
-
-            .charts-row {
-                grid-template-columns: 1fr;
-            }
-
-            .button-group .btn {
-                padding: 0.8rem 1.5rem;
-                font-size: 0.9rem;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .btn-export, .btn-light {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .table td, .table th {
-                padding: 1rem;
-                font-size: 0.9rem;
-            }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .slide-up {
-            animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { 
-                transform: translateY(50px); 
-                opacity: 0; 
-            }
-            to { 
-                transform: translateY(0); 
-                opacity: 1; 
-            }
-        }
-
-        /* Thêm hiệu ứng loading */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--background-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(16, 185, 129, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
 </head>
-
 <body>
-    <!-- Loading Overlay -->
-    <div class="loading-overlay">
-        <div class="loading-spinner"></div>
-    </div>
+    <%- include('../../DashboardPN', { pageTitle: 'Doanh Thu' }) %>
 
-    <%- include('../../DashboardPN', { pageTitle: '' }) %>
-
-    <div class="container mt-5">
-        <!-- Dashboard Header -->
-        <div class="dashboard-header text-center slide-up">
-            <h1 class="mb-3">Thống Kê Doanh Thu</h1>
-            <p class="lead mb-0">Xin chào, <strong><%= partnerName || 'Đối tác' %></strong></p>
+    <div class="main-content-layout">
+        <!-- Page Header -->
+        <div class="hero-header-gt d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="hero-badge-pill">
+                    <i class="fas fa-coins text-warning me-1"></i> Báo Cáo Tài Chính
+                </span>
+                <h1 class="text-white mb-2">Báo Cáo Doanh Thu Tour</h1>
+                <p class="mb-0">Theo dõi doanh số bán vé, lượng khách đặt và tỷ lệ tăng trưởng theo từng hành trình.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light rounded-pill px-3 py-2 fw-bold text-primary shadow-sm" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel text-success me-1"></i> Xuất Báo Cáo Excel
+                </button>
+            </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="row mb-4 fade-in">
-            <div class="col-md-6 mb-4 mb-md-0">
-                <div class="stats-card">
-                    <h3><i class="fas fa-chart-line mr-2"></i>Tổng Doanh Thu</h3>
-                    <div class="stats-value">
-                        <%= totalRevenue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
-                    </div>
-                    <small class="text-muted">Tổng doanh thu từ tất cả các tour</small>
-                </div>
-            </div>
+        <!-- KPI Revenue Summary -->
+        <div class="row g-4 mb-4">
             <div class="col-md-6">
-                <div class="stats-card">
-                    <h3><i class="fas fa-wallet mr-2"></i>Doanh Thu Thực Tế</h3>
-                    <div class="stats-value">
-                        <%= totalActualRevenue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-icon-primary">
+                        <i class="fas fa-wallet"></i>
                     </div>
-                    <small class="text-muted">Doanh thu sau khi trừ các chi phí</small>
+                    <div>
+                        <div class="kpi-title">Tổng Doanh Thu Đến Nay</div>
+                        <div class="kpi-value text-primary font-display">
+                            <%= (typeof totalRevenue !== 'undefined' && totalRevenue ? totalRevenue : 0).toLocaleString('vi-VN') %> VNĐ
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-clock"></i> Tính đến ngày <%= new Date().toLocaleDateString('vi-VN') %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-icon-cyan">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-title">Tổng Số Tour Giao Dịch</div>
+                        <div class="kpi-value">
+                            <%= (typeof revenueData !== 'undefined' && revenueData ? revenueData.length : 0) %> Tour
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-circle-check"></i> Đang hoạt động
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Time Period Buttons -->
-        <div class="button-group text-center fade-in">
-            <button class="btn btn-outline-primary active" data-period="daily" onclick="updateChart('daily')">
-                <i class="far fa-clock mr-1"></i>Ngày
-            </button>
-            <button class="btn btn-outline-primary" data-period="weekly" onclick="updateChart('weekly')">
-                <i class="far fa-calendar mr-1"></i>Tuần
-            </button>
-            <button class="btn btn-outline-primary" data-period="monthly" onclick="updateChart('monthly')">
-                <i class="far fa-calendar-alt mr-1"></i>Tháng
-            </button>
-            <button class="btn btn-outline-primary" data-period="yearly" onclick="updateChart('yearly')">
-                <i class="fas fa-calendar-check mr-1"></i>Năm
-            </button>
-        </div>
+        <!-- Charts & Table -->
+        <div class="row g-4">
+            <!-- Table of Tours Revenue -->
+            <div class="col-lg-7">
+                <div class="card-gt p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <h4 class="fw-bold text-main mb-0 fs-5">Doanh Thu Theo Từng Tour</h4>
+                        <span class="badge-gt badge-gt-info">
+                            <%= typeof partnerName !== 'undefined' && partnerName ? partnerName : 'Đối tác' %>
+                        </span>
+                    </div>
 
-        <!-- Charts Row -->
-        <div class="charts-row fade-in">
-            <div class="chart-card">
-                <h5><i class="fas fa-chart-bar mr-2"></i>Biểu Đồ Doanh Thu Theo Tour</h5>
-                <div class="chart-container">
-                    <canvas id="revenueChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card">
-                <h5><i class="fas fa-chart-pie mr-2"></i>Phân Bố Doanh Thu</h5>
-                <div class="chart-container">
-                    <canvas id="revenuePieChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Revenue Table -->
-        <div class="card fade-in">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-table mr-2"></i>Chi Tiết Doanh Thu Theo Tour</h5>
-                <div class="action-buttons">
-                    <button class="btn btn-export" onclick="exportToExcel()">
-                        <i class="fas fa-file-excel"></i>
-                        Xuất Excel
-                    </button>
-                    <button class="btn btn-light btn-sm" onclick="location.reload()">
-                        <i class="fas fa-sync-alt refresh-icon"></i>Làm mới
-                    </button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover" id="revenueTable">
-                        <thead>
-                            <tr>
-                                <th>Tên Tour</th>
-                                <th>Số Đơn Hàng</th>
-                                <th>Doanh Thu</th>
-                                <th>Doanh Thu Thực Tế</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (revenueData && revenueData.length > 0) { %>
-                                <% revenueData.forEach(data => { %>
-                                    <tr class="fade-in">
-                                        <td><strong><%= data.tourName %></strong></td>
-                                        <td><span class="badge badge-info"><%= data.ordersCount %></span></td>
-                                        <td class="text-success"><%= data.revenue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></td>
-                                        <td class="text-primary"><%= data.actualRevenue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></td>
+                    <div class="table-gt-container border-0 shadow-none">
+                        <div class="table-responsive">
+                            <table class="table-gt" id="revenueTable">
+                                <thead>
+                                    <tr>
+                                        <th>Tên Tour</th>
+                                        <th class="text-center">Số Đơn</th>
+                                        <th class="text-end">Doanh Thu (VNĐ)</th>
                                     </tr>
-                                <% }) %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">
-                                        <i class="fas fa-info-circle mr-2"></i>Không có dữ liệu để hiển thị
-                                    </td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody id="revenueTableBody">
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4 text-muted">Đang tải dữ liệu doanh thu...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="revenuePagination" class="d-none flex-wrap align-items-center justify-content-between gap-2 mt-3">
+                        <span class="text-muted fs-xs" id="revenuePageInfo"></span>
+                        <div class="d-flex flex-wrap gap-2" id="revenuePageButtons"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Distribution Chart -->
+            <div class="col-lg-5">
+                <div class="card-gt p-4 h-100 d-flex flex-column">
+                    <h4 class="fw-bold text-main mb-3 fs-5">Tỷ Trọng Doanh Thu</h4>
+                    <div class="d-flex align-items-center justify-content-center flex-grow-1" style="min-height: 280px;">
+                        <p id="revenueChartEmpty" class="text-muted text-center mb-0 d-none">Chưa có tour nào phát sinh doanh thu.</p>
+                        <canvas id="partnerRevenuePieChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Dữ liệu từ server
-        const revenueData = {
-            daily: <%- JSON.stringify(dailyRevenue) %>,
-            weekly: <%- JSON.stringify(weeklyRevenue) %>,
-            monthly: <%- JSON.stringify(monthlyRevenue) %>,
-            yearly: <%- JSON.stringify(yearlyRevenue) %>
-        };
+        const revenueData = <%- (typeof revenueData !== 'undefined' && revenueData) ? JSON.stringify(revenueData) : '[]' %>;
+        const REVENUE_PAGE_SIZE = 5;
+        let revenuePage = 1;
 
-        // Tạo màu ngẫu nhiên cho các tour
-        function generateColors(count) {
-            const colors = [];
-            for (let i = 0; i < count; i++) {
-                const hue = (i * 137.5) % 360;
-                colors.push(`hsla(${hue}, 70%, 50%, 0.7)`);
+        revenueData.sort((a, b) => (Number(b.revenue) || 0) - (Number(a.revenue) || 0));
+
+        function renderRevenueTable() {
+            const tbody = document.getElementById('revenueTableBody');
+            const pagination = document.getElementById('revenuePagination');
+            const pageInfo = document.getElementById('revenuePageInfo');
+            const pageButtons = document.getElementById('revenuePageButtons');
+            const total = revenueData.length;
+
+            if (!total) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">Chưa có dữ liệu doanh thu cho các tour.</td></tr>';
+                pagination.classList.add('d-none');
+                pagination.classList.remove('d-flex');
+                return;
             }
-            return colors;
+
+            const totalPages = Math.ceil(total / REVENUE_PAGE_SIZE);
+            if (revenuePage > totalPages) revenuePage = totalPages;
+            if (revenuePage < 1) revenuePage = 1;
+
+            const start = (revenuePage - 1) * REVENUE_PAGE_SIZE;
+            const pageItems = revenueData.slice(start, start + REVENUE_PAGE_SIZE);
+
+            tbody.innerHTML = pageItems.map((data) => `
+                <tr>
+                    <td><div class="fw-bold text-main fs-sm">${escapeHtml(data.tourName || '')}</div></td>
+                    <td class="text-center"><span class="badge-gt badge-gt-neutral">${Number(data.ordersCount) || 0} đơn</span></td>
+                    <td class="text-end"><strong class="text-primary font-display">${(Number(data.revenue) || 0).toLocaleString('vi-VN')} VNĐ</strong></td>
+                </tr>
+            `).join('');
+
+            const from = start + 1;
+            const to = start + pageItems.length;
+            pageInfo.textContent = `${from}–${to} của ${total} tour`;
+            pagination.classList.remove('d-none');
+            pagination.classList.add('d-flex');
+
+            const buttons = [];
+            buttons.push(`<button type="button" class="btn btn-gt-outline btn-gt-sm" data-page="${revenuePage - 1}" ${revenuePage === 1 ? 'disabled' : ''}>Trước</button>`);
+            for (let page = 1; page <= totalPages; page += 1) {
+                const active = page === revenuePage ? 'btn-gt-primary' : 'btn-gt-outline';
+                buttons.push(`<button type="button" class="btn ${active} btn-gt-sm" data-page="${page}">${page}</button>`);
+            }
+            buttons.push(`<button type="button" class="btn btn-gt-outline btn-gt-sm" data-page="${revenuePage + 1}" ${revenuePage === totalPages ? 'disabled' : ''}>Sau</button>`);
+            pageButtons.innerHTML = buttons.join('');
         }
 
-        // Xử lý dữ liệu cho biểu đồ
-        function processChartData(data) {
-            const tourData = {};
-            data.forEach(([tourId, info]) => {
-                if (!tourData[tourId]) {
-                    tourData[tourId] = info.totalRevenue || 0;
-                }
-            });
-            return tourData;
-        }
+        function renderRevenueChart() {
+            const canvas = document.getElementById('partnerRevenuePieChart');
+            const empty = document.getElementById('revenueChartEmpty');
+            const withRevenue = revenueData.filter((item) => Number(item.revenue) > 0);
 
-        // Khởi tạo biểu đồ
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        const pieCtx = document.getElementById('revenuePieChart').getContext('2d');
-        let revenueChart;
-        let revenuePieChart;
-
-        // Cập nhật biểu đồ
-        function updateChart(period) {
-            const buttons = document.querySelectorAll('.button-group .btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-period="${period}"]`).classList.add('active');
-
-            const periodData = revenueData[period];
-            const tourData = processChartData(periodData);
-            const tourNames = <% if (revenueData && revenueData.length > 0) { %>
-                <%- JSON.stringify(revenueData.map(data => data.tourName)) %>
-            <% } else { %>
-                []
-            <% } %>;
-
-            const colors = generateColors(tourNames.length);
-            const values = tourNames.map((_, index) => Object.values(tourData)[index] || 0);
-
-            // Destroy existing charts if they exist
-            if (revenueChart) {
-                revenueChart.destroy();
-            }
-            if (revenuePieChart) {
-                revenuePieChart.destroy();
+            if (!withRevenue.length) {
+                canvas.classList.add('d-none');
+                empty.classList.remove('d-none');
+                return;
             }
 
-            // Create bar chart
-            revenueChart = new Chart(ctx, {
-                type: 'bar',
+            canvas.classList.remove('d-none');
+            empty.classList.add('d-none');
+
+            const palette = ['#10b981', '#06b6d4', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
+            new Chart(canvas.getContext('2d'), {
+                type: 'doughnut',
                 data: {
-                    labels: tourNames,
+                    labels: withRevenue.map((item) => item.tourName),
                     datasets: [{
-                        label: 'Doanh Thu',
-                        data: values,
-                        backgroundColor: colors,
-                        borderColor: colors.map(color => color.replace('0.7', '1')),
-                        borderWidth: 1
+                        data: withRevenue.map((item) => Number(item.revenue) || 0),
+                        backgroundColor: withRevenue.map((_, index) => palette[index % palette.length]),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: value => {
-                                    if (value >= 1000000) {
-                                        return (value / 1000000).toFixed(1) + 'M VND';
-                                    }
-                                    return value.toLocaleString('vi-VN') + ' VND';
-                                }
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans', size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.label}: ${Number(ctx.raw || 0).toLocaleString('vi-VN')} VNĐ`
                             }
                         }
                     },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: context => {
-                                    const value = context.raw;
-                                    return `Doanh Thu: ${value.toLocaleString('vi-VN')} VND`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Create pie chart
-            revenuePieChart = new Chart(pieCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: tourNames,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: colors,
-                        borderColor: colors.map(color => color.replace('0.7', '1')),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '60%',
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 20,
-                                padding: 15,
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: context => {
-                                    const value = context.raw;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${context.label}: ${percentage}% (${value.toLocaleString('vi-VN')} VND)`;
-                                }
-                            }
-                        }
-                    }
+                    cutout: '65%'
                 }
             });
         }
 
-        // Hàm xuất Excel
-        function exportToExcel() {
-            const table = document.getElementById('revenueTable');
-            const rows = Array.from(table.querySelectorAll('tr'));
-            
-            // Chuẩn bị dữ liệu cho Excel
-            const data = rows.map(row => {
-                const cells = Array.from(row.querySelectorAll('th, td'));
-                return cells.map(cell => {
-                    // Lấy text content, loại bỏ các ký tự đặc biệt và khoảng trắng thừa
-                    let text = cell.textContent.trim();
-                    // Nếu là số tiền, chuyển về dạng số
-                    if (text.includes('₫')) {
-                        text = text.replace(/[₫,]/g, '').trim();
-                    }
-                    return text;
-                });
-            });
-
-            // Tạo workbook và worksheet
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            
-            // Điều chỉnh độ rộng cột
-            const columnWidths = data[0].map((_, i) => ({
-                wch: Math.max(...data.map(row => row[i] ? row[i].toString().length : 0))
-            }));
-            ws['!cols'] = columnWidths;
-
-            // Thêm worksheet vào workbook
-            XLSX.utils.book_append_sheet(wb, ws, "Doanh Thu Tour");
-
-            // Tạo tên file với timestamp
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `Doanh_Thu_Tour_${timestamp}.xlsx`;
-
-            // Xuất file
-            XLSX.writeFile(wb, fileName);
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
         }
 
-        // Khởi tạo với daily mặc định
-        updateChart('daily');
+        document.addEventListener('DOMContentLoaded', function () {
+            renderRevenueTable();
+            renderRevenueChart();
 
-        // Thêm code xử lý loading
-        window.addEventListener('load', function() {
-            const loadingOverlay = document.querySelector('.loading-overlay');
-            loadingOverlay.style.opacity = '0';
-            setTimeout(() => {
-                loadingOverlay.style.display = 'none';
-            }, 500);
+            document.getElementById('revenuePageButtons').addEventListener('click', function (event) {
+                const button = event.target.closest('button[data-page]');
+                if (!button || button.disabled) return;
+                revenuePage = Number(button.dataset.page);
+                renderRevenueTable();
+            });
         });
+
+        function exportToExcel() {
+            const rows = revenueData.map((data) => ({
+                'Tên Tour': data.tourName || '',
+                'Số Đơn': Number(data.ordersCount) || 0,
+                'Doanh Thu (VNĐ)': Number(data.revenue) || 0,
+            }));
+            const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 'Tên Tour': '', 'Số Đơn': 0, 'Doanh Thu (VNĐ)': 0 }]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, sheet, 'DoanhThu');
+            XLSX.writeFile(workbook, 'GlobeTrek_DoanhThu_Partner.xlsx');
+        }
     </script>
 </body>
-
 </html>

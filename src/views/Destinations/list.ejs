@@ -1,46 +1,772 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>Destination List</title>
+    <title>Quản Lý Điểm Đến - GlobeTrek Admin</title>
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
-    <%- include('../header', { pageTitle: '' }) %>
+    <%- include('../header', { pageTitle: 'Destination List' }) %>
     
-    <div class="page-header">
-        <div class="container">
-            <h1 class="display-4">Destination List</h1>
+    <div class="main-content-layout">
+        <!-- Page Header with Action Button -->
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="text-primary fs-sm fw-bold">Điểm Đến</span>
+                    <span class="text-muted fs-xs">/</span>
+                    <a href="/admin/countries" class="text-muted fs-sm fw-semibold text-decoration-none">
+                        <i class="fas fa-globe me-1"></i> Quốc Gia
+                    </a>
+                    <span class="text-muted fs-xs">/</span>
+                    <a href="/admin/regions" class="text-muted fs-sm fw-semibold text-decoration-none">
+                        <i class="fas fa-map-location-dot me-1"></i> Vùng Miền
+                    </a>
+                </div>
+                <h2 class="fw-bold text-main mb-1">Quản Lý Điểm Đến Du Lịch</h2>
+                <p class="text-muted fs-sm mb-0">Danh sách các địa danh du lịch, quốc gia, vùng miền và thời gian khởi tạo trên GlobeTrek</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/admin/countries" class="btn btn-gt-outline btn-gt-sm">
+                    <i class="fas fa-globe me-1"></i> Quốc Gia
+                </a>
+                <a href="/admin/regions" class="btn btn-gt-outline btn-gt-sm">
+                    <i class="fas fa-map-location-dot me-1"></i> Vùng Miền
+                </a>
+                <button type="button" class="btn btn-gt-primary btn-gt-sm" data-bs-toggle="modal" data-bs-target="#addDestinationModal">
+                    <i class="fas fa-plus-circle me-1"></i> Thêm Điểm Đến
+                </button>
+            </div>
+        </div>
+
+        <!-- Full Width Destinations Table Card -->
+        <%
+          const currentSort = (typeof filters !== 'undefined' && filters.sortBy) ? filters.sortBy : 'createdAt';
+          const currentOrder = (typeof filters !== 'undefined' && filters.order) ? filters.order : 'desc';
+          const currentSearch = (typeof filters !== 'undefined' && filters.search) ? filters.search : '';
+          const currentCountry = (typeof filters !== 'undefined' && filters.country) ? filters.country : '';
+          const currentRegion = (typeof filters !== 'undefined' && filters.region) ? filters.region : '';
+
+          function getSortUrl(field) {
+            let nextOrder = 'desc';
+            if (currentSort === field) {
+              nextOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+            }
+            const params = new URLSearchParams();
+            if (currentSearch) params.set('search', currentSearch);
+            if (currentCountry) params.set('country', currentCountry);
+            if (currentRegion) params.set('region', currentRegion);
+            params.set('sortBy', field);
+            params.set('order', nextOrder);
+            return '?' + params.toString();
+          }
+
+          function getSortIcon(field) {
+            if (currentSort !== field) return '<i class="fas fa-sort text-muted ms-1 fs-xs"></i>';
+            return currentOrder === 'asc' 
+              ? '<i class="fas fa-sort-up text-primary ms-1"></i>' 
+              : '<i class="fas fa-sort-down text-primary ms-1"></i>';
+          }
+        %>
+        <div class="card-gt p-4">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <h4 class="fw-bold text-main mb-0 fs-5">Danh Sách Điểm Đến</h4>
+                    <span class="badge-gt badge-gt-info">
+                        <i class="fas fa-location-dot"></i> <%= typeof totalItems !== 'undefined' ? totalItems : (destinations ? destinations.length : 0) %> Điểm đến
+                    </span>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Quick Sort Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-gt-outline btn-gt-sm dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-arrow-down-short-wide text-primary me-1"></i>
+                            <span>
+                                <% if (currentSort === 'tours' && currentOrder === 'desc') { %>Nhiều tour nhất
+                                <% } else if (currentSort === 'tours' && currentOrder === 'asc') { %>Ít tour nhất
+                                <% } else if (currentSort === 'createdAt' && currentOrder === 'asc') { %>Cũ nhất
+                                <% } else if (currentSort === 'name' && currentOrder === 'asc') { %>Tên (A-Z)
+                                <% } else if (currentSort === 'name' && currentOrder === 'desc') { %>Tên (Z-A)
+                                <% } else { %>Mới nhất<% } %>
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                            <li><a class="dropdown-item fs-sm py-2 <%= (currentSort === 'createdAt' && currentOrder === 'desc') ? 'active fw-bold' : '' %>" href="?sortBy=createdAt&order=desc<%= currentSearch ? '&search=' + currentSearch : '' %><%= currentCountry ? '&country=' + currentCountry : '' %>"><i class="far fa-clock me-2"></i>Mới nhất (Mặc định)</a></li>
+                            <li><a class="dropdown-item fs-sm py-2 <%= (currentSort === 'createdAt' && currentOrder === 'asc') ? 'active fw-bold' : '' %>" href="?sortBy=createdAt&order=asc<%= currentSearch ? '&search=' + currentSearch : '' %><%= currentCountry ? '&country=' + currentCountry : '' %>"><i class="fas fa-history me-2"></i>Cũ nhất</a></li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li><a class="dropdown-item fs-sm py-2 <%= (currentSort === 'tours' && currentOrder === 'desc') ? 'active fw-bold' : '' %>" href="?sortBy=tours&order=desc<%= currentSearch ? '&search=' + currentSearch : '' %><%= currentCountry ? '&country=' + currentCountry : '' %>"><i class="fas fa-arrow-down-wide-short me-2"></i>Số tour: Nhiều nhất</a></li>
+                            <li><a class="dropdown-item fs-sm py-2 <%= (currentSort === 'tours' && currentOrder === 'asc') ? 'active fw-bold' : '' %>" href="?sortBy=tours&order=asc<%= currentSearch ? '&search=' + currentSearch : '' %><%= currentCountry ? '&country=' + currentCountry : '' %>"><i class="fas fa-arrow-up-wide-short me-2"></i>Số tour: Ít nhất</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Filter by Country Form & Search -->
+                    <form action="/admin/destinations" method="GET" class="m-0 d-flex align-items-center gap-2">
+                        <input type="hidden" name="sortBy" value="<%= currentSort %>">
+                        <input type="hidden" name="order" value="<%= currentOrder %>">
+                        
+                        <select name="country" class="form-control-gt py-1 fs-sm" onchange="this.form.submit()" style="min-width: 150px;">
+                            <option value="">Tất cả quốc gia</option>
+                            <% if (typeof countries !== 'undefined' && countries) { %>
+                                <% countries.forEach(c => { %>
+                                    <option value="<%= c._id %>" <%= currentCountry == c._id.toString() ? 'selected' : '' %>>
+                                        <%= c.name %>
+                                    </option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+
+                        <div class="search-input-group" style="width: 220px;">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="destSearchInput" name="search" class="form-control-gt py-1 fs-sm" placeholder="Tìm kiếm điểm đến..." value="<%= currentSearch %>">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-gt-container border-0 shadow-none">
+                <div class="table-responsive">
+                    <table class="table-gt" id="destTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <a href="<%- getSortUrl('name') %>" class="text-decoration-none text-main d-inline-flex align-items-center" title="Sắp xếp theo tên">
+                                        Tên Điểm Đến <%- getSortIcon('name') %>
+                                    </a>
+                                </th>
+                                <th>Quốc Gia</th>
+                                <th>Vùng Miền</th>
+                                <th>
+                                    <a href="<%- getSortUrl('tours') %>" class="text-decoration-none text-main d-inline-flex align-items-center" title="Sắp xếp theo số lượng tour">
+                                        Số Lượng Tour <%- getSortIcon('tours') %>
+                                    </a>
+                                </th>
+                                <th>Mô Tả</th>
+                                <th>
+                                    <a href="<%- getSortUrl('createdAt') %>" class="text-decoration-none text-main d-inline-flex align-items-center" title="Sắp xếp theo ngày tạo">
+                                        Ngày Tạo <%- getSortIcon('createdAt') %>
+                                    </a>
+                                </th>
+                                <th class="text-end">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (!destinations || destinations.length === 0) { %>
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <div class="empty-state-gt border-0 py-3">
+                                            <div class="empty-state-icon">
+                                                <i class="fas fa-location-dot"></i>
+                                            </div>
+                                            <h6 class="fw-bold text-main">Chưa có điểm đến nào phù hợp.</h6>
+                                            <p class="empty-state-desc mb-3">Nhấn nút "Thêm Điểm Đến" ở trên để tạo điểm đến đầu tiên.</p>
+                                            <button type="button" class="btn btn-gt-primary btn-gt-sm" data-bs-toggle="modal" data-bs-target="#addDestinationModal">
+                                                <i class="fas fa-plus-circle me-1"></i> Thêm Điểm Đến
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% destinations.forEach(destination => { %>
+                                    <% const countryName = destination.country ? destination.country.name : 'Việt Nam'; %>
+                                    <% const regionName = destination.region ? destination.region.name : 'Chưa gán'; %>
+                                    <tr class="dest-item" 
+                                        data-name="<%= destination.name ? destination.name.toLowerCase() : '' %>" 
+                                        data-country="<%= countryName.toLowerCase() %>" 
+                                        data-region="<%= regionName.toLowerCase() %>">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <% if (destination.image) { %>
+                                                    <div class="gt-img-preview rounded-3 overflow-hidden shadow-xs border" 
+                                                         style="width: 48px; height: 48px; flex-shrink: 0;"
+                                                         data-gt-preview="<%= destination.image %>"
+                                                         data-gt-title="<%= destination.name %> - <%= countryName %> (<%= regionName %>)"
+                                                         title="Nhấp để xem ảnh gốc">
+                                                        <img src="<%= destination.image %>" alt="<%= destination.name %>" style="width: 100%; height: 100%; object-fit: cover;">
+                                                    </div>
+                                                <% } else { %>
+                                                    <div class="rounded-circle p-2 bg-emerald text-white fs-xs d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; flex-shrink: 0;">
+                                                        <i class="fas fa-location-dot"></i>
+                                                    </div>
+                                                <% } %>
+                                                <div>
+                                                    <div class="fw-bold text-main fs-6"><%= destination.name %></div>
+                                                    <% if (destination.isPopular) { %>
+                                                        <span class="badge bg-warning text-dark fs-xs py-0 px-1 mt-1 rounded-pill">
+                                                            <i class="fas fa-fire me-1"></i> Nổi bật
+                                                        </span>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-gt badge-gt-info">
+                                                <i class="fas fa-flag me-1"></i> <%= countryName %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge-gt badge-gt-secondary">
+                                                <i class="fas fa-compass me-1"></i> <%= regionName %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="/admin/tours/list?destination=<%= destination._id %>" class="badge-gt badge-gt-neutral text-decoration-none" title="Xem các tour tại điểm đến này">
+                                                <i class="fas fa-route me-1"></i> <%= destination.tourCount || 0 %> Tour
+                                            </a>
+                                        </td>
+                                        <td style="max-width: 250px;">
+                                            <div class="text-muted fs-sm text-truncate" title="<%= destination.description || 'Chưa có mô tả' %>">
+                                                <%= destination.description || '—' %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fs-sm text-muted">
+                                                <i class="far fa-clock me-1"></i>
+                                                <%= destination.createdAt ? new Date(destination.createdAt).toLocaleDateString('vi-VN') : 'Mới tạo' %>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" 
+                                                    class="btn btn-gt-ghost text-primary btn-gt-sm me-1 btn-detail-dest" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#detailDestinationModal"
+                                                    data-id="<%= destination._id %>"
+                                                    data-name="<%= destination.name %>"
+                                                    data-country="<%= countryName %>"
+                                                    data-region="<%= regionName %>"
+                                                    data-description="<%= destination.description || '' %>"
+                                                    data-image="<%= destination.image || '' %>"
+                                                    data-popular="<%= destination.isPopular ? 'true' : 'false' %>"
+                                                    data-tours="<%= destination.tourCount || 0 %>"
+                                                    data-created="<%= destination.createdAt ? new Date(destination.createdAt).toLocaleString('vi-VN') : 'Mới tạo' %>"
+                                                    title="Xem chi tiết toàn bộ">
+                                                <i class="fas fa-eye me-1"></i> Chi tiết
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-gt-outline btn-gt-sm me-1 btn-edit-dest" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editDestinationModal"
+                                                    data-id="<%= destination._id %>"
+                                                    data-name="<%= destination.name %>"
+                                                    data-country-id="<%= destination.country ? destination.country._id : '' %>"
+                                                    data-region-id="<%= destination.region ? destination.region._id : '' %>"
+                                                    data-description="<%= destination.description || '' %>"
+                                                    data-image="<%= destination.image || '' %>"
+                                                    data-popular="<%= destination.isPopular ? 'true' : 'false' %>">
+                                                <i class="fas fa-pen-to-square me-1"></i> Sửa
+                                            </button>
+                                            <form action="/admin/destinations/delete/<%= destination._id %>" method="POST" class="d-inline m-0" onsubmit="return confirm('Bạn có chắc muốn xóa điểm đến này?');">
+                                                <button type="submit" class="btn btn-gt-ghost text-danger btn-gt-sm border">
+                                                    <i class="fas fa-trash-can me-1"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-4 pt-3 border-top">
+                    <div class="fs-sm text-muted">
+                        Hiển thị <strong><%= (currentPage - 1) * 8 + 1 %> - <%= Math.min(currentPage * 8, totalItems) %></strong> trong tổng số <strong><%= totalItems %></strong> điểm đến
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <% if (currentPage > 1) { %>
+                            <a href="?page=<%= currentPage - 1 %><%= typeof queryString !== 'undefined' ? queryString : '' %>" class="btn btn-gt-outline btn-gt-sm">
+                                <i class="fas fa-chevron-left me-1"></i> Trước
+                            </a>
+                        <% } else { %>
+                            <button class="btn btn-gt-outline btn-gt-sm" disabled>
+                                <i class="fas fa-chevron-left me-1"></i> Trước
+                            </button>
+                        <% } %>
+
+                        <div class="d-flex gap-1">
+                            <% for (let p = 1; p <= totalPages; p++) { %>
+                                <% if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) { %>
+                                    <a href="?page=<%= p %><%= typeof queryString !== 'undefined' ? queryString : '' %>" 
+                                       class="btn btn-gt-sm <%= p === currentPage ? 'btn-gt-primary' : 'btn-gt-outline' %> px-3">
+                                        <%= p %>
+                                    </a>
+                                <% } else if (p === currentPage - 2 || p === currentPage + 2) { %>
+                                    <span class="px-2 text-muted align-self-center">...</span>
+                                <% } %>
+                            <% } %>
+                        </div>
+
+                        <% if (currentPage < totalPages) { %>
+                            <a href="?page=<%= currentPage + 1 %><%= typeof queryString !== 'undefined' ? queryString : '' %>" class="btn btn-gt-outline btn-gt-sm">
+                                Sau <i class="fas fa-chevron-right ms-1"></i>
+                            </a>
+                        <% } else { %>
+                            <button class="btn btn-gt-outline btn-gt-sm" disabled>
+                                Sau <i class="fas fa-chevron-right ms-1"></i>
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            <% } %>
         </div>
     </div>
 
-    <div class="container mt-4">
-        <div class="card">
-            <div class="table-responsive">
-                <table class="table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% destinations.forEach(destination => { %>
-                            <tr>
-                                <td><%= destination.name %></td>
-                                <td>
-                                    <a href="/admin/destinations/edit/<%= destination._id %>" class="btn btn-primary btn-sm me-2">Edit</a>
-                                    <a href="/admin/destinations/delete/<%= destination._id %>" class="btn btn-danger btn-sm">Delete</a>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+    <!-- Modal: Thêm Điểm Đến Mới -->
+    <div class="modal fade" id="addDestinationModal" tabindex="-1" aria-labelledby="addDestinationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge emerald">
+                            <i class="fas fa-location-dot"></i>
+                        </div>
+                        <h5 class="modal-title fw-bold text-main" id="addDestinationModalLabel">Thêm Điểm Đến Du Lịch Mới</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/admin/destinations/create" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body p-4">
+                        <div class="form-group-gt mb-3">
+                            <label for="modalDestName" class="form-label-gt">Tên Điểm Đến / Tỉnh Thành <span class="text-danger">*</span></label>
+                            <div class="search-input-group">
+                                <i class="fas fa-map-pin"></i>
+                                <input type="text" class="form-control-gt" id="modalDestName" name="name" placeholder="Ví dụ: Hạ Long, Đà Nẵng, Phú Quốc, Sapa..." maxlength="100" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="modalDestCountry" class="form-label-gt">Quốc Gia <span class="text-danger">*</span></label>
+                                <select class="form-select form-control-gt" id="modalDestCountry" name="country" required onchange="onCountryChange(this.value, 'modalDestRegion')">
+                                    <option value="">-- Chọn Quốc Gia --</option>
+                                    <% if (typeof countries !== 'undefined' && countries) { %>
+                                        <% countries.forEach(c => { %>
+                                            <option value="<%= c._id %>" <%= c.name === 'Việt Nam' ? 'selected' : '' %>>
+                                                <%= c.name %>
+                                            </option>
+                                        <% }) %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modalDestRegion" class="form-label-gt">Vùng Miền <span class="text-danger">*</span></label>
+                                <select class="form-select form-control-gt" id="modalDestRegion" name="region" required>
+                                    <option value="">-- Chọn Vùng Miền --</option>
+                                    <% if (typeof regions !== 'undefined' && regions) { %>
+                                        <% regions.forEach(r => { %>
+                                            <option value="<%= r._id %>" data-country="<%= r.country ? r.country._id : '' %>">
+                                                <%= r.name %> (<%= r.country ? r.country.name : '' %>)
+                                            </option>
+                                        <% }) %>
+                                    <% } %>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Drag and Drop Image File Upload -->
+                        <div class="form-group-gt mb-3">
+                            <label class="form-label-gt">Hình Ảnh Điểm Đến (Tùy chọn)</label>
+                            <div class="p-3 border rounded-4 text-center bg-light border-dashed position-relative">
+                                <i class="fas fa-cloud-arrow-up text-primary fs-3 mb-1 d-block"></i>
+                                <p class="fs-xs text-muted mb-2">Kéo thả ảnh vào đây hoặc nhấp để chọn tệp</p>
+                                <input type="file" class="form-control-gt" id="modalDestImageFile" name="image" accept="image/*" onchange="previewImage(this, 'addImgPreview', 'addImgPreviewWrap')">
+                                <div id="addImgPreviewWrap" class="mt-2 d-none text-center">
+                                    <img id="addImgPreview" src="" alt="Preview" class="rounded-3 shadow-sm border" style="max-height: 120px; max-width: 100%; object-fit: cover;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group-gt mb-3">
+                            <label for="modalDestDesc" class="form-label-gt mb-1">Mô Tả Điểm Đến (Tùy chọn)</label>
+                            <textarea class="form-control-gt" id="modalDestDesc" name="description" rows="2" placeholder="Thông tin tóm tắt về cảnh sắc, trải nghiệm nổi bật..." maxlength="500"></textarea>
+                        </div>
+
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="modalDestPopular" name="isPopular">
+                            <label class="form-check-label fs-sm fw-semibold text-main" for="modalDestPopular">
+                                Đánh dấu là điểm đến thịnh hành / nổi bật
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-gt-primary">
+                            <i class="fas fa-check-circle me-1"></i> Lưu Điểm Đến
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+
+    <!-- Modal: Chỉnh Sửa Điểm Đến -->
+    <div class="modal fade" id="editDestinationModal" tabindex="-1" aria-labelledby="editDestinationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge emerald">
+                            <i class="fas fa-pen-to-square"></i>
+                        </div>
+                        <h5 class="modal-title fw-bold text-main" id="editDestinationModalLabel">Chỉnh Sửa Điểm Đến</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editDestForm" method="POST" action="" enctype="multipart/form-data">
+                    <div class="modal-body p-4">
+                        <div class="form-group-gt mb-3">
+                            <label for="editDestName" class="form-label-gt">Tên Điểm Đến / Tỉnh Thành <span class="text-danger">*</span></label>
+                            <div class="search-input-group">
+                                <i class="fas fa-map-pin"></i>
+                                <input type="text" class="form-control-gt" id="editDestName" name="name" required maxlength="100">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="editDestCountry" class="form-label-gt">Quốc Gia <span class="text-danger">*</span></label>
+                                <select class="form-select form-control-gt" id="editDestCountry" name="country" required onchange="onCountryChange(this.value, 'editDestRegion')">
+                                    <option value="">-- Chọn Quốc Gia --</option>
+                                    <% if (typeof countries !== 'undefined' && countries) { %>
+                                        <% countries.forEach(c => { %>
+                                            <option value="<%= c._id %>"><%= c.name %></option>
+                                        <% }) %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editDestRegion" class="form-label-gt">Vùng Miền <span class="text-danger">*</span></label>
+                                <select class="form-select form-control-gt" id="editDestRegion" name="region" required>
+                                    <option value="">-- Chọn Vùng Miền --</option>
+                                    <% if (typeof regions !== 'undefined' && regions) { %>
+                                        <% regions.forEach(r => { %>
+                                            <option value="<%= r._id %>" data-country="<%= r.country ? r.country._id : '' %>">
+                                                <%= r.name %> (<%= r.country ? r.country.name : '' %>)
+                                            </option>
+                                        <% }) %>
+                                    <% } %>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Drag and Drop Image File Upload -->
+                        <div class="form-group-gt mb-3">
+                            <label class="form-label-gt">Hình Ảnh Điểm Đến</label>
+                            <div id="editCurrentImgWrap" class="mb-2 d-none text-center">
+                                <img id="editCurrentImg" src="" alt="Current Image" class="rounded-3 shadow-sm border mb-1" style="max-height: 100px; max-width: 100%; object-fit: cover;">
+                                <div class="fs-xs text-muted">Ảnh hiện tại (Chọn tệp mới để thay đổi)</div>
+                            </div>
+                            <div class="p-3 border rounded-4 text-center bg-light border-dashed position-relative">
+                                <i class="fas fa-cloud-arrow-up text-primary fs-3 mb-1 d-block"></i>
+                                <p class="fs-xs text-muted mb-2">Kéo thả ảnh mới vào đây hoặc nhấp để chọn tệp</p>
+                                <input type="file" class="form-control-gt" id="editDestImageFile" name="image" accept="image/*" onchange="previewImage(this, 'editImgPreview', 'editImgPreviewWrap')">
+                                <div id="editImgPreviewWrap" class="mt-2 d-none text-center">
+                                    <img id="editImgPreview" src="" alt="New Preview" class="rounded-3 shadow-sm border" style="max-height: 120px; max-width: 100%; object-fit: cover;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group-gt mb-3">
+                            <label for="editDestDesc" class="form-label-gt mb-1">Mô Tả Điểm Đến</label>
+                            <textarea class="form-control-gt" id="editDestDesc" name="description" rows="2" placeholder="Thông tin tóm tắt..." maxlength="500"></textarea>
+                        </div>
+
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="editDestPopular" name="isPopular">
+                            <label class="form-check-label fs-sm fw-semibold text-main" for="editDestPopular">
+                                Đánh dấu là điểm đến thịnh hành / nổi bật
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-gt-primary">
+                            <i class="fas fa-save me-1"></i> Lưu Thay Đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Xem Chi Tiết Điểm Đến -->
+    <div class="modal fade" id="detailDestinationModal" tabindex="-1" aria-labelledby="detailDestinationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge emerald">
+                            <i class="fas fa-location-dot"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main mb-0" id="detailDestName">Chi Tiết Điểm Đến</h5>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <span class="badge-gt badge-gt-info fs-xs" id="detailDestCountry">Việt Nam</span>
+                                <span class="badge-gt badge-gt-secondary fs-xs" id="detailDestRegion">Miền Bắc</span>
+                                <span class="badge bg-warning text-dark fs-xs py-0 px-2 rounded-pill d-none" id="detailDestPopularBadge">
+                                    <i class="fas fa-fire me-1"></i> Nổi bật
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-body">
+                    <!-- High-Res Cover Image -->
+                    <div class="detail-section-card mb-3 p-2 text-center" id="detailDestImgContainer">
+                        <div class="position-relative rounded-3 overflow-hidden bg-light" style="max-height: 280px;">
+                            <img src="" alt="Ảnh điểm đến" id="detailDestImg" class="w-100 h-100 object-fit-cover gt-img-preview" title="Nhấp để xem toàn màn hình">
+                            <button type="button" class="btn btn-dark btn-sm bg-opacity-75 position-absolute bottom-0 end-0 m-2 rounded-pill px-3" id="detailDestOpenLightbox">
+                                <i class="fas fa-expand me-1"></i> Phóng to ảnh gốc
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Meta Information Grid -->
+                    <div class="detail-section-card">
+                        <div class="detail-section-title">
+                            <i class="fas fa-circle-info text-primary"></i> Thông Tin Chung
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-sm-3">
+                                <div class="detail-field-row">
+                                    <span class="detail-field-label">Quốc Gia:</span>
+                                    <span class="detail-field-value fw-semibold text-main" id="detailDestCountryText">Việt Nam</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="detail-field-row">
+                                    <span class="detail-field-label">Vùng Miền:</span>
+                                    <span class="detail-field-value fw-semibold text-main" id="detailDestRegionText">Miền Bắc</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="detail-field-row">
+                                    <span class="detail-field-label">Số Tour:</span>
+                                    <span class="detail-field-value fw-semibold text-primary" id="detailDestTourCount">0 Tour</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="detail-field-row">
+                                    <span class="detail-field-label">Thời Gian Tạo:</span>
+                                    <span class="detail-field-value fs-sm text-muted" id="detailDestCreated">—</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Full Description -->
+                    <div class="detail-section-card mb-0">
+                        <div class="detail-section-title">
+                            <i class="fas fa-align-left text-secondary"></i> Mô Tả Chi Tiết Đầy Đủ
+                        </div>
+                        <div class="detail-text-box" id="detailDestDesc">
+                            Chưa có thông tin mô tả cho điểm đến này.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-white">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-gt-primary" id="detailDestEditBtn">
+                        <i class="fas fa-pen-to-square me-1"></i> Chỉnh Sửa Điểm Đến Này
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Live image preview helper function
+        function previewImage(input, previewImgId, previewWrapId) {
+            const file = input.files && input.files[0];
+            const previewImg = document.getElementById(previewImgId);
+            const previewWrap = document.getElementById(previewWrapId);
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (previewImg) previewImg.src = e.target.result;
+                    if (previewWrap) previewWrap.classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                if (previewWrap) previewWrap.classList.add('d-none');
+            }
+        }
+
+        // Filter regions dynamically by country
+        function onCountryChange(countryId, regionSelectId, selectedRegionId = null) {
+            const regionSelect = document.getElementById(regionSelectId);
+            if (!regionSelect) return;
+            
+            const options = regionSelect.querySelectorAll('option');
+            let hasSelected = false;
+
+            options.forEach(opt => {
+                if (!opt.value) {
+                    opt.style.display = '';
+                    return;
+                }
+                const optCountry = opt.getAttribute('data-country');
+                if (!countryId || optCountry === countryId) {
+                    opt.style.display = '';
+                    if (selectedRegionId && opt.value === selectedRegionId) {
+                        opt.selected = true;
+                        hasSelected = true;
+                    }
+                } else {
+                    opt.style.display = 'none';
+                    if (opt.selected) opt.selected = false;
+                }
+            });
+
+            if (!hasSelected && regionSelect.value && regionSelect.selectedOptions[0]?.style.display === 'none') {
+                regionSelect.value = '';
+            }
+        }
+
+        // Live Search Filter (Name, Country & Region)
+        document.getElementById('destSearchInput').addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            document.querySelectorAll('.dest-item').forEach(item => {
+                const name = item.getAttribute('data-name') || '';
+                const country = item.getAttribute('data-country') || '';
+                const region = item.getAttribute('data-region') || '';
+                item.style.display = (!query || name.includes(query) || country.includes(query) || region.includes(query)) ? '' : 'none';
+            });
+        });
+
+        // Populate Detail Modal dynamically
+        const detailDestModal = document.getElementById('detailDestinationModal');
+        let currentDetailDestData = null;
+        if (detailDestModal) {
+            detailDestModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                const id = button.getAttribute('data-id');
+                const name = button.getAttribute('data-name');
+                const country = button.getAttribute('data-country') || 'Việt Nam';
+                const region = button.getAttribute('data-region') || 'Chưa gán';
+                const desc = button.getAttribute('data-description') || 'Chưa có mô tả chi tiết cho điểm đến này.';
+                const image = button.getAttribute('data-image') || '';
+                const popular = button.getAttribute('data-popular') === 'true';
+                const tours = button.getAttribute('data-tours') || '0';
+                const created = button.getAttribute('data-created') || 'Mới tạo';
+
+                currentDetailDestData = { id, name, country, region, desc, image, popular };
+
+                document.getElementById('detailDestName').textContent = name;
+                document.getElementById('detailDestCountry').textContent = country;
+                document.getElementById('detailDestRegion').textContent = region;
+                document.getElementById('detailDestCountryText').textContent = country;
+                document.getElementById('detailDestRegionText').textContent = region;
+                const tourCountEl = document.getElementById('detailDestTourCount');
+                if (tourCountEl) tourCountEl.textContent = `${tours} Tour`;
+                document.getElementById('detailDestCreated').textContent = created;
+                document.getElementById('detailDestDesc').textContent = desc;
+
+                const popBadge = document.getElementById('detailDestPopularBadge');
+                if (popBadge) {
+                    if (popular) popBadge.classList.remove('d-none');
+                    else popBadge.classList.add('d-none');
+                }
+
+                const imgEl = document.getElementById('detailDestImg');
+                const imgContainer = document.getElementById('detailDestImgContainer');
+                if (image && imgEl && imgContainer) {
+                    imgEl.src = image;
+                    imgEl.setAttribute('data-gt-preview', image);
+                    imgEl.setAttribute('data-gt-title', `${name} - ${country} (${region})`);
+                    imgContainer.classList.remove('d-none');
+                } else if (imgContainer) {
+                    imgContainer.classList.add('d-none');
+                }
+
+                // Setup lightbox trigger
+                document.getElementById('detailDestOpenLightbox').onclick = function() {
+                    if (image && window.openImageLightbox) {
+                        window.openImageLightbox(image, name, `Điểm đến: ${name} - ${country} (${region})`);
+                    }
+                };
+            });
+
+            // Quick transition from Detail Modal to Edit Modal
+            document.getElementById('detailDestEditBtn')?.addEventListener('click', function() {
+                if (!currentDetailDestData) return;
+                const bsDetailModal = bootstrap.Modal.getInstance(detailDestModal);
+                if (bsDetailModal) bsDetailModal.hide();
+
+                setTimeout(() => {
+                    const editBtn = document.querySelector(`.btn-edit-dest[data-id="${currentDetailDestData.id}"]`);
+                    if (editBtn) editBtn.click();
+                }, 300);
+            });
+        }
+
+        // Populate Edit Modal dynamically
+        const editDestModal = document.getElementById('editDestinationModal');
+        if (editDestModal) {
+            editDestModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                const id = button.getAttribute('data-id');
+                const name = button.getAttribute('data-name');
+                const countryId = button.getAttribute('data-country-id') || '';
+                const regionId = button.getAttribute('data-region-id') || '';
+                const desc = button.getAttribute('data-description') || '';
+                const image = button.getAttribute('data-image') || '';
+                const popular = button.getAttribute('data-popular') === 'true';
+                
+                const form = editDestModal.querySelector('#editDestForm');
+                const nameInput = editDestModal.querySelector('#editDestName');
+                const countrySelect = editDestModal.querySelector('#editDestCountry');
+                const descInput = editDestModal.querySelector('#editDestDesc');
+                const popCheck = editDestModal.querySelector('#editDestPopular');
+                
+                const currentImgWrap = document.getElementById('editCurrentImgWrap');
+                const currentImg = document.getElementById('editCurrentImg');
+                const editFileInput = document.getElementById('editDestImageFile');
+                const editImgPreviewWrap = document.getElementById('editImgPreviewWrap');
+                
+                if (form) form.action = `/admin/destinations/edit/${id}`;
+                if (nameInput) nameInput.value = name || '';
+                if (countrySelect) countrySelect.value = countryId;
+                
+                // Filter regions according to country
+                onCountryChange(countryId, 'editDestRegion', regionId);
+
+                if (descInput) descInput.value = desc;
+                if (popCheck) popCheck.checked = popular;
+                
+                // Reset file input & previews
+                if (editFileInput) editFileInput.value = '';
+                if (editImgPreviewWrap) editImgPreviewWrap.classList.add('d-none');
+                
+                // Show current image thumbnail if exists
+                if (image && currentImg && currentImgWrap) {
+                    currentImg.src = image;
+                    currentImgWrap.classList.remove('d-none');
+                } else if (currentImgWrap) {
+                    currentImgWrap.classList.add('d-none');
+                }
+                
+                setTimeout(() => nameInput && nameInput.focus(), 150);
+            });
+        }
+
+        // Trigger initial country change filter for Add Modal
+        document.addEventListener('DOMContentLoaded', () => {
+            const addCountrySelect = document.getElementById('modalDestCountry');
+            if (addCountrySelect && addCountrySelect.value) {
+                onCountryChange(addCountrySelect.value, 'modalDestRegion');
+            }
+        });
+    </script>
 </body>
 </html>

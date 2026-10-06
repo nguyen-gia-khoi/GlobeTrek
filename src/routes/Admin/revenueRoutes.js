@@ -9,7 +9,10 @@ const {
   getTotalRevenueForAllPartners,
   processMonthlyPayments
 } = require("../../controllers/Admin/revenueController");
-const {verifyAdmin} = require('../../Middleware/authMiddleware');
+const { requireAdmin } = require('../../Middleware/authMiddleware');
+
+router.use(requireAdmin);
+
 // Route lấy doanh thu hàng ngày cho admin
 router.get("/daily" ,getDailyRevenue);
 
@@ -26,7 +29,7 @@ router.get("/partner/weekly-revenue" ,getWeeklyRevenueForAllPartners);
 
 router.get("/partner/monthly-revenue" ,getMonthlyRevenueForEachPartner);
 
-router.get("/partner/total-revenue", verifyAdmin ,getTotalRevenueForAllPartners);
+router.get("/partner/total-revenue", getTotalRevenueForAllPartners);
 
 
 

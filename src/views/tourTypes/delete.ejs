@@ -1,21 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <title>Confirm Delete Tour Type</title>
+    <title>Xác Nhận Xóa Loại Tour - GlobeTrek Admin</title>
 </head>
 <body>
     <%- include('../header', { pageTitle: 'Confirm Delete Tour Type' }) %>
-    <div class="container mt-5">
-        <h1 class="mt-5">Confirm Delete Tour Type</h1>
-        <p>Are you sure you want to delete the Tour Type: <strong><%= tourType.name %></strong>?</p>
-        <form action="/tourTypes/delete/<%= tourType._id %>" method="POST">
-            <button type="submit" class="btn btn-danger">Delete</button>
-            <a href="/tourtypes" class="btn btn-secondary">Cancel</a>
-        </form>
-        
+    
+    <div class="main-content-layout">
+        <div class="card-gt p-5 text-center mx-auto" style="max-width: 550px; margin-top: 2rem;">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center p-3 bg-danger bg-opacity-10 text-danger mb-3" style="width: 70px; height: 70px;">
+                <i class="fas fa-triangle-exclamation fs-2"></i>
+            </div>
+            <h4 class="fw-bold text-main mb-2">Xác Nhận Xóa Loại Tour?</h4>
+            <p class="text-muted fs-sm mb-4">
+                Bạn có chắc chắn muốn xóa phân loại <strong>"<%= tourType.name %>"</strong> không? Các tour thuộc loại này có thể bị ảnh hưởng.
+            </p>
+
+            <form action="/tourTypes/delete/<%= tourType._id %>" method="POST">
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="/tourtypes" class="btn btn-gt-ghost">Hủy Bỏ</a>
+                    <button type="submit" class="btn btn-gt-danger">
+                        <i class="fas fa-trash-can me-1"></i> Xóa Vĩnh Viễn
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>

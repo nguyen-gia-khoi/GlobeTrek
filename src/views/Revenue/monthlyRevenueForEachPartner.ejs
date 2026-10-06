@@ -1,186 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doanh thu hàng tháng của từng đối tác</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <style>
-        .btn-pay[disabled] {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            min-width: 300px;
-        }
-
-        .table th, .table td {
-            vertical-align: middle;
-            text-align: center;
-        }
-
-        .text-success {
-            font-weight: bold;
-        }
-
-        .modal-header {
-            background-color: #f8f9fa;
-        }
-
-        .modal-title {
-            color: #007bff;
-        }
-    </style>
+    <title>Chi Trả Doanh Thu Đối Tác - GlobeTrek Admin</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
-
 <body>
     <%- include('../header', { pageTitle: 'Doanh thu hàng tháng của từng đối tác' }) %>
-    <div class="container mt-5">
-        <h2 class="mt-5 text-center text-primary">Doanh thu tháng <%= month %> cho từng đối tác</h2>
 
-        <!-- Bảng doanh thu -->
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Đối tác</th>
-                        <th>Email</th>
-                        <th>Tổng doanh thu (VNĐ)</th>
-                        <th>Doanh thu Admin (VNĐ)</th>
-                        <th>Doanh thu Partner (VNĐ)</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% groupedRevenues.forEach((revenue) => { %>
-                        <tr id="revenue-<%= revenue.partnerEmail %>">
-                            <td><%= revenue.partnerName %></td>
-                            <td><%= revenue.partnerEmail %></td>
-                            <td><%= revenue.totalSales.toLocaleString('vi-VN') %></td>
-                            <td><%= revenue.adminRevenue.toLocaleString('vi-VN') %></td>
-                            <td><%= revenue.partnerRevenue.toLocaleString('vi-VN') %></td>
-                            <td class="<%= revenue.status === 'success' ? 'text-success' : 'text-danger' %>">
-                                <%= revenue.status === 'success' ? 'Đã thanh toán' : 'Chưa thanh toán' %>
-                            </td>
-                            <td>
-                                <button class="btn btn-success btn-pay"
-                                    data-partner-email="<%= revenue.partnerEmail %>"
-                                    data-partner-name="<%= revenue.partnerName %>"
-                                    data-partner-amount="<%= revenue.partnerRevenue %>"
-                                    <%= revenue.status === 'success' ? 'disabled' : '' %>>
-                                    <%= revenue.status === 'success' ? 'Đã thanh toán' : 'Trả tiền' %>
-                                </button>
-                            </td>
+    <div class="main-content-layout">
+        <div class="hero-header-gt d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="hero-badge-pill">
+                    <i class="fas fa-hand-holding-dollar text-warning me-1"></i> Quyết Toán Đối Tác
+                </span>
+                <h1 class="text-white mb-2">Quyết Toán Doanh Thu Tháng <%= typeof month !== 'undefined' ? month : '' %></h1>
+                <p class="mb-0">Đối soát doanh thu, hoa hồng sàn và xử lý chi trả thanh toán cho từng đối tác.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light rounded-pill px-3 py-2 fw-bold text-primary shadow-sm" onclick="location.reload()">
+                    <i class="fas fa-arrows-rotate me-1"></i> Làm Mới
+                </button>
+            </div>
+        </div>
+
+        <!-- Settlements Table -->
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
+                        <tr>
+                            <th>Đối Tác & Email</th>
+                            <th>Tổng Doanh Thu (VNĐ)</th>
+                            <th>Doanh Thu Admin (30%)</th>
+                            <th>Doanh Thu Đối Tác (70%)</th>
+                            <th>Trạng Thái Chi Trả</th>
+                            <th class="text-end">Hành Động</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% if (!groupedRevenues || groupedRevenues.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="empty-state-gt border-0 py-4">
+                                        <div class="empty-state-icon">
+                                            <i class="fas fa-receipt"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-main">Không Có Dữ Liệu Quyết Toán</h5>
+                                        <p class="empty-state-desc mb-0">Chưa có giao dịch phát sinh nào cần chi trả trong tháng này.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% groupedRevenues.forEach((revenue) => { %>
+                                <tr id="revenue-<%= revenue.partnerEmail %>">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold fs-xs" style="width: 38px; height: 38px; background: var(--gradient-accent);">
+                                                <%= revenue.partnerName ? revenue.partnerName.charAt(0).toUpperCase() : 'P' %>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-main fs-sm"><%= revenue.partnerName %></div>
+                                                <div class="fs-xs text-muted"><%= revenue.partnerEmail %></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-main"><%= (revenue.totalSales || 0).toLocaleString('vi-VN') %> VNĐ</strong>
+                                    </td>
+                                    <td>
+                                        <span class="text-secondary fw-semibold"><%= (revenue.adminRevenue || 0).toLocaleString('vi-VN') %> VNĐ</span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-primary font-display fs-6"><%= (revenue.partnerRevenue || 0).toLocaleString('vi-VN') %> VNĐ</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt badge-gt-warning">
+                                            <i class="fas fa-lock"></i>
+                                            Đối soát đang tạm khóa
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-gt-ghost btn-gt-sm" disabled>
+                                            <i class="fas fa-lock me-1"></i> Tạm khóa chi trả
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- Modal xác nhận thanh toán -->
-    <div class="modal fade" id="paymentModal" tabindex="-1" role="dialog" aria-labelledby="paymentModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="paymentModalLabel">Xác nhận thanh toán</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+    <!-- Payment Confirmation Modal -->
+    <div class="modal fade" id="payoutModal" tabindex="-1" aria-labelledby="payoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <h5 class="modal-title fw-bold text-main" id="payoutModalLabel">Xác Nhận Chi Trả Hoa Hồng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <div class="rounded-circle d-inline-flex p-3 bg-emerald text-white mb-2">
+                            <i class="fas fa-money-bill-transfer fs-2"></i>
+                        </div>
+                        <h4 class="fw-bold text-primary font-display" id="modalPayoutAmount">0 VNĐ</h4>
+                        <p class="text-muted fs-sm">Chuyển khoản đến đối tác <strong id="modalPartnerName">Partner</strong></p>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-4 border mb-3">
+                        <div class="d-flex justify-content-between fs-sm text-muted mb-1">
+                            <span>Email nhận:</span>
+                            <span id="modalPartnerEmail" class="fw-semibold text-main">email@example.com</span>
+                        </div>
+                        <div class="d-flex justify-content-between fs-sm text-muted">
+                            <span>Kỳ quyết toán:</span>
+                            <span class="fw-semibold text-main">Tháng <%= typeof month !== 'undefined' ? month : '' %></span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info py-2 px-3 fs-xs rounded-3 mb-0">
+                        <i class="fas fa-info-circle me-1"></i> Số tiền này đã trừ 30% hoa hồng sàn GlobeTrek.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-gt-primary" id="confirmPayoutBtn">
+                        <i class="fas fa-check me-1"></i> Xác Nhận Đã Thanh Toán
                     </button>
-                </div>
-                <div class="modal-body">
-                    <p id="paymentConfirmationText"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
-                    <button type="button" id="confirmPayment" class="btn btn-success">Xác nhận</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Thông báo -->
-    <div class="alert alert-success alert-dismissible fade show" id="successAlert" style="display: none;" role="alert">
-        Thanh toán thành công!
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
     </div>
-    <div class="alert alert-danger alert-dismissible fade show" id="errorAlert" style="display: none;" role="alert">
-        Thanh toán thất bại!
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-
-    <!-- Script -->
-    <script>
-        $(document).ready(function () {
-            let selectedPartnerEmail, selectedPartnerName, selectedPartnerAmount;
-
-            // Khi click vào nút Trả tiền
-            $(".btn-pay").click(function () {
-                selectedPartnerEmail = $(this).data("partner-email");
-                selectedPartnerName = $(this).data("partner-name");
-                selectedPartnerAmount = $(this).data("partner-amount");
-
-                const confirmationText = `Bạn có chắc chắn muốn trả số tiền <strong>${Number(selectedPartnerAmount).toLocaleString('vi-VN')} VNĐ</strong> cho đối tác <strong>${selectedPartnerName}</strong>?`;
-                $("#paymentConfirmationText").html(confirmationText);
-                $("#paymentModal").modal("show");
-            });
-
-            // Xác nhận thanh toán
-            $("#confirmPayment").click(function () {
-                $("#paymentModal").modal("hide");
-
-                // Gửi yêu cầu POST đến server
-                $.ajax({
-                    url: '/admin/revenue/process-payment',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        partneremail: selectedPartnerEmail,
-                        partnerAmount: selectedPartnerAmount,
-                    }),
-                    success: function (response) {
-                        // Nếu cập nhật thành công, cập nhật lại hàng tương ứng
-                        const updatedRow = `
-                            <tr id="revenue-${response.partnerEmail}">
-                                <td>${response.partnerName}</td>
-                                <td>${response.partnerEmail}</td>
-                                <td>${Number(response.totalSales).toLocaleString('vi-VN')}</td>
-                                <td>${Number(response.adminRevenue).toLocaleString('vi-VN')}</td>
-                                <td>${Number(response.partnerRevenue).toLocaleString('vi-VN')}</td>
-                                <td class="text-success">Đã thanh toán</td>
-                                <td>
-                                    <button class="btn btn-success btn-pay" disabled>Đã thanh toán</button>
-                                </td>
-                            </tr>`;
-                        $(`#revenue-${response.partnerEmail}`).replaceWith(updatedRow);
-
-                        // Hiển thị thông báo thành công
-                        $("#successAlert").fadeIn();
-                        setTimeout(() => $("#successAlert").fadeOut(), 3000);
-                    },
-                    error: function (error) {
-                        // Hiển thị thông báo lỗi
-                        $("#errorAlert").fadeIn();
-                        setTimeout(() => $("#errorAlert").fadeOut(), 3000);
-                    },
-                });
-            });
-        });
-    </script>
 </body>
-
 </html>

@@ -1,96 +1,52 @@
 const mongoose = require('mongoose');
 const moment = require('moment-timezone'); // Import moment-timezone
+const axios = require('axios');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const { Tour } = require('../models/Tour');
 const { sendOrderConfirmationEmail } = require('../service/mailtrap/email');
 const { Pointer } = require("pointer-wallet");
-const {  paypalClient } = require('../config/payment');
+const { paypalClient } = require('../config/payment');
 const paypal = require('@paypal/checkout-server-sdk');
+const redis = require('../config/redis');
+const {
+  runWithOptionalTransaction,
+  resolveDeparture,
+  reserveSeats,
+  undoReservation,
+  confirmHeldOrder,
+  releaseHeldOrder,
+  releaseSoldOrder,
+} = require('../service/departureService');
+const {
+  quoteOrder,
+  reservePromotionUse,
+  releasePromotionUse,
+} = require('../service/promotionService');
 
-
-const secretKey = process.env.VITE_POINTER_SECRET_KEY; 
+const secretKey = process.env.VITE_POINTER_SECRET_KEY;
 const pointerPayment = new Pointer(secretKey);
 
+const HOLD_MINUTES = Math.max(1, Number(process.env.ORDER_HOLD_MINUTES) || 15);
+const HOLD_DURATION_MS = HOLD_MINUTES * 60 * 1000;
 
-const updateAvailabilityOnCreateOrder = async (tourId, bookingDate, adultCount, childCount) => {
-  const tour = await Tour.findById(tourId);
-
-  if (!tour) {
-    throw new Error("Tour not found");
+// Hoàn trả lại số lượng chỗ trống khi đơn hàng bị hủy hoặc quá 15 phút không thanh toán
+const releaseHeldSeats = async (orderId, reason = 'canceled') => {
+  try {
+    const order = await releaseHeldOrder(orderId);
+    if (!order) return null;
+    await redis.del(`order:hold:${orderId}`);
+    console.log(`[Order Hold] Đã nhả chỗ đơn ${orderId} (Lý do: ${reason})`);
+    return order;
+  } catch (error) {
+    console.error(`[Order Lock Error] Lỗi khi nhả chỗ đơn ${orderId}:`, error);
+    throw error;
   }
-
-  const bookingDateLocal = moment(bookingDate).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD');
-  const selectedAvailability = tour.availabilities.find(avail => {
-    const availDateLocal = moment(avail.date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD');
-    return availDateLocal === bookingDateLocal;
-  });
-
-  if (!selectedAvailability) {
-    throw new Error("No availability found for the selected date");
-  }
-
-  const totalSeatsRequested = adultCount + childCount;
-  if (selectedAvailability.availableSeats < totalSeatsRequested) {
-    throw new Error("Not enough available spots for the selected date");
-  }
-
-  // Giảm số lượng chỗ trống cho ngày đã chọn
-  selectedAvailability.availableSeats -= totalSeatsRequested;
-  await tour.save();
-};
-
-const updateAvailabilityOnCancelOrder = async (tourId, bookingDate, adultCount, childCount) => {
-  const tour = await Tour.findById(tourId);
-
-  if (!tour) {
-    throw new Error("Tour not found");
-  }
-
-  const availability = tour.availabilities.find(avail => 
-    moment(avail.date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') === moment(bookingDate).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD')
-  );
-
-  if (!availability) {
-    throw new Error("No availability found for the selected date");
-  }
-
-  // Tăng số lượng chỗ trống khi hủy đơn hàng
-  availability.availableSeats += adultCount + childCount;
-  await tour.save();
 };
 
 const createOrder = async (req, res) => {
   try {
     const {
-      totalValue,
-      customerInfo,
-      passengerInfo,
-      tour, 
-      adultPrice,
-      childPrice,
-      adultCount,
-      childCount,
-      bookingDate,
-      paymentMethod,
-    } = req.body;
-
-    if (!tour) {
-      return res.status(400).json({ message: "Tour is required" });
-    }
-
-    if (adultCount <= 0 && childCount <= 0) {
-      return res.status(400).json({ message: "At least one ticket must be purchased" });
-    }
-
-    // Kiểm tra và cập nhật số lượng chỗ trống trong tour
-    await updateAvailabilityOnCreateOrder(tour, bookingDate, adultCount, childCount);
-
-    // Tạo đơn hàng mới
-    const newOrder = new Order({
-      orderDate: moment().tz('Asia/Ho_Chi_Minh').toDate(),
-      totalValue,
-      user: req.user._id,
       customerInfo,
       passengerInfo,
       tour,
@@ -99,57 +55,159 @@ const createOrder = async (req, res) => {
       adultCount,
       childCount,
       bookingDate,
-      status: 'pending',
+      departureId,
       paymentMethod,
+    } = req.body;
+
+    if (!tour) {
+      return res.status(400).json({ message: "Tour is required" });
+    }
+
+    if ((adultCount || 0) <= 0 && (childCount || 0) <= 0) {
+      return res.status(400).json({ message: "At least one ticket must be purchased" });
+    }
+
+    const totalSeatsRequested = (Number(adultCount) || 0) + (Number(childCount) || 0);
+    const tourDoc = await Tour.findById(tour);
+    const departure = await resolveDeparture({
+      tourId: tour,
+      departureId,
+      bookingDate,
+      requireOpen: true,
+    });
+    if (!departure) {
+      return res.status(400).json({ message: 'Không tìm thấy lịch khởi hành đang mở bán cho ngày đã chọn' });
+    }
+
+    const quote = await quoteOrder({
+      tour: tourDoc,
+      departure,
+      adultCount,
+      childCount,
+      adultPrice,
+      childPrice,
+      code: req.body.code,
+      userId: req.user._id,
     });
 
-    const savedOrder = await newOrder.save();
-
-    // Cập nhật lịch sử đơn hàng của người dùng
-    await User.updateOne(
-      { _id: req.user._id },
-      { $push: { orderHistory: savedOrder._id } }
-    );
-
-    // Cập nhật trạng thái đơn hàng sau 1 phút nếu chưa thanh toán
-    setTimeout(async () => {
-      const orderToProcess = await Order.findById(savedOrder._id);
-      if (orderToProcess && orderToProcess.status === 'pending') {
-        orderToProcess.status = 'processing';
-        await orderToProcess.save();
-        console.log(`Order ${savedOrder._id} updated to 'processing'.`);
+    const holdExpiresAt = new Date(Date.now() + HOLD_DURATION_MS);
+    let savedOrder;
+    await runWithOptionalTransaction(async (session) => {
+      const reserved = await reserveSeats(departure._id, totalSeatsRequested, session);
+      if (!reserved) {
+        throw new Error('Không đủ chỗ trống hoặc lịch đã đóng bán');
       }
-    }, 1 * 60 * 1000); // 1 phút
 
-    res.status(201).json({ message: 'Order created successfully', order: savedOrder });
+      let usageReserved = false;
+      try {
+        if (quote.promotion) {
+          await reservePromotionUse(quote.promotion.id, req.user._id, session);
+          usageReserved = true;
+        }
+        const newOrder = new Order({
+          orderDate: moment().tz('Asia/Ho_Chi_Minh').toDate(),
+          totalValue: quote.totalValue,
+          originalTotal: quote.originalTotal,
+          discountAmount: quote.discountAmount,
+          promotion: quote.promotion?.id || undefined,
+          user: req.user._id,
+          customerInfo,
+          passengerInfo,
+          tour,
+          departure: departure._id,
+          adultPrice: quote.adultPrice,
+          childPrice: quote.childPrice,
+          adultCount,
+          childCount,
+          bookingDate: departure.departureDate,
+          holdExpiresAt,
+          status: 'pending',
+          seatState: 'held',
+          paymentMethod,
+        });
+        savedOrder = await newOrder.save(session ? { session } : {});
+        await User.updateOne(
+          { _id: req.user._id },
+          { $addToSet: { orderHistory: savedOrder._id } },
+          session ? { session } : {}
+        );
+      } catch (error) {
+        if (!session) {
+          await undoReservation(departure._id, totalSeatsRequested);
+          if (usageReserved) await releasePromotionUse(quote.promotion.id);
+        }
+        throw error;
+      }
+    });
+
+    try {
+      await redis.set(
+        `order:hold:${savedOrder._id}`,
+        JSON.stringify({
+          orderId: savedOrder._id,
+          tourId: tour,
+          departureId: departure._id,
+          bookingDate: departure.departureDate,
+          adultCount,
+          childCount,
+          holdExpiresAt
+        }),
+        'EX',
+        HOLD_MINUTES * 60
+      );
+    } catch (redisErr) {
+      console.error("Redis set hold key error:", redisErr.message);
+    }
+
+    setTimeout(async () => {
+      try {
+        const currentOrder = await Order.findById(savedOrder._id);
+        if (currentOrder && (currentOrder.status === 'pending' || currentOrder.status === 'processing')) {
+          await releaseHeldSeats(savedOrder._id, `Quá ${HOLD_MINUTES} phút chưa thanh toán`);
+        }
+      } catch (timerErr) {
+        console.error(`Error in auto-release timer for order ${savedOrder._id}:`, timerErr);
+      }
+    }, HOLD_DURATION_MS);
+
+    res.status(201).json({
+      message: `Order created successfully. Seats are held for ${HOLD_MINUTES} minutes.`,
+      order: savedOrder,
+      quote,
+      holdExpiresAt: savedOrder.holdExpiresAt
+    });
   } catch (error) {
-    console.log("Error in createOrder controller", error.message);
-    res.status(500).json({ message: 'Error creating order', error: error.message });
+    console.log("Error in createOrder controller:", error.message);
+    res.status(error.status || 500).json({ message: error.message || 'Error creating order', error: error.message });
   }
 };
 
 
-// Lấy các đơn hàng của người dùng
+// Lấy danh sách đơn hàng của người dùng (tối ưu hóa các trường dữ liệu cần thiết)
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log(userId)
-    const currentDate = new Date().toISOString().slice(0, 10); 
 
     const user = await User.findById(userId).populate({
-      match: { bookingDate: { $gte: currentDate } }, 
       path: 'orderHistory',
-      populate: { path: 'tour' }
+      select: '_id bookingDate createdAt orderDate tour adultCount childCount totalValue status paymentMethod holdExpiresAt',
+      populate: {
+        path: 'tour',
+        select: '_id title name description images location duration price'
+      }
     });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const orders = user.orderHistory;
+    const orders = (user.orderHistory || []).filter(Boolean);
+
+    // Sắp xếp đơn hàng mới nhất lên đầu
+    orders.sort((a, b) => new Date(b.createdAt || b.bookingDate || 0) - new Date(a.createdAt || a.bookingDate || 0));
 
     const groupedOrders = orders.reduce((result, order) => {
-      const date = new Date(order.bookingDate);
+      const date = order.bookingDate ? new Date(order.bookingDate) : new Date(order.createdAt || Date.now());
       const monthYear = `${date.getMonth() + 1}-${date.getFullYear()}`;
 
       if (!result[monthYear]) {
@@ -163,53 +221,85 @@ const getUserOrders = async (req, res) => {
     res.status(200).json(groupedOrders);
   } catch (error) {
     console.log("Error fetching orders", error.message);
-    res.status(500).json({ message: 'Error fetching orders', error });
+    res.status(500).json({ message: 'Error fetching orders', error: error.message });
+  }
+};
+
+// Lấy chi tiết 1 vé / đơn hàng theo orderId
+const getOrderDetail = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.user._id;
+
+    const order = await Order.findById(orderId)
+      .populate('tour')
+      .populate('user', 'name email phone phoneNumber address');
+
+    if (!order) {
+      return res.status(404).json({ message: 'Không tìm thấy thông tin vé/đơn hàng này' });
+    }
+
+    // Bảo mật: Kiểm tra xem đơn hàng có thuộc về user đang đăng nhập không (hoặc role admin)
+    const isOwner = order.user && (order.user._id ? order.user._id.toString() : order.user.toString()) === userId.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Bạn không có quyền xem chi tiết vé này' });
+    }
+
+    return res.status(200).json(order);
+  } catch (error) {
+    console.error('Error fetching order detail:', error);
+    return res.status(500).json({ message: 'Lỗi máy chủ khi lấy chi tiết vé', error: error.message });
   }
 };
 
 // Xử lý thanh toán
 const processPayment = async (req, res) => {
   try {
-    console.log(req.body)
+    console.log(req.body);
     const { orderID, status } = req.body;
 
     const order = await Order.findById(orderID).populate('user');
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+    if (String(order.user?._id || order.user) !== String(req.user._id) && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Bạn không có quyền thanh toán đơn này' });
+    }
 
     if (status === 200) {
-      order.status = 'paid';
-      await order.save();
-    
+      const paidOrder = await confirmHeldOrder(order._id);
+
+      // Xóa khóa tạm trong Redis khi thanh toán thành công
+      await redis.del(`order:hold:${order._id}`);
+
       // Gửi email xác nhận
       const tour = await Tour.findById(order.tour);
-      const email = order.user.email;
-    
-      const emailContent = {
-        orderId: order._id,
-        totalValue: order.totalValue.toLocaleString(),
-        bookingDate: order.bookingDate,
-        tour: tour,
-        status: order.status,
-      };
-    
-      try {
-        await sendOrderConfirmationEmail(email, emailContent);
-        console.log("Email confirmation sent to:", order.user.email);
-      } catch (emailError) {
-        console.error("Error sending email:", emailError.message);
-      }
-    
-      res.status(200).json({ message: 'Payment successful', order });
-    } else {
-      // Hoàn lại số lượng chỗ trống nếu thanh toán thất bại
-      await Tour.updateOne(
-        { _id: order.tour },
-        { $inc: { availableSpots: order.adultCount + order.childCount } }
-      );
+      const email = order.user?.email || order.customerInfo?.email;
 
-      res.status(400).json({ message: 'Payment failed' });
+      if (email) {
+        const emailContent = {
+          orderId: order._id,
+          totalValue: order.totalValue.toLocaleString(),
+          bookingDate: order.bookingDate,
+          tour: tour,
+          status: paidOrder.status,
+        };
+
+        try {
+          await sendOrderConfirmationEmail(email, emailContent);
+          console.log("Email confirmation sent to:", email);
+        } catch (emailError) {
+          console.error("Error sending email:", emailError.message);
+        }
+      }
+
+      res.status(200).json({ message: 'Payment successful', order: paidOrder });
+    } else {
+      // Hoàn lại số lượng chỗ trống và chuyển trạng thái canceled nếu thanh toán thất bại
+      await releaseHeldSeats(order._id, 'Thanh toán thất bại');
+      res.status(400).json({ message: 'Payment failed, seats released' });
     }
   } catch (error) {
     console.log("Error in processPayment", error.message);
@@ -217,16 +307,17 @@ const processPayment = async (req, res) => {
   }
 };
 
-const axios = require('axios');
-
 const cancelOrder = async (req, res) => {
   try {
-    const { orderId } = req.body; 
+    const { orderId } = req.body;
     console.log("Received orderID:", orderId);
 
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
+    }
+    if (String(order.user) !== String(req.user._id) && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Bạn không có quyền hủy đơn này' });
     }
 
     if (order.status === 'canceled') {
@@ -234,8 +325,9 @@ const cancelOrder = async (req, res) => {
     }
 
     if (order.status === 'paid') {
-      return res.status(400).json({ message: 'Paid orders cannot be canceled' });
+      return res.status(400).json({ message: 'Paid orders cannot be canceled directly via this method' });
     }
+
     const pointerSecretKey = process.env.VITE_POINTER_SECRET_KEY;
     if (!pointerSecretKey) {
       return res.status(500).json({ message: 'Pointer Wallet secret key is missing' });
@@ -244,29 +336,23 @@ const cancelOrder = async (req, res) => {
       'Authorization': `Bearer ${pointerSecretKey}`,
       'Content-Type': 'application/json',
     };
-    // const orderID = orderId;
-    //     // Gọi API Pointer Wallet để hủy đơn hàng, truyền orderID trong thân yêu cầu
-    //     const cancelResponse = await pointerPayment.cancelOrder(
-    //       { orderID }, 
-    //       { headers }           
-    //     );    
-    const cancelResponse = await axios.post('https://api.pointer.io.vn/api/payment/cancel-order', {
-      orderID: orderId
-    }, { headers});
 
-    console.log('Pointer Wallet cancel response:', cancelResponse.data);
-    if (cancelResponse.status === 200 ) {
-      await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
-      await User.findByIdAndUpdate(order.user, { $inc: { cancellationCount: 1 } }, { new: true });
-      order.status = 'canceled';
-      await order.save();
-
-      return res.status(200).json({ message: 'Order canceled successfully', order });
-    } else {
-      return res.status(400).json({ message: 'Failed to cancel order via Pointer Wallet', details: cancelResponse.data });
+    try {
+      const cancelResponse = await axios.post('https://api.pointer.io.vn/api/payment/cancel-order', {
+        orderID: orderId
+      }, { headers });
+      console.log('Pointer Wallet cancel response:', cancelResponse.data);
+    } catch (pointerErr) {
+      console.warn('Pointer Wallet cancel request warning:', pointerErr.message);
     }
+
+    // Nhả lại chỗ và cập nhật trạng thái đơn hàng sang canceled
+    await releaseHeldSeats(order._id, 'Người dùng hủy đơn');
+    await User.findByIdAndUpdate(order.user, { $inc: { cancellationCount: 1 } }, { new: true });
+
+    return res.status(200).json({ message: 'Order canceled successfully', order });
   } catch (error) {
-    console.error('Error in cancelOrder:', error); 
+    console.error('Error in cancelOrder:', error);
     res.status(500).json({ message: 'Error canceling order', error: error.message });
   }
 };
@@ -283,15 +369,20 @@ const Refund = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+    if (String(order.user) !== String(req.user._id) && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Bạn không có quyền hoàn tiền đơn này' });
+    }
 
     const refundResponse = await pointerPayment.refundMoney(orderID);
 
     // Kiểm tra phản hồi từ refund API
     if (refundResponse && refundResponse.status === 200) {
       console.log("Refund successful:", refundResponse.data);
+      const canceledOrder = await releaseSoldOrder(order._id);
       return res.status(200).json({
         message: "Refund successful",
         data: refundResponse.data,
+        order: canceledOrder,
       });
     } else {
       console.error("Refund failed:", refundResponse);
@@ -309,48 +400,45 @@ const Refund = async (req, res) => {
 
 const weekhookRefund = async (req, res) => {
   try {
-    const { orderID, status  } = req.body;
+    const { orderID, status } = req.body;
+    if (!orderID) return res.status(400).json({ message: 'Order not found' });
 
     const order = await Order.findById(orderID);
-    console.log(orderID)
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
+    }
+    if (order.status === 'canceled') {
+      return res.status(200).json({ message: 'Đơn hàng đã được hủy trước đó' });
     }
     if (order.status !== 'paid') {
       return res.status(400).json({ message: "Only paid orders can be canceled with this function" });
     }
 
-    // Cập nhật số lượng chỗ trống khi hủy tour
-    await updateAvailabilityOnCancelOrder(order.tour, order.bookingDate, order.adultCount, order.childCount);
-
-    if (status === 200) {
-      order.status = 'canceled';
-      await order.save();
-
-      return res.status(200).json({ message: 'Paid order canceled successfully', order });
-    } else {
-      return res.status(400).json({ message: 'Failed to refund money', refundResponse });
+    if (Number(status) === 200) {
+      const canceledOrder = await releaseSoldOrder(order._id);
+      return res.status(200).json({ message: 'Paid order canceled successfully', orderId: canceledOrder?._id || order._id });
     }
+    return res.status(400).json({ message: 'Failed to refund money' });
   } catch (error) {
     console.error("Error in cancelPaidOrder:", error.message);
-    res.status(500).json({ message: 'Error canceling paid order', error: error.message });
+    res.status(500).json({ message: 'Error canceling paid order' });
   }
 };
 
-const connectWallet = async(req, res) =>{
+const connectWallet = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log(userId)
+    console.log(userId);
     const partnerId = process.env.PARTNERID;
     const returnUrl = process.env.VITE_REDIRECT_URL;
 
     const redirectUrl = `https://wallet.pointer.io.vn/connect-app?partnerId=${partnerId}&returnUrl=${encodeURIComponent(returnUrl)}&userId=${userId}`;
     res.json({ redirectUrl });
   } catch (error) {
-    console.error("Error in cconnectWallet :", error.message);
-    res.status(500).json({ message: 'Error connectWallet ', error: error.message });
+    console.error("Error in connectWallet:", error.message);
+    res.status(500).json({ message: 'Error connectWallet', error: error.message });
   }
-}
+};
 
 const handelEvent = async (req, res) => {
   try {
@@ -362,15 +450,15 @@ const handelEvent = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       userID,
       { signature },
-      { new: true } 
+      { new: true }
     );
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.status(200).json({ 
-      message: 'Signature saved successfully', 
-      user: updatedUser 
+    res.status(200).json({
+      message: 'Signature saved successfully',
+      userId: updatedUser._id,
     });
   } catch (error) {
     console.error('Error handling webhook:', error);
@@ -381,10 +469,13 @@ const handelEvent = async (req, res) => {
 
 const createPaypalPayment = async (req, res) => {
   try {
-    const { orderID, returnUrl, cancelUrl } = req.body; // Lấy returnUrl từ body
+    const { orderID, returnUrl, cancelUrl } = req.body;
     const order = await Order.findById(orderID);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
+    }
+    if (String(order.user) !== String(req.user._id) && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Bạn không có quyền thanh toán đơn này' });
     }
 
     const request = new paypal.orders.OrdersCreateRequest();
@@ -400,8 +491,8 @@ const createPaypalPayment = async (req, res) => {
         reference_id: order._id.toString(),
       }],
       application_context: {
-        return_url: returnUrl, // Thêm returnUrl
-        cancel_url: cancelUrl || `${VITE_REDIRECT_URL}/payment/${orderID}`, // Thêm cancelUrl nếu cần
+        return_url: returnUrl,
+        cancel_url: cancelUrl || `${process.env.VITE_REDIRECT_URL || ''}/payment/${orderID}`,
       },
     });
 
@@ -425,7 +516,7 @@ const createPaypalPayment = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-// Sửa lại hàm capturePaypalPayment
+
 const capturePaypalPayment = async (req, res) => {
   try {
     const { orderID, paypalOrderId } = req.body;
@@ -434,15 +525,16 @@ const capturePaypalPayment = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+    if (String(order.user) !== String(req.user._id) && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Bạn không có quyền thanh toán đơn này' });
+    }
 
     const request = new paypal.orders.OrdersCaptureRequest(paypalOrderId);
     const response = await paypalClient.execute(request);
 
-    console.log('PayPal Capture Response:', response.result); // Log để kiểm tra
+    console.log('PayPal Capture Response:', response.result);
 
-   
     if (response.result.status === "COMPLETED") {
-      order.status = 'paid';
       order.paymentDetails = {
         transactionId: response.result.id,
         provider: 'paypal',
@@ -450,29 +542,37 @@ const capturePaypalPayment = async (req, res) => {
         captureId: response.result.purchase_units[0].payments.captures[0].id,
       };
       await order.save();
+      const paidOrder = await confirmHeldOrder(order._id);
+
+      // Xóa khóa tạm trong Redis khi thanh toán thành công
+      await redis.del(`order:hold:${order._id}`);
 
       // Gửi email xác nhận
       const tour = await Tour.findById(order.tour);
-      const emailContent = {
-        orderId: order._id,
-        totalValue: order.totalValue.toLocaleString(),
-        bookingDate: order.bookingDate,
-        tour: tour,
-        status: order.status,
-      };
+      const email = order.user?.email || order.customerInfo?.email;
+      if (email) {
+        const emailContent = {
+          orderId: order._id,
+          totalValue: order.totalValue.toLocaleString(),
+          bookingDate: order.bookingDate,
+          tour: tour,
+          status: paidOrder.status,
+        };
 
-      try {
-        await sendOrderConfirmationEmail(order.user.email, emailContent);
-      } catch (emailError) {
-        console.error("Error sending email:", emailError.message);
+        try {
+          await sendOrderConfirmationEmail(email, emailContent);
+        } catch (emailError) {
+          console.error("Error sending email:", emailError.message);
+        }
       }
 
       return res.json({
         success: true,
         message: "Payment completed successfully",
-        order: order,
+        order: paidOrder,
       });
     } else {
+      await releaseHeldSeats(order._id, 'PayPal capture không hoàn tất');
       return res.status(400).json({
         message: "Payment not completed",
         status: response.result.status,
@@ -484,10 +584,35 @@ const capturePaypalPayment = async (req, res) => {
   }
 };
 
-// Add these to your exports
+// Background Sweeper: quét và nhả chỗ các đơn quá hạn giữ chỗ
+const cleanupExpiredOrders = async () => {
+  try {
+    const now = new Date();
+    const expiredOrders = await Order.find({
+      status: { $in: ['pending', 'processing'] },
+      holdExpiresAt: { $lt: now }
+    });
+
+    if (expiredOrders.length > 0) {
+      console.log(`[Sweeper] Phát hiện ${expiredOrders.length} đơn hàng quá hạn giữ chỗ. Tiến hành nhả vé và hủy đơn...`);
+      for (const expOrder of expiredOrders) {
+        await releaseHeldSeats(expOrder._id, `Hết hạn ${HOLD_MINUTES} phút giữ chỗ (Background Sweeper)`);
+      }
+    }
+  } catch (err) {
+    console.error('[Sweeper Error] Lỗi khi quét đơn hàng hết hạn:', err.message);
+  }
+};
+
+// Khởi chạy sweeper định kỳ mỗi 2 phút
+setInterval(cleanupExpiredOrders, 2 * 60 * 1000);
+// Chạy ngay một lần khi server khởi động
+cleanupExpiredOrders();
+
 module.exports = {
   createOrder,
   getUserOrders,
+  getOrderDetail,
   processPayment,
   cancelOrder,
   Refund,
@@ -496,4 +621,6 @@ module.exports = {
   handelEvent,
   createPaypalPayment,
   capturePaypalPayment,
+  releaseHeldSeats,
+  cleanupExpiredOrders,
 };

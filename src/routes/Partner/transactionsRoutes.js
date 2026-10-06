@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { getPartnerTransactions } = require("../../controllers/Partner/TransationController");
-const {verifyAdmin} = require('../../Middleware/authMiddleware');
+const { requireVerifiedPartner } = require('../../Middleware/authMiddleware');
 
-// Route hiển thị giao dịch của Partner
-router.get("/" ,  getPartnerTransactions);
+router.use(requireVerifiedPartner);
+router.get('/', (req, res) => {
+  res.status(404).json({ message: 'Chưa có giao dịch đối soát' });
+});
 
 module.exports = router;

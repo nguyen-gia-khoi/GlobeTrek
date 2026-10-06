@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../../controllers/authController');
-const {verifyAdmin} = require('../../Middleware/authMiddleware');
+const { requireAdmin } = require('../../Middleware/authMiddleware');
+
+router.use(requireAdmin);
+
 router.get('/users' ,authController.getUser)
 router.get('/partners' ,authController.gePartners)
 router.post('/banPartner' ,authController.banPartner)

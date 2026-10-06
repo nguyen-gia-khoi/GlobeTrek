@@ -3,156 +3,686 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh sách Tour của Partner</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.3/antd.min.css" />
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            max-width: 1000px;
-            margin: auto;
-        }
-        .ant-table {
-            width: 100%;
-            table-layout: fixed;
-        }
-        .ant-table-thead th, .ant-table-tbody td {
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        .col-title { width: 150px; }
-        .col-description { width: 200px; }
-        .col-price { width: 100px; }
-        .col-location { width: 150px; }
-        .col-duration { width: 100px; }
-        .col-schedule { width: 200px; }
-        .col-partner { width: 150px; }
-        .col-availability { width: 150px; }
-        .col-status { width: 100px; }
-        .col-action { width: 120px; }
-        @media (max-width: 768px) {
-            .ant-table-thead th, .ant-table-tbody td {
-                font-size: 0.9rem;
-            }
-        }
-    </style>
+    <title>Danh Sách Tất Cả Tour - GlobeTrek Admin</title>
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
-    <%- include('../../header', { pageTitle: 'Danh sách Tour của Partner' }) %>
-    <div class="container mt-5">
-        <h1 class="mb-5 text-center">Danh sách Tour của Partner</h1>
-        <div class="ant-table-wrapper">
-            <table class="ant-table">
-                <thead class="ant-table-thead">
-                    <tr>
-                        <th class="col-title">Tiêu đề</th>
-                        <th class="col-description">Mô tả</th>
-                        <th class="col-price">Giá</th>
-                        <th class="col-location">Địa điểm</th>
-                        <th class="col-duration">Thời gian</th>
-                        <th class="col-schedule">Lịch trình</th>
-                        <th class="col-partner">Partner</th>
-                        <th class="col-availability">Số chỗ còn lại</th>
-                        <th class="col-status">Trạng thái</th>
-                        <th class="col-action">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody class="ant-table-tbody">
-                    <% if (tours.length === 0) { %>
+    <%- include('../../header', { pageTitle: 'Danh sách Tour' }) %>
+
+    <div class="main-content-layout">
+        <!-- Page Header -->
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold text-main mb-1">Quản Lý Danh Sách Tour Toàn Hệ Thống</h2>
+                <p class="text-muted fs-sm mb-0">Kiểm tra trạng thái hoạt động, đối tác cung cấp và số chỗ của từng tour</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/admin/tours/add-requests" class="btn btn-gt-outline btn-gt-sm">
+                    <i class="fas fa-plus-circle me-1"></i> Duyệt Thêm Tour
+                </a>
+                <a href="/admin/tours/delete-requests" class="btn btn-gt-ghost text-danger btn-gt-sm border">
+                    <i class="fas fa-trash-alt me-1"></i> Yêu Cầu Xóa
+                </a>
+            </div>
+        </div>
+
+        <!-- Multi-criteria Filter Bar -->
+        <div class="card-gt p-4 mb-4 shadow-sm border-0">
+            <form action="/admin/tours/list" method="GET" id="adminTourFilterForm">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-filter text-primary fs-5"></i>
+                        <h6 class="fw-bold text-main mb-0">Bộ Lọc & Tìm Kiếm Tour</h6>
+                    </div>
+                    <div class="fs-xs text-muted">
+                        <% if (typeof totalTours !== 'undefined') { %>
+                            Tìm thấy <strong class="text-primary"><%= totalTours %></strong> tour
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <!-- 1. Tìm kiếm tên/địa điểm -->
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label fs-xs fw-bold text-muted mb-1">
+                            <i class="fas fa-search me-1 text-primary"></i> Từ khóa / Tên tour
+                        </label>
+                        <div class="search-input-group">
+                            <i class="fas fa-magnifying-glass"></i>
+                            <input type="text" name="search" class="form-control-gt" placeholder="Tìm tên tour hoặc địa điểm..." value="<%= filters ? filters.search : '' %>">
+                        </div>
+                    </div>
+
+                    <!-- 2. Lọc theo Đối tác -->
+                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                        <label class="form-label fs-xs fw-bold text-muted mb-1">
+                            <i class="fas fa-handshake me-1 text-info"></i> Đối tác
+                        </label>
+                        <select name="partner" class="form-control-gt">
+                            <option value="">Tất cả đối tác</option>
+                            <% if (typeof partnersList !== 'undefined' && partnersList) { %>
+                                <% partnersList.forEach(p => { %>
+                                    <option value="<%= p._id %>" <%= (filters && filters.partner == p._id.toString()) ? 'selected' : '' %>>
+                                        <%= p.name %>
+                                    </option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <!-- 3. Lọc theo Trạng thái -->
+                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                        <label class="form-label fs-xs fw-bold text-muted mb-1">
+                            <i class="fas fa-toggle-on me-1 text-success"></i> Trạng thái
+                        </label>
+                        <select name="status" class="form-control-gt">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="active" <%= (filters && filters.status === 'active') ? 'selected' : '' %>>🟢 Đang mở</option>
+                            <option value="disabled" <%= (filters && filters.status === 'disabled') ? 'selected' : '' %>>⛔ Đã tạm dừng</option>
+                            <option value="pending" <%= (filters && filters.status === 'pending') ? 'selected' : '' %>>🕒 Chờ duyệt</option>
+                        </select>
+                    </div>
+
+                    <!-- 4. Lọc theo Quốc gia -->
+                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                        <label class="form-label fs-xs fw-bold text-muted mb-1">
+                            <i class="fas fa-earth-asia me-1 text-primary"></i> Quốc gia
+                        </label>
+                        <select name="country" id="filterCountry" class="form-control-gt" onchange="onFilterCountryChange(this.value)">
+                            <option value="">Tất cả quốc gia</option>
+                            <% if (typeof countriesList !== 'undefined' && countriesList) { %>
+                                <% countriesList.forEach(c => { %>
+                                    <option value="<%= c._id %>" <%= (filters && filters.country == c._id.toString()) ? 'selected' : '' %>>
+                                        <%= c.name %>
+                                    </option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <!-- 5. Lọc theo Vùng miền -->
+                    <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+                        <label class="form-label fs-xs fw-bold text-muted mb-1">
+                            <i class="fas fa-map me-1 text-info"></i> Vùng miền
+                        </label>
+                        <select name="region" id="filterRegion" class="form-control-gt" onchange="onFilterRegionChange(this.value)">
+                            <option value="">Tất cả vùng miền</option>
+                            <% if (typeof regionsList !== 'undefined' && regionsList) { %>
+                                <% regionsList.forEach(r => { %>
+                                    <option value="<%= r._id %>" 
+                                            data-country="<%= r.country ? (r.country._id ? r.country._id.toString() : r.country.toString()) : '' %>"
+                                            <%= (filters && filters.region == r._id.toString()) ? 'selected' : '' %>>
+                                        <%= r.name %>
+                                    </option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <!-- 6. Lọc theo Điểm đến -->
+                    <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+                        <label class="form-label fs-xs fw-bold text-muted mb-1">
+                            <i class="fas fa-map-location-dot me-1 text-danger"></i> Điểm đến
+                        </label>
+                        <select name="destination" id="filterDestination" class="form-control-gt">
+                            <option value="">Tất cả điểm đến</option>
+                            <% if (typeof destinationsList !== 'undefined' && destinationsList) { %>
+                                <% destinationsList.forEach(d => { %>
+                                    <option value="<%= d._id %>" 
+                                            data-country="<%= d.country ? (d.country._id ? d.country._id.toString() : d.country.toString()) : '' %>"
+                                            data-region="<%= d.region ? (d.region._id ? d.region._id.toString() : d.region.toString()) : '' %>"
+                                            <%= (filters && filters.destination == d._id.toString()) ? 'selected' : '' %>>
+                                        <%= d.name %>
+                                    </option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <!-- 7. Lọc theo Ngày có lịch khởi hành -->
+                    <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+                        <label class="form-label fs-xs fw-bold text-muted mb-1">
+                            <i class="fas fa-calendar-day me-1 text-primary"></i> Ngày có lịch
+                        </label>
+                        <input type="date" name="date" class="form-control-gt" value="<%= filters ? filters.date : '' %>" title="Chọn ngày có lịch khởi hành">
+                    </div>
+
+                    <!-- 8. Lọc theo Số ngày (Duration) -->
+                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                        <label class="form-label fs-xs fw-bold text-muted mb-1">
+                            <i class="fas fa-clock me-1 text-warning"></i> Số ngày
+                        </label>
+                        <select name="duration" class="form-control-gt">
+                            <option value="">Tất cả số ngày</option>
+                            <option value="1" <%= (filters && filters.duration === '1') ? 'selected' : '' %>>1 Ngày</option>
+                            <option value="2" <%= (filters && filters.duration === '2') ? 'selected' : '' %>>2 Ngày</option>
+                            <option value="3" <%= (filters && filters.duration === '3') ? 'selected' : '' %>>3 Ngày</option>
+                            <option value="4" <%= (filters && filters.duration === '4') ? 'selected' : '' %>>4 Ngày</option>
+                            <option value="5" <%= (filters && filters.duration === '5') ? 'selected' : '' %>>5 Ngày</option>
+                            <option value="6+" <%= (filters && filters.duration === '6+') ? 'selected' : '' %>>Từ 6 ngày trở lên</option>
+                        </select>
+                    </div>
+
+                    <!-- Nút Lọc & Đặt lại -->
+                    <div class="col-12 col-md-6 col-lg-4 d-flex align-items-end justify-content-end gap-2 ms-auto">
+                        <button type="submit" class="btn btn-gt-primary btn-gt-sm px-4">
+                            <i class="fas fa-filter me-1"></i> Áp Dụng Lọc
+                        </button>
+                        <a href="/admin/tours/list" class="btn btn-gt-ghost btn-gt-sm border text-muted px-3" title="Xóa tất cả điều kiện lọc">
+                            <i class="fas fa-rotate-left me-1"></i> Đặt Lại
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tour List Table -->
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
                         <tr>
-                            <td colspan="10" class="ant-table-cell ant-table-cell-align-center">Không có tour nào.</td>
+                            <th>Tên Tour & Địa Điểm</th>
+                            <th>Đối Tác</th>
+                            <th style="min-width: 180px;">Giá Bán (VNĐ)</th>
+                            <th>Thời Lượng</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-end">Hành Động</th>
                         </tr>
-                    <% } else { %>
-                        <% tours.forEach(tour => { %>
+                    </thead>
+                    <tbody>
+                        <% if (!tours || tours.length === 0) { %>
                             <tr>
-                                <td class="ant-table-cell"><%= tour.title %></td>
-                                <td class="ant-table-cell"><%= tour.description %></td>
-                                <td class="ant-table-cell"><%= tour.price %> VNĐ</td>
-                                <td class="ant-table-cell"><%= tour.location %></td>
-                                <td class="ant-table-cell"><%= tour.duration %> ngày</td>
-                                <td class="ant-table-cell">
-                                    <% 
-                                        let displayedSchedules = tour.schedules.slice(0, 2);
-                                        displayedSchedules.forEach((schedule) => { 
-                                    %>
-                                        <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
-                                    <% }) %>
-                                    <% if (tour.schedules.length > 2) { %>
-                                        <div id="schedules-<%= tour._id %>" class="additional-schedules" style="display:none;">
-                                            <% tour.schedules.slice(2).forEach((schedule) => { %>
-                                                <div>Ngày <%= schedule.date %>: <%= schedule.activity %></div>
-                                            <% }) %>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="empty-state-gt border-0 py-4">
+                                        <div class="empty-state-icon">
+                                            <i class="fas fa-compass"></i>
                                         </div>
-                                        <a href="javascript:void(0);" onclick="toggleSchedules('<%= tour._id %>')">Xem thêm...</a>
-                                    <% } %>
-                                </td>
-                                <td class="ant-table-cell"><%= tour.partner ? tour.partner.name : 'Không có' %></td>
-                                <td class="ant-table-cell">
-                                    <% 
-                                        let displayedAvailabilities = tour.availabilities.slice(0, 2);
-                                        displayedAvailabilities.forEach((availabilities) => { 
-                                    %>
-                                        <div><%= availabilities.date.toLocaleDateString() %>: <%= availabilities.availableSeats %> chỗ</div>
-                                    <% }) %>
-                                    <% if (tour.availabilities.length > 2) { %>
-                                        <div id="availabilities-<%= tour._id %>" class="additional-availabilities" style="display:none;">
-                                            <% tour.availabilities.slice(2).forEach((availabilities) => { %>
-                                                <div><%= availabilities.date.toLocaleDateString() %>: <%= availabilities.availableSeats %> chỗ</div>
-                                            <% }) %>
-                                        </div>
-                                        <a href="javascript:void(0);" onclick="toggleAvailabilities('<%= tour._id %>')">Xem thêm...</a>
-                                    <% } %>
-                                </td>
-                                <td class="ant-table-cell">
-                                    <span class="ant-tag <%= tour.isDisabled ? 'ant-tag-red' : 'ant-tag-green' %>">
-                                        <%= tour.isDisabled ? 'Tắt' : 'Bật' %>
-                                    </span>
-                                </td>
-                                <td class="ant-table-cell">
-                                    <% if (!tour.hasOrders) { %>
-                                        <form action="/admin/tours/toggle-status/<%= tour._id %>" method="POST" class="d-inline">
-                                            <button type="submit" class="ant-btn <%= tour.isDisabled ? 'ant-btn-primary' : 'ant-btn-danger' %>">
-                                                <%= tour.isDisabled ? 'Bật' : 'Tắt' %>
-                                            </button>
-                                        </form>
-                                    <% } else { %>
-                                        <span class="ant-tag ant-tag-blue">Đã có đơn hàng</span>
-                                    <% } %>
+                                        <h5 class="fw-bold text-main">Không Tìm Thấy Tour Phù Hợp</h5>
+                                        <p class="empty-state-desc mb-0">Không có tour nào khớp với các tiêu chí tìm kiếm hoặc bộ lọc hiện tại.</p>
+                                    </div>
                                 </td>
                             </tr>
-                        <% }) %>
-                    <% } %>
-                </tbody>
-            </table>
+                        <% } else { %>
+                            <% tours.forEach(tour => { %>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-3 overflow-hidden flex-shrink-0 bg-light border gt-img-preview" 
+                                                 style="width: 52px; height: 52px; cursor: pointer;"
+                                                 data-gt-preview="<%= (tour.images && tour.images.length > 0) ? tour.images[0] : '' %>"
+                                                 data-gt-title="<%= tour.title %>"
+                                                 title="Nhấp để xem ảnh gốc">
+                                                <% if (tour.images && tour.images.length > 0) { %>
+                                                    <img src="<%= tour.images[0] %>" alt="<%= tour.title %>" class="w-100 h-100 object-fit-cover">
+                                                <% } else { %>
+                                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted fs-xs">
+                                                        <i class="fas fa-image"></i>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-main fs-6 mb-1"><%= tour.title %></div>
+                                                
+                                                <!-- Phân Cấp Địa Lý: Điểm Đến -> Vùng Miền -> Quốc Gia -->
+                                                <div class="d-flex flex-wrap align-items-center gap-1 mb-1">
+                                                    <% if (tour.destination) { %>
+                                                        <span class="badge-gt badge-gt-primary py-1 px-2" style="font-size: 0.72rem;">
+                                                            <i class="fas fa-location-dot me-1"></i><%= tour.destination.name || tour.destination %>
+                                                        </span>
+                                                    <% } %>
+                                                    <% if (tour.region) { %>
+                                                        <span class="badge-gt badge-gt-info py-1 px-2" style="font-size: 0.72rem;">
+                                                            <i class="fas fa-map me-1"></i><%= tour.region.name || tour.region %>
+                                                        </span>
+                                                    <% } %>
+                                                    <% if (tour.country) { %>
+                                                        <span class="badge-gt badge-gt-neutral py-1 px-2" style="font-size: 0.72rem;">
+                                                            <i class="fas fa-globe me-1 text-secondary"></i><%= tour.country.name || tour.country %>
+                                                        </span>
+                                                    <% } %>
+                                                </div>
+                                                
+                                                <div class="fs-xs text-muted">
+                                                    <i class="fas fa-map-pin text-primary me-1"></i><%= tour.location || 'Việt Nam' %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt badge-gt-info">
+                                            <i class="fas fa-handshake"></i> <%= tour.partner ? tour.partner.name : 'Chưa gán' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column gap-1" style="min-width: 180px;">
+                                            <div class="fw-bold text-primary font-display fs-6 text-nowrap">
+                                                <%= (tour.price || 0).toLocaleString('vi-VN') %> đ
+                                            </div>
+                                            <div class="fs-xs d-flex flex-column gap-1 pt-1 border-top">
+                                                <div class="d-flex justify-content-between gap-3 text-muted text-nowrap">
+                                                    <span><i class="fas fa-child text-secondary me-1"></i>Trẻ em:</span>
+                                                    <span class="fw-semibold text-secondary"><%= (tour.childPrice || Math.round((tour.price || 0) * 0.75)).toLocaleString('vi-VN') %> đ</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between gap-3 text-nowrap">
+                                                    <span class="text-warning"><i class="fas fa-star me-1"></i>Lễ (NL):</span>
+                                                    <span class="fw-semibold text-warning"><%= (tour.specialAdultPrice || Math.round((tour.price || 0) * 1.5)).toLocaleString('vi-VN') %> đ</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between gap-3 text-nowrap">
+                                                    <span class="text-warning"><i class="fas fa-star me-1"></i>Lễ (TE):</span>
+                                                    <span class="fw-semibold text-warning"><%= (tour.specialChildPrice || Math.round(((tour.childPrice || (tour.price || 0) * 0.75)) * 1.5)).toLocaleString('vi-VN') %> đ</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt badge-gt-neutral">
+                                            <i class="fas fa-clock"></i> <%= tour.duration %> Ngày
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (!tour.isApproved) { %>
+                                            <span class="badge-gt badge-gt-warning">
+                                                <i class="fas fa-clock"></i> Chờ duyệt
+                                            </span>
+                                        <% } else if (tour.isDisabled) { %>
+                                            <span class="badge-gt badge-gt-danger">
+                                                <i class="fas fa-circle-dot"></i> Đã tắt
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge-gt badge-gt-success">
+                                                <i class="fas fa-circle-dot"></i> Đang mở
+                                            </span>
+                                        <% } %>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex align-items-center gap-1">
+                                            <button type="button" 
+                                                    class="btn btn-gt-ghost text-primary btn-gt-sm btn-admin-tour-detail" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#detailAdminTourModal"
+                                                    data-tour='<%- JSON.stringify(tour).replace(/'/g, "&apos;") %>'
+                                                    title="Xem toàn bộ thông tin tour">
+                                                <i class="fas fa-eye me-1"></i> Chi tiết
+                                            </button>
+                                            <% if (!tour.isApproved) { %>
+                                                <a href="/admin/tours/add-requests" class="btn btn-gt-primary btn-gt-sm" title="Xét duyệt mở bán tour này">
+                                                    <i class="fas fa-check me-1"></i> Xét Duyệt
+                                                </a>
+                                            <% } else if (!tour.hasOrders) { %>
+                                                <form action="/admin/tours/toggle-status/<%= tour._id %>" method="POST" class="d-inline m-0">
+                                                    <button type="submit" class="btn btn-gt-sm <%= tour.isDisabled ? 'btn-gt-primary' : 'btn-gt-ghost text-danger border' %>">
+                                                        <i class="fas <%= tour.isDisabled ? 'fa-play' : 'fa-pause' %> me-1"></i>
+                                                        <%= tour.isDisabled ? 'Mở Bán' : 'Tạm Dừng' %>
+                                                    </button>
+                                                </form>
+                                            <% } else { %>
+                                                <span class="badge-gt badge-gt-info">
+                                                    <i class="fas fa-shopping-bag"></i> Đã có đơn
+                                                </span>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="pagination mt-3">
-            <ul class="ant-pagination">
-                <li class="ant-pagination-prev <%= currentPage === 1 ? 'ant-pagination-disabled' : '' %>">
-                    <a href="?page=<%= currentPage - 1 %>">«</a>
-                </li>
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                    <li class="ant-pagination-item <%= i === currentPage ? 'ant-pagination-item-active' : '' %>">
-                        <a href="?page=<%= i %>"><%= i %></a>
-                    </li>
+
+        <!-- Pagination -->
+        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+            <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
+                <% if (currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %><%= typeof queryString !== 'undefined' ? queryString : '' %>" class="btn btn-gt-outline btn-gt-sm">
+                        <i class="fas fa-chevron-left"></i> Trước
+                    </a>
                 <% } %>
-                <li class="ant-pagination-next <%= currentPage === totalPages ? 'ant-pagination-disabled' : '' %>">
-                    <a href="?page=<%= currentPage + 1 %>">»</a>
-                </li>
-            </ul>
+                <span class="fs-sm fw-bold text-muted px-3">Trang <%= currentPage %> / <%= totalPages %></span>
+                <% if (currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %><%= typeof queryString !== 'undefined' ? queryString : '' %>" class="btn btn-gt-outline btn-gt-sm">
+                        Sau <i class="fas fa-chevron-right"></i>
+                    </a>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Modal: Xem Chi Tiết Tour Đầy Đủ (Admin) -->
+    <div class="modal fade" id="detailAdminTourModal" tabindex="-1" aria-labelledby="detailAdminTourModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge emerald">
+                            <i class="fas fa-route"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main mb-0" id="adminTourTitle">Chi Tiết Tour Du Lịch</h5>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <span class="badge-gt badge-gt-info fs-xs" id="adminTourPartner">Đối Tác</span>
+                                <span class="badge-gt badge-gt-secondary fs-xs" id="adminTourLocation">Việt Nam</span>
+                                <span class="badge-gt badge-gt-success fs-xs font-display" id="adminTourPrice">0 VNĐ</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-body" style="max-height: 75vh; overflow-y: auto;">
+                    <!-- Geographic Classification Section -->
+                    <div class="detail-section-card mb-3">
+                        <div class="detail-section-title">
+                            <i class="fas fa-map-location-dot text-primary"></i> Phân Cấp Địa Lý & Khu Vực
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-sm-4">
+                                <div class="p-2 rounded-3 bg-white border text-center shadow-xs">
+                                    <small class="text-muted fs-xs d-block mb-1"><i class="fas fa-location-dot text-danger me-1"></i>Điểm Đến</small>
+                                    <strong class="text-primary fs-sm" id="adminTourDetailDestination">—</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-2 rounded-3 bg-white border text-center shadow-xs">
+                                    <small class="text-muted fs-xs d-block mb-1"><i class="fas fa-map text-secondary me-1"></i>Vùng Miền</small>
+                                    <strong class="text-secondary fs-sm" id="adminTourDetailRegion">—</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-2 rounded-3 bg-white border text-center shadow-xs">
+                                    <small class="text-muted fs-xs d-block mb-1"><i class="fas fa-globe text-success me-1"></i>Quốc Gia</small>
+                                    <strong class="text-main fs-sm" id="adminTourDetailCountry">—</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Gallery (Images & Videos) -->
+                    <div class="detail-section-card" id="adminTourMediaSection">
+                        <div class="detail-section-title">
+                            <i class="fas fa-photo-film text-primary"></i> Hình Ảnh & Video Gốc
+                        </div>
+                        <div class="detail-gallery-grid" id="adminTourGalleryGrid"></div>
+                    </div>
+
+                    <!-- Price Breakdown Section -->
+                    <div class="detail-section-card">
+                        <div class="detail-section-title">
+                            <i class="fas fa-tags text-primary"></i> Khung Bảng Giá Vé Chi Tiết
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-md-3">
+                                <div class="p-3 rounded-3 bg-white border text-center shadow-xs">
+                                    <div class="fs-xs text-muted mb-1"><i class="fas fa-user text-primary me-1"></i>Người Lớn (Thường)</div>
+                                    <div class="font-display fw-bold text-primary fs-5" id="adminTourPriceAdult">0 VNĐ</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="p-3 rounded-3 bg-white border text-center shadow-xs">
+                                    <div class="fs-xs text-muted mb-1"><i class="fas fa-child text-secondary me-1"></i><span id="adminTourPriceChildLabel">Trẻ Em (75%)</span></div>
+                                    <div class="font-display fw-bold text-secondary fs-5" id="adminTourPriceChild">0 VNĐ</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="p-3 rounded-3 bg-white border text-center shadow-xs" style="background: rgba(245, 158, 11, 0.05);">
+                                    <div class="fs-xs text-warning mb-1"><i class="fas fa-star me-1"></i><span id="adminTourPriceSpecialAdultLabel">Lễ - NL (150%)</span></div>
+                                    <div class="font-display fw-bold text-warning fs-5" id="adminTourPriceSpecialAdult">0 VNĐ</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="p-3 rounded-3 bg-white border text-center shadow-xs" style="background: rgba(245, 158, 11, 0.05);">
+                                    <div class="fs-xs text-warning mb-1"><i class="fas fa-star me-1"></i><span id="adminTourPriceSpecialChildLabel">Lễ - TE (150%)</span></div>
+                                    <div class="font-display fw-bold text-warning fs-5" id="adminTourPriceSpecialChild">0 VNĐ</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Highlights & Summary -->
+                    <div class="detail-section-card">
+                        <div class="detail-section-title">
+                            <i class="fas fa-star text-warning"></i> Điểm Nhấn Nổi Bật (Highlights)
+                        </div>
+                        <div class="detail-text-box mb-3" id="adminTourHighlights">Chưa có thông tin điểm nhấn.</div>
+
+                        <div class="detail-section-title mt-4">
+                            <i class="fas fa-align-left text-secondary"></i> Mô Tả Chi Tiết Toàn Bộ
+                        </div>
+                        <div class="detail-text-box" id="adminTourDesc">Chưa có mô tả chi tiết.</div>
+                    </div>
+
+                    <!-- Daily Schedules (Lịch Trình Chi Tiết Từng Ngày) -->
+                    <div class="detail-section-card">
+                        <div class="detail-section-title">
+                            <i class="fas fa-calendar-days text-info"></i> Lịch Trình Chi Tiết Từng Ngày
+                        </div>
+                        <div id="adminTourSchedulesList" class="d-flex flex-column gap-2"></div>
+                    </div>
+
+                    <!-- Availabilities (Ngày Khởi Hành & Số Chỗ) -->
+                    <div class="detail-section-card mb-0">
+                        <div class="detail-section-title">
+                            <i class="fas fa-calendar-check text-success"></i> Các Đợt Khởi Hành & Chỗ Trống
+                        </div>
+                        <div id="adminTourAvailabilitiesList" class="row g-2"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-white">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
         </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.3/antd.min.js"></script>
+
     <script>
-        function toggleSchedules(tourId) {
-            var schedulesDiv = document.getElementById("schedules-" + tourId);
-            schedulesDiv.style.display = schedulesDiv.style.display === "none" ? "block" : "none";
+        function toggleAdminSchedule(id) {
+            const div = document.getElementById("admin-sch-" + id);
+            div.style.display = div.style.display === "none" ? "block" : "none";
         }
-        function toggleAvailabilities(tourId) {
-            var availabilitiesDiv = document.getElementById("availabilities-" + tourId);
-            availabilitiesDiv.style.display = availabilitiesDiv.style.display === "none" ? "block" : "none";
+
+        // Admin Detail Tour Modal Populator
+        const detailAdminTourModal = document.getElementById('detailAdminTourModal');
+        if (detailAdminTourModal) {
+            detailAdminTourModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                const tourDataStr = button.getAttribute('data-tour');
+                if (!tourDataStr) return;
+                const tour = JSON.parse(tourDataStr);
+
+                const childPercent = tour.childPercent || 75;
+                const holidayAdultPercent = tour.holidayAdultPercent || 150;
+                const holidayChildPercent = tour.holidayChildPercent || 150;
+
+                const adultPrice = tour.price || 0;
+                const childPrice = tour.childPrice || Math.round((adultPrice * childPercent) / 100);
+                const specialAdultPrice = tour.specialAdultPrice || Math.round((adultPrice * holidayAdultPercent) / 100);
+                const specialChildPrice = tour.specialChildPrice || Math.round((childPrice * holidayChildPercent) / 100);
+
+                document.getElementById('adminTourTitle').textContent = tour.title || 'Chi Tiết Tour';
+                document.getElementById('adminTourPartner').innerHTML = `<i class="fas fa-handshake me-1"></i> ${tour.partner ? tour.partner.name : 'Chưa gán'}`;
+                document.getElementById('adminTourLocation').innerHTML = `<i class="fas fa-map-pin me-1"></i> ${tour.location || 'Việt Nam'} (${tour.duration || 1} Ngày)`;
+                document.getElementById('adminTourPrice').textContent = `${adultPrice.toLocaleString('vi-VN')} VNĐ`;
+
+                // Set Price Breakdown
+                document.getElementById('adminTourPriceAdult').textContent = `${adultPrice.toLocaleString('vi-VN')} VNĐ`;
+                document.getElementById('adminTourPriceChild').textContent = `${childPrice.toLocaleString('vi-VN')} VNĐ`;
+                document.getElementById('adminTourPriceSpecialAdult').textContent = `${specialAdultPrice.toLocaleString('vi-VN')} VNĐ`;
+                document.getElementById('adminTourPriceSpecialChild').textContent = `${specialChildPrice.toLocaleString('vi-VN')} VNĐ`;
+
+                const childLbl = document.getElementById('adminTourPriceChildLabel');
+                if (childLbl) childLbl.textContent = `Trẻ Em (${childPercent}%)`;
+                const spAdultLbl = document.getElementById('adminTourPriceSpecialAdultLabel');
+                if (spAdultLbl) spAdultLbl.textContent = `Lễ - NL (${holidayAdultPercent}%)`;
+                const spChildLbl = document.getElementById('adminTourPriceSpecialChildLabel');
+                if (spChildLbl) spChildLbl.textContent = `Lễ - TE (${holidayChildPercent}%)`;
+
+                document.getElementById('adminTourHighlights').textContent = tour.highlights || 'Chưa có thông tin điểm nhấn.';
+                document.getElementById('adminTourDesc').textContent = tour.description || 'Chưa có mô tả chi tiết.';
+
+                // Populate Geographic Info
+                const destName = tour.destination ? (tour.destination.name || tour.destination) : '—';
+                const regionName = tour.region ? (tour.region.name || tour.region) : '—';
+                const countryName = tour.country ? (tour.country.name || tour.country) : 'Việt Nam';
+                
+                const destEl = document.getElementById('adminTourDetailDestination');
+                if (destEl) destEl.textContent = destName;
+                const regEl = document.getElementById('adminTourDetailRegion');
+                if (regEl) regEl.textContent = regionName;
+                const ctryEl = document.getElementById('adminTourDetailCountry');
+                if (ctryEl) ctryEl.textContent = countryName;
+
+                // Populate Media Gallery
+                const galleryGrid = document.getElementById('adminTourGalleryGrid');
+                galleryGrid.innerHTML = '';
+                const images = tour.images || [];
+                const videos = tour.videos || [];
+
+                images.forEach((imgUrl, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'detail-gallery-item gt-img-preview';
+                    item.setAttribute('data-gt-preview', imgUrl);
+                    item.setAttribute('data-gt-title', `${tour.title} (Ảnh ${idx + 1})`);
+                    item.innerHTML = `
+                        <img src="${imgUrl}" alt="Tour image ${idx + 1}">
+                        <div class="gallery-overlay"><i class="fas fa-magnifying-glass-plus fs-5"></i></div>
+                    `;
+                    galleryGrid.appendChild(item);
+                });
+
+                videos.forEach((vidUrl, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'detail-gallery-item';
+                    item.innerHTML = `
+                        <video src="${vidUrl}" controls preload="metadata"></video>
+                    `;
+                    galleryGrid.appendChild(item);
+                });
+
+                if (images.length === 0 && videos.length === 0) {
+                    galleryGrid.innerHTML = '<p class="text-muted fs-xs mb-0">Tour chưa tải lên hình ảnh hoặc video nào.</p>';
+                }
+
+                // Populate Schedules
+                const schedContainer = document.getElementById('adminTourSchedulesList');
+                schedContainer.innerHTML = '';
+                if (tour.schedules && tour.schedules.length > 0) {
+                    tour.schedules.forEach(sch => {
+                        const row = document.createElement('div');
+                        row.className = 'p-3 rounded-3 bg-white border d-flex align-items-start gap-3';
+                        row.innerHTML = `
+                            <span class="badge-gt badge-gt-primary flex-shrink-0">Ngày ${sch.day || sch.date}</span>
+                            <div class="fs-sm text-main">${sch.activity}</div>
+                        `;
+                        schedContainer.appendChild(row);
+                    });
+                } else {
+                    schedContainer.innerHTML = '<p class="text-muted fs-xs mb-0">Chưa thiết lập lịch trình từng ngày.</p>';
+                }
+
+                // Populate Availabilities
+                const avContainer = document.getElementById('adminTourAvailabilitiesList');
+                avContainer.innerHTML = '';
+                if (tour.departures && tour.departures.length > 0) {
+                    tour.departures.forEach(av => {
+                        const col = document.createElement('div');
+                        col.className = 'col-sm-6 col-md-4';
+                        col.innerHTML = `
+                            <div class="p-2 rounded-3 bg-white border d-flex align-items-center justify-content-between fs-xs">
+                                <span><i class="fas fa-calendar-alt text-primary me-1"></i> ${new Date(av.date).toLocaleDateString('vi-VN')}</span>
+                                <strong class="text-success">${av.availableSeats} chỗ</strong>
+                            </div>
+                        `;
+                        avContainer.appendChild(col);
+                    });
+                } else {
+                    avContainer.innerHTML = '<p class="text-muted fs-xs mb-0">Chưa có lịch khởi hành nào.</p>';
+                }
+            });
         }
+
+        // Xử lý cascading filter (Quốc gia -> Vùng miền -> Điểm đến)
+        function onFilterCountryChange(countryId, preserveSelection = false) {
+            const regionSelect = document.getElementById('filterRegion');
+            const destSelect = document.getElementById('filterDestination');
+            if (!regionSelect || !destSelect) return;
+
+            // Lọc danh sách vùng miền theo quốc gia
+            const regionOptions = regionSelect.querySelectorAll('option');
+            let hasCurrentRegion = false;
+            regionOptions.forEach(opt => {
+                if (!opt.value) return;
+                const optCountry = opt.getAttribute('data-country');
+                if (!countryId || !optCountry || optCountry === countryId) {
+                    opt.style.display = '';
+                    if (opt.selected) hasCurrentRegion = true;
+                } else {
+                    opt.style.display = 'none';
+                    if (opt.selected) opt.selected = false;
+                }
+            });
+
+            if (!preserveSelection && !hasCurrentRegion) {
+                regionSelect.value = '';
+            }
+
+            filterFilterDestinations(preserveSelection);
+        }
+
+        function onFilterRegionChange(regionId) {
+            if (regionId) {
+                const regionSelect = document.getElementById('filterRegion');
+                const selectedOpt = regionSelect.options[regionSelect.selectedIndex];
+                const countryId = selectedOpt ? selectedOpt.getAttribute('data-country') : '';
+                const countrySelect = document.getElementById('filterCountry');
+                if (countryId && countrySelect && (!countrySelect.value || countrySelect.value !== countryId)) {
+                    countrySelect.value = countryId;
+                }
+            }
+            filterFilterDestinations(false);
+        }
+
+        function filterFilterDestinations(preserveSelection = false) {
+            const countryId = document.getElementById('filterCountry')?.value || '';
+            const regionId = document.getElementById('filterRegion')?.value || '';
+            const destSelect = document.getElementById('filterDestination');
+            if (!destSelect) return;
+            const destOptions = destSelect.querySelectorAll('option');
+
+            let currentStillValid = false;
+            destOptions.forEach(opt => {
+                if (!opt.value) return;
+                const optCountry = opt.getAttribute('data-country');
+                const optRegion = opt.getAttribute('data-region');
+
+                let match = true;
+                if (countryId && optCountry && optCountry !== countryId) match = false;
+                if (regionId && optRegion && optRegion !== regionId) match = false;
+
+                if (match) {
+                    opt.style.display = '';
+                    if (opt.selected) currentStillValid = true;
+                } else {
+                    opt.style.display = 'none';
+                    if (opt.selected) opt.selected = false;
+                }
+            });
+
+            if (!preserveSelection && !currentStillValid && destSelect.value) {
+                destSelect.value = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialCountry = document.getElementById('filterCountry')?.value;
+            const initialRegion = document.getElementById('filterRegion')?.value;
+            if (initialCountry || initialRegion) {
+                onFilterCountryChange(initialCountry, true);
+            }
+        });
     </script>
 </body>
 </html>

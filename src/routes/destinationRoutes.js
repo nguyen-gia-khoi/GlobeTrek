@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const destinationController = require('../controllers/Admin/destinationController');
-const {verifyAdmin} = require('../Middleware/authMiddleware');
 
-// Định nghĩa các route cho Destination
-router.get('/', destinationController.getAllDestinations); // Lấy danh sách Destination
+// Public API endpoints for Client (không yêu cầu verifyAdmin)
+router.get('/', destinationController.getAllDestinationsAPI); // GET /destinations
+router.get('/api', destinationController.getAllDestinationsAPI); // GET /destinations/api
+router.get('/api/:id', destinationController.getDestinationByIdAPI); // GET /destinations/api/:id
+router.get('/:id', destinationController.getDestinationByIdAPI); // GET /destinations/:id
+
 module.exports = router;

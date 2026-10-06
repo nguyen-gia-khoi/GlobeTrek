@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= kind === 'automatic' ? 'Chương Trình Ưu Đãi' : 'Mã Giảm Giá' %> - GlobeTrek Partner</title>
+</head>
+<body>
+    <%- include('../../DashboardPN', { pageTitle: kind === 'automatic' ? 'Chương Trình Ưu Đãi' : 'Mã Giảm Giá / Khuyến Mãi' }) %>
+
+    <div class="main-content-layout">
+        <div class="hero-header-gt d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="hero-badge-pill"><i class="fas fa-tags text-warning me-1"></i> Marketing</span>
+                <h1 class="text-white mb-2"><%= kind === 'automatic' ? 'Chương Trình Ưu Đãi' : 'Mã Giảm Giá' %></h1>
+                <p class="mb-0">
+                    <%= kind === 'automatic'
+                        ? 'Ưu đãi tự áp dụng cho tour của bạn khi khách không nhập mã.'
+                        : 'Tạo mã để khách nhập lúc đặt tour. Mỗi đơn chỉ nhận một ưu đãi.' %>
+                </p>
+            </div>
+            <button class="btn btn-light rounded-pill px-4 py-2 fw-bold text-primary shadow-sm" id="openPromotionModal" type="button">
+                <i class="fas fa-plus-circle me-1"></i> Thêm <%= kind === 'automatic' ? 'chương trình' : 'mã' %>
+            </button>
+        </div>
+
+        <div class="d-flex gap-2 mb-3">
+            <a class="btn <%= kind === 'code' ? 'btn-gt-primary' : 'btn-gt-outline' %> btn-gt-sm" href="/partner/promotions?kind=code">Mã giảm giá</a>
+            <a class="btn <%= kind === 'automatic' ? 'btn-gt-primary' : 'btn-gt-outline' %> btn-gt-sm" href="/partner/promotions?kind=automatic">Tự áp dụng</a>
+        </div>
+
+        <form method="GET" action="/partner/promotions" class="card-gt card-gt-static p-3 mb-4">
+            <input type="hidden" name="kind" value="<%= kind %>">
+            <div class="departure-filters">
+                <div class="filter-field">
+                    <label class="form-label fs-xs fw-bold">Tìm kiếm</label>
+                    <input class="form-control" type="search" name="search" value="<%= filters.search %>" placeholder="Tên hoặc mã">
+                </div>
+                <div class="filter-field">
+                    <label class="form-label fs-xs fw-bold">Trạng thái</label>
+                    <select class="form-select" name="status">
+                        <option value="">Tất cả</option>
+                        <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Đang chạy</option>
+                        <option value="paused" <%= filters.status === 'paused' ? 'selected' : '' %>>Tạm dừng</option>
+                        <option value="expired" <%= filters.status === 'expired' ? 'selected' : '' %>>Hết hạn</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-gt-primary btn-gt-sm" type="submit"><i class="fas fa-filter"></i></button>
+                    <a class="btn btn-gt-outline btn-gt-sm" href="/partner/promotions?kind=<%= kind %>"><i class="fas fa-rotate-left"></i></a>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
+                        <tr>
+                            <th><%= kind === 'code' ? 'Mã' : 'Chương trình' %></th>
+                            <th>Mức giảm</th>
+                            <th>Phạm vi</th>
+                            <th>Thời gian đặt</th>
+                            <th class="text-center">Đã dùng</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!promotions.length) { %>
+                            <tr><td colspan="7" class="text-center text-muted py-5">Chưa có ưu đãi nào.</td></tr>
+                        <% } %>
+                        <% promotions.forEach(promotion => {
+                            const statusText = { active: 'Đang chạy', paused: 'Tạm dừng', expired: 'Hết hạn' }[promotion.status];
+                            const statusClass = promotion.status === 'active' ? 'badge-gt-success' : (promotion.status === 'paused' ? 'badge-gt-warning' : 'badge-gt-neutral');
+                            const discountText = promotion.discountType === 'percent'
+                                ? promotion.discountValue + '%'
+                                : promotion.discountValue.toLocaleString('vi-VN') + 'đ';
+                            const bookingText = promotion.bookingStart || promotion.bookingEnd
+                                ? `${promotion.bookingStart || '...'} – ${promotion.bookingEnd || '...'}`
+                                : 'Không giới hạn';
+                        %>
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-main fs-sm"><%= promotion.kind === 'code' ? promotion.code : promotion.name %></div>
+                                    <% if (promotion.kind === 'code') { %><div class="text-muted fs-xs"><%= promotion.name %></div><% } %>
+                                </td>
+                                <td class="fw-semibold text-primary"><%= discountText %></td>
+                                <td class="fs-xs"><%= promotion.tourText %></td>
+                                <td class="fs-xs"><%= bookingText %></td>
+                                <td class="text-center"><%= promotion.usedCount %><%= promotion.usageLimit ? '/' + promotion.usageLimit : '' %></td>
+                                <td><span class="badge-gt <%= statusClass %>"><%= statusText %></span></td>
+                                <td class="text-end text-nowrap">
+                                    <button class="btn btn-gt-ghost btn-gt-sm text-primary edit-promotion"
+                                            data-promotion='<%- JSON.stringify(promotion).replace(/'/g, "&#39;") %>'>
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <% if (promotion.usedCount === 0) { %>
+                                        <button class="btn btn-gt-ghost btn-gt-sm text-danger delete-promotion" data-id="<%= promotion.id %>" data-name="<%= promotion.name %>">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <% if (total > 0) { %>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
+                <span class="text-muted fs-xs"><%= (currentPage - 1) * pageSize + 1 %>–<%= Math.min(currentPage * pageSize, total) %> của <%= total %> ưu đãi</span>
+                <% if (totalPages > 1) { %>
+                    <div class="d-flex gap-2">
+                        <% const startPage = Math.max(1, currentPage - 2); const endPage = Math.min(totalPages, currentPage + 2); %>
+                        <% const query = `kind=${kind}${filters.status ? '&status=' + filters.status : ''}${filters.search ? '&search=' + encodeURIComponent(filters.search) : ''}`; %>
+                        <% if (currentPage > 1) { %>
+                            <a class="btn btn-gt-outline btn-gt-sm" href="?<%= query %>&page=<%= currentPage - 1 %>">Trước</a>
+                        <% } %>
+                        <% for (let page = startPage; page <= endPage; page++) { %>
+                            <a class="btn <%= page === currentPage ? 'btn-gt-primary' : 'btn-gt-outline' %> btn-gt-sm" href="?<%= query %>&page=<%= page %>"><%= page %></a>
+                        <% } %>
+                        <% if (currentPage < totalPages) { %>
+                            <a class="btn btn-gt-outline btn-gt-sm" href="?<%= query %>&page=<%= currentPage + 1 %>">Sau</a>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+
+    <div class="modal fade" id="promotionModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <form class="modal-content modal-gt-content" id="promotionForm">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <h5 class="modal-title fw-bold" id="promotionModalTitle">Thêm ưu đãi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" name="kind" value="<%= kind %>">
+                    <input type="hidden" id="promotionId">
+                    <div class="row g-3">
+                        <% if (kind === 'code') { %>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Mã</label>
+                                <input class="form-control text-uppercase" name="code" id="promotionCode" maxlength="20" required>
+                            </div>
+                        <% } %>
+                        <div class="<%= kind === 'code' ? 'col-md-8' : 'col-12' %>">
+                            <label class="form-label fw-semibold">Tên</label>
+                            <input class="form-control" name="name" id="promotionName" maxlength="120" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Kiểu giảm</label>
+                            <select class="form-select" name="discountType" id="promotionDiscountType">
+                                <option value="percent">Phần trăm</option>
+                                <option value="fixed">Số tiền</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Mức giảm</label>
+                            <input class="form-control" type="number" name="discountValue" id="promotionDiscountValue" min="1" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Đơn tối thiểu</label>
+                            <input class="form-control" type="number" name="minSubtotal" id="promotionMinSubtotal" min="0" value="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Đặt từ ngày</label>
+                            <input class="form-control" type="date" name="bookingStart" id="promotionBookingStart">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Đặt đến ngày</label>
+                            <input class="form-control" type="date" name="bookingEnd" id="promotionBookingEnd">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Khởi hành từ ngày</label>
+                            <input class="form-control" type="date" name="departureStart" id="promotionDepartureStart">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Khởi hành đến ngày</label>
+                            <input class="form-control" type="date" name="departureEnd" id="promotionDepartureEnd">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Tổng lượt</label>
+                            <input class="form-control" type="number" name="usageLimit" id="promotionUsageLimit" min="1" placeholder="Không giới hạn">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Lượt mỗi khách</label>
+                            <input class="form-control" type="number" name="perUserLimit" id="promotionPerUserLimit" min="1" placeholder="Không giới hạn">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" for="promotionTourPicker">Tour áp dụng</label>
+                            <select class="form-select" id="promotionTourPicker">
+                                <option value="">Chọn tour để thêm...</option>
+                            </select>
+                            <div id="selectedTours" class="d-flex flex-column gap-2 mt-2"></div>
+                            <div class="form-text">Bỏ trống để áp dụng cho mọi tour của bạn.</div>
+                        </div>
+                        <div class="col-md-4" id="promotionStatusWrap">
+                            <label class="form-label fw-semibold">Trạng thái</label>
+                            <select class="form-select" name="status" id="promotionStatus">
+                                <option value="active">Đang chạy</option>
+                                <option value="paused">Tạm dừng</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="text-danger fs-sm mt-3" id="promotionError"></div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-gt-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const requestJson = async (url, options) => {
+            const response = await fetch(url, {
+                ...options,
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(options?.headers || {}) },
+            });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.message || 'Có lỗi xảy ra');
+            return payload;
+        };
+
+        const modal = new bootstrap.Modal(document.getElementById('promotionModal'));
+        const form = document.getElementById('promotionForm');
+        const tourOptions = <%- JSON.stringify(tours.map(tour => ({ id: String(tour._id), title: tour.title }))) %>;
+        const selectedTourIds = new Set();
+        const setField = (id, value) => { document.getElementById(id).value = value ?? ''; };
+
+        const renderSelectedTours = () => {
+            const picker = document.getElementById('promotionTourPicker');
+            const list = document.getElementById('selectedTours');
+            picker.replaceChildren(new Option('Chọn tour để thêm...', ''));
+            tourOptions
+                .filter(tour => !selectedTourIds.has(tour.id))
+                .forEach(tour => picker.add(new Option(tour.title, tour.id)));
+
+            list.replaceChildren();
+            const chosen = tourOptions.filter(tour => selectedTourIds.has(tour.id));
+            if (!chosen.length) {
+                const hint = document.createElement('span');
+                hint.className = 'text-muted fs-xs';
+                hint.textContent = 'Chưa chọn tour nào. Ưu đãi sẽ áp dụng cho mọi tour.';
+                list.appendChild(hint);
+                return;
+            }
+            chosen.forEach(tour => {
+                const chip = document.createElement('div');
+                chip.className = 'd-flex align-items-center justify-content-between gap-2 border rounded-3 px-3 py-2 bg-light';
+                const title = document.createElement('span');
+                title.className = 'fs-sm';
+                title.textContent = tour.title;
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'btn btn-gt-ghost btn-gt-sm text-danger';
+                remove.textContent = 'Bỏ';
+                remove.addEventListener('click', () => {
+                    selectedTourIds.delete(tour.id);
+                    renderSelectedTours();
+                });
+                chip.append(title, remove);
+                list.appendChild(chip);
+            });
+        };
+
+        const setSelectedTours = (ids) => {
+            selectedTourIds.clear();
+            (ids || []).forEach(id => selectedTourIds.add(String(id)));
+            renderSelectedTours();
+        };
+
+        document.getElementById('promotionTourPicker').addEventListener('change', function () {
+            if (!this.value) return;
+            selectedTourIds.add(this.value);
+            renderSelectedTours();
+        });
+        const lockDiscount = (locked) => {
+            ['promotionCode', 'promotionDiscountType', 'promotionDiscountValue'].forEach(id => {
+                const field = document.getElementById(id);
+                if (field) field.disabled = locked;
+            });
+        };
+
+        document.getElementById('openPromotionModal').addEventListener('click', () => {
+            form.reset();
+            document.getElementById('promotionId').value = '';
+            document.getElementById('promotionModalTitle').textContent = 'Thêm ưu đãi';
+            document.getElementById('promotionStatusWrap').classList.add('d-none');
+            document.getElementById('promotionError').textContent = '';
+            lockDiscount(false);
+            setSelectedTours([]);
+            modal.show();
+        });
+
+        document.querySelectorAll('.edit-promotion').forEach(button => button.addEventListener('click', () => {
+            const promotion = JSON.parse(button.dataset.promotion);
+            form.reset();
+            document.getElementById('promotionId').value = promotion.id;
+            document.getElementById('promotionModalTitle').textContent = 'Cập nhật ưu đãi';
+            document.getElementById('promotionStatusWrap').classList.remove('d-none');
+            setField('promotionName', promotion.name);
+            setField('promotionCode', promotion.code);
+            setField('promotionDiscountType', promotion.discountType);
+            setField('promotionDiscountValue', promotion.discountValue);
+            setField('promotionMinSubtotal', promotion.minSubtotal);
+            setField('promotionBookingStart', promotion.bookingStart);
+            setField('promotionBookingEnd', promotion.bookingEnd);
+            setField('promotionDepartureStart', promotion.departureStart);
+            setField('promotionDepartureEnd', promotion.departureEnd);
+            setField('promotionUsageLimit', promotion.usageLimit);
+            setField('promotionPerUserLimit', promotion.perUserLimit);
+            setField('promotionStatus', promotion.status === 'paused' ? 'paused' : 'active');
+            setSelectedTours(promotion.tourIds);
+            document.getElementById('promotionError').textContent = '';
+            lockDiscount(promotion.usedCount > 0);
+            modal.show();
+        }));
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const id = document.getElementById('promotionId').value;
+            const data = new FormData(form);
+            ['promotionCode', 'promotionDiscountType', 'promotionDiscountValue'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field?.disabled) data.set(field.name, field.value);
+            });
+            const payload = Object.fromEntries(data.entries());
+            payload.tourIds = [...selectedTourIds];
+            try {
+                await requestJson(id ? `/partner/promotions/${id}` : '/partner/promotions', {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                });
+                location.reload();
+            } catch (error) {
+                document.getElementById('promotionError').textContent = error.message;
+            }
+        });
+
+        document.querySelectorAll('.delete-promotion').forEach(button => button.addEventListener('click', async function () {
+            if (!confirm(`Xóa ưu đãi ${this.dataset.name}?`)) return;
+            try {
+                await requestJson(`/partner/promotions/${this.dataset.id}/delete`, { method: 'POST', body: '{}' });
+                location.reload();
+            } catch (error) {
+                alert(error.message);
+            }
+        }));
+    </script>
+</body>
+</html>

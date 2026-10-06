@@ -3,108 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh sách Đơn hàng</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-    <style>
-        .toggle-content {
-            display: none;
-        }
-    </style>
+    <title>Quản Lý Đơn Hàng - GlobeTrek Admin</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
     <%- include('../header', { pageTitle: 'Danh sách Đơn hàng' }) %>
 
-    <div class="container mt-5">
-        <h1 class="mt-5">Danh sách Đơn hàng</h1>
+    <div class="main-content-layout">
+        <!-- Page Header -->
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold text-main mb-1">Quản Lý Đơn Hàng & Vé Tour</h2>
+                <p class="text-muted fs-sm mb-0">Theo dõi toàn bộ đơn đặt tour, vé người lớn/trẻ em và doanh thu chi tiết</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-gt-outline btn-gt-sm" onclick="location.reload()">
+                    <i class="fas fa-arrows-rotate me-1"></i> Làm Mới
+                </button>
+            </div>
+        </div>
 
-        <% if (ordersSummary.length === 0) { %>
-            <div class="alert alert-warning">Không có đơn hàng nào được tìm thấy.</div>
-        <% } else { %>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Tên Tour</th>
-                        <th>Ngày Đặt</th>
-                        <th>Tổng số Người</th>
-                        <th>Tổng số Vé</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% ordersSummary.forEach((summary, index) => { %>
+        <!-- Orders Table -->
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
                         <tr>
-                            <td><%= summary.orders[0].tourDetails.title %></td>
-                            <td><%= new Date(summary._id.bookingDate).toLocaleDateString("vi-VN") %></td>
-                            <td><%= summary.totalPeople %></td>
-                            <td><%= summary.totalTickets %></td>
-                            <td>
-                                <button 
-                                    class="btn btn-primary btn-sm toggle-btn" 
-                                    data-target="#details-<%= index %>">
-                                    Xem chi tiết
-                                </button>
-                            </td>
+                            <th>Tên Tour Du Lịch</th>
+                            <th>Ngày Khởi Hành</th>
+                            <th>Tổng Số Khách</th>
+                            <th>Tổng Số Vé</th>
+                            <th class="text-end">Chi Tiết Đơn</th>
                         </tr>
-                        <!-- Chi tiết -->
-                        <tr id="details-<%= index %>" class="toggle-content">
-                            <td colspan="5">
-                                <table class="table table-sm table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Email Người Dùng</th>
-                                            <th>ID Đơn Hàng</th>
-                                            <th>Người Lớn</th>
-                                            <th>Trẻ Em</th>
-                                            <th>Tổng Giá Trị</th>
-                                            <th>Trạng Thái</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <% summary.orders.forEach(order => { %>
-                                            <tr>
-                                                <td><%= order.userDetails.email || "N/A" %></td>
-                                                <td><%= order._id %></td>
-                                                <td><%= order.adultCount %></td>
-                                                <td><%= order.childCount %></td>
-                                                <td><%= order.totalValue?.toLocaleString("vi-VN", { style: "currency", currency: "VND" }) || "0 VND" %></td>
-                                                <td>
-                                                    <span class="badge <%= order.status === 'pending' ? 'bg-warning' : order.status === 'paid' ? 'bg-success' : 'bg-secondary' %>">
-                                                        <%= order.status %>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        <% }); %>
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                    <% }); %>
-                </tbody>
-            </table>
-        <% } %>
+                    </thead>
+                    <tbody>
+                        <% if (!ordersSummary || ordersSummary.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="empty-state-gt border-0 py-4">
+                                        <div class="empty-state-icon">
+                                            <i class="fas fa-receipt"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-main">Chưa Có Đơn Hàng Nào</h5>
+                                        <p class="empty-state-desc mb-0">Toàn bộ đơn đặt tour của khách hàng trên hệ thống sẽ xuất hiện tại đây.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% ordersSummary.forEach((summary, index) => { %>
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-main fs-6">
+                                            <i class="fas fa-route text-primary me-1"></i>
+                                            <%= summary.orders && summary.orders[0] && summary.orders[0].tourDetails ? summary.orders[0].tourDetails.title : 'Tour đã xóa' %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt badge-gt-info">
+                                            <i class="fas fa-calendar-day"></i>
+                                            <%= new Date(summary._id.bookingDate).toLocaleDateString("vi-VN") %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-main"><%= summary.totalPeople %></strong> người
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt badge-gt-neutral">
+                                            <i class="fas fa-ticket"></i> <%= summary.totalTickets %> vé
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-gt-primary btn-gt-sm toggle-details-btn" data-target="#admin-details-<%= index %>">
+                                            <i class="fas fa-chevron-down me-1"></i> Xem Chi Tiết (<%= summary.orders.length %>)
+                                        </button>
+                                    </td>
+                                </tr>
 
-        <!-- Phân trang -->
-        <nav>
-            <ul class="pagination">
+                                <!-- Expandable Sub-table for Order Items -->
+                                <tr id="admin-details-<%= index %>" style="display: none;">
+                                    <td colspan="5" class="p-3 bg-light border-bottom">
+                                        <div class="card-gt p-3 bg-white">
+                                            <h6 class="fw-bold text-main mb-3 fs-xs text-uppercase text-muted">
+                                                <i class="fas fa-list me-1"></i> Danh Sách Khách Hàng Thuộc Đợt Này
+                                            </h6>
+                                            <div class="table-responsive">
+                                                <table class="table-gt mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Mã Đơn</th>
+                                                            <th>Email Khách Hàng</th>
+                                                            <th>Người Lớn</th>
+                                                            <th>Trẻ Em</th>
+                                                            <th>Tổng Tiền</th>
+                                                            <th>Trạng Thái</th>
+                                                            <th class="text-end">Chi Tiết</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% summary.orders.forEach(order => { %>
+                                                            <tr>
+                                                                <td class="font-monospace fs-xs">#<%= order._id %></td>
+                                                                <td class="fw-semibold text-main fs-xs">
+                                                                    <i class="fas fa-envelope text-primary me-1"></i>
+                                                                    <%= order.userDetails ? order.userDetails.email : "N/A" %>
+                                                                </td>
+                                                                <td class="fs-xs"><%= order.adultCount %> người</td>
+                                                                <td class="fs-xs"><%= order.childCount %> trẻ</td>
+                                                                <td class="font-display fw-bold text-primary fs-sm">
+                                                                    <%= (order.totalValue || 0).toLocaleString("vi-VN") %> VNĐ
+                                                                </td>
+                                                                <td>
+                                                                    <span class="badge-gt <%= order.status === 'paid' ? 'badge-gt-success' : order.status === 'pending' ? 'badge-gt-warning' : 'badge-gt-neutral' %>">
+                                                                        <%= order.status %>
+                                                                    </span>
+                                                                </td>
+                                                                <td class="text-end">
+                                                                    <button type="button" 
+                                                                            class="btn btn-gt-ghost text-primary btn-gt-sm btn-admin-order-detail" 
+                                                                            data-bs-toggle="modal" 
+                                                                            data-bs-target="#detailAdminOrderModal"
+                                                                            data-id="<%= order._id %>"
+                                                                            data-tour="<%= summary.orders[0] && summary.orders[0].tourDetails ? summary.orders[0].tourDetails.title : 'Tour đã xóa' %>"
+                                                                            data-email="<%= order.userDetails ? order.userDetails.email : 'N/A' %>"
+                                                                            data-name="<%= order.userDetails ? order.userDetails.name : 'Chưa đặt tên' %>"
+                                                                            data-adults="<%= order.adultCount %>"
+                                                                            data-children="<%= order.childCount %>"
+                                                                            data-total="<%= (order.totalValue || 0).toLocaleString('vi-VN') %> VNĐ"
+                                                                            data-status="<%= order.status %>"
+                                                                            data-booking="<%= new Date(summary._id.bookingDate).toLocaleDateString('vi-VN') %>"
+                                                                            data-created="<%= order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : 'Đã ghi nhận' %>"
+                                                                            title="Xem chi tiết đơn này">
+                                                                        <i class="fas fa-eye me-1"></i> Xem
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        <% }); %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+            <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
                 <% for (let i = 1; i <= totalPages; i++) { %>
-                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-                    </li>
+                    <a href="?page=<%= i %>" class="btn btn-gt-sm <%= i === currentPage ? 'btn-gt-primary' : 'btn-gt-outline' %>">
+                        <%= i %>
+                    </a>
                 <% } %>
-            </ul>
-        </nav>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Modal: Xem Chi Tiết Đơn Hàng (Admin) -->
+    <div class="modal fade" id="detailAdminOrderModal" tabindex="-1" aria-labelledby="detailAdminOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge emerald">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main mb-0" id="detailAdminOrderIdDisplay">Chi Tiết Đơn Hàng</h5>
+                            <span class="badge-gt badge-gt-success fs-xs mt-1" id="detailAdminOrderStatusBadge">Đã thanh toán</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-body">
+                    <!-- Tour Information Card -->
+                    <div class="detail-section-card">
+                        <div class="detail-section-title">
+                            <i class="fas fa-route text-primary"></i> Thông Tin Tour Đặt
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Tên Tour:</span>
+                            <span class="detail-field-value fw-bold text-main" id="detailAdminOrderTourTitle">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Ngày Khởi Hành:</span>
+                            <span class="detail-field-value text-primary fw-semibold" id="detailAdminOrderBookingDate">—</span>
+                        </div>
+                    </div>
+
+                    <!-- Customer & Payment Card -->
+                    <div class="detail-section-card mb-0">
+                        <div class="detail-section-title">
+                            <i class="fas fa-user-check text-secondary"></i> Khách Hàng & Thanh Toán
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Họ Tên Khách:</span>
+                            <span class="detail-field-value fw-semibold" id="detailAdminOrderName">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Email:</span>
+                            <span class="detail-field-value text-primary" id="detailAdminOrderEmail">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Số Lượng Khách:</span>
+                            <span class="detail-field-value" id="detailAdminOrderTickets">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Tổng Giá Trị:</span>
+                            <span class="detail-field-value font-display fw-bold text-success fs-5" id="detailAdminOrderTotal">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Thời Gian Đặt:</span>
+                            <span class="detail-field-value text-muted fs-xs" id="detailAdminOrderCreated">—</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-white">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        document.querySelectorAll('.toggle-btn').forEach(button => {
+        document.querySelectorAll('.toggle-details-btn').forEach(button => {
             button.addEventListener('click', () => {
                 const target = document.querySelector(button.dataset.target);
                 if (target) {
-                    target.style.display = target.style.display === 'none' ? 'table-row' : 'none';
+                    const isVisible = target.style.display !== 'none';
+                    target.style.display = isVisible ? 'none' : 'table-row';
+                    button.innerHTML = isVisible ? 
+                        '<i class="fas fa-chevron-down me-1"></i> Xem Chi Tiết' : 
+                        '<i class="fas fa-chevron-up me-1"></i> Thu Gọn';
                 }
             });
         });
+
+        const detailAdminOrderModal = document.getElementById('detailAdminOrderModal');
+        if (detailAdminOrderModal) {
+            detailAdminOrderModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+
+                const id = button.getAttribute('data-id');
+                const tour = button.getAttribute('data-tour');
+                const name = button.getAttribute('data-name');
+                const email = button.getAttribute('data-email');
+                const adults = button.getAttribute('data-adults');
+                const children = button.getAttribute('data-children');
+                const total = button.getAttribute('data-total');
+                const status = button.getAttribute('data-status');
+                const booking = button.getAttribute('data-booking');
+                const created = button.getAttribute('data-created');
+
+                document.getElementById('detailAdminOrderIdDisplay').textContent = `Đơn Đặt Tour #${id}`;
+                document.getElementById('detailAdminOrderTourTitle').textContent = tour;
+                document.getElementById('detailAdminOrderBookingDate').textContent = booking;
+                document.getElementById('detailAdminOrderName').textContent = name;
+                document.getElementById('detailAdminOrderEmail').textContent = email;
+                document.getElementById('detailAdminOrderTickets').innerHTML = `<strong>${adults}</strong> Người lớn, <strong>${children}</strong> Trẻ em`;
+                document.getElementById('detailAdminOrderTotal').textContent = total;
+                document.getElementById('detailAdminOrderCreated').textContent = created;
+
+                const statusBadge = document.getElementById('detailAdminOrderStatusBadge');
+                if (status === 'paid') {
+                    statusBadge.className = 'badge-gt badge-gt-success fs-xs mt-1';
+                    statusBadge.textContent = 'Đã thanh toán';
+                } else if (status === 'canceled') {
+                    statusBadge.className = 'badge-gt badge-gt-danger fs-xs mt-1';
+                    statusBadge.textContent = 'Đã hủy';
+                } else {
+                    statusBadge.className = 'badge-gt badge-gt-warning fs-xs mt-1';
+                    statusBadge.textContent = 'Chờ xử lý';
+                }
+            });
+        }
     </script>
 </body>
 </html>

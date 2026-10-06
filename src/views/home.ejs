@@ -3,303 +3,321 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= pageTitle %></title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #10b981;
-            --primary-dark: #059669;
-            --primary-light: #34d399;
-            --secondary-color: #06b6d4;
-            --accent-color: #a7f3d0;
-            --background-color: #f0fdfa;
-            --card-background: #ffffff;
-            --text-primary: #1f2937;
-            --text-secondary: #374151;
-            --border-radius: 24px;
-            --border-radius-lg: 30px;
-            --shadow-sm: 0 4px 6px rgba(16, 185, 129, 0.05);
-            --shadow-md: 0 8px 20px rgba(16, 185, 129, 0.1);
-            --shadow-lg: 0 20px 40px rgba(16, 185, 129, 0.15);
-            --glass-bg: rgba(255, 255, 255, 0.95);
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            --gradient-primary: linear-gradient(135deg, #10b981, #06b6d4);
-            --gradient-hover: linear-gradient(135deg, #059669, #0891b2);
-        }
-
-        body {
-            background-color: var(--background-color);
-            font-family: 'Inter', sans-serif;
-            color: var(--text-primary);
-            line-height: 1.7;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 30%),
-                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.1) 0%, transparent 30%),
-                radial-gradient(circle at 50% 50%, rgba(167, 243, 208, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 30%);
-            pointer-events: none;
-            z-index: -1;
-            animation: gradientAnimation 15s ease infinite;
-        }
-
-        @keyframes gradientAnimation {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .dashboard-header {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 4rem 0 6rem;
-            margin-bottom: -3rem;
-            border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dashboard-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
-            background-size: 60px 60px;
-            animation: headerPattern 60s linear infinite;
-            opacity: 0.6;
-        }
-
-        .dashboard-header h1 {
-            font-weight: 800;
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            position: relative;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            background: linear-gradient(to right, #ffffff, #e0ffff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .card {
-            background: var(--glass-bg);
-            border: 1px solid rgba(16, 185, 129, 0.1);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            transition: var(--transition);
-            backdrop-filter: blur(10px);
-            margin-bottom: 2.5rem;
-            overflow: hidden;
-        }
-
-         .card:hover {
-             transform: translateY(-5px) scale(1.005); 
-             box-shadow: var(--shadow-lg); 
-        }
-
-        .table {
-            margin-bottom: 0;
-        }
-
-        .table th {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--text-secondary);
-            font-weight: 700;
-            border: none;
-            padding: 1.5rem;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-        }
-
-        .table td {
-            padding: 1.5rem;
-            vertical-align: middle;
-            color: var(--text-primary);
-            border-color: rgba(16, 185, 129, 0.1);
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-
-        .table-hover tbody tr {
-            transition: var(--transition);
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: rgba(16, 185, 129, 0.05);
-            transform: scale(1.01);
-        }
-
-        .btn {
-            padding: 0.8rem 1.5rem;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: var(--transition);
-            letter-spacing: 0.5px;
-        }
-
-        .btn-success {
-            background: var(--gradient-primary);
-            border: none;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            border: none;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .alert {
-            border-radius: var(--border-radius);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(16, 185, 129, 0.1);
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--background-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(16, 185, 129, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    </style>
+    <title>Quản Trị Hệ Thống - GlobeTrek Admin</title>
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div class="loading-overlay">
-        <div class="loading-spinner"></div>
-    </div>
-
     <%- include('header', { pageTitle: 'Home' }) %>
 
-    <div class="container mt-5">
-        <!-- Dashboard Header -->
-        <div class="dashboard-header text-center">
-            <h1 class="mb-3">Quản Lý Đối Tác</h1>
-            <p class="lead mb-0">Danh sách đối tác chờ xác thực</p>
+    <div class="main-content-layout">
+        <!-- Hero Header -->
+        <div class="hero-header-gt d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="hero-badge-pill">
+                    <i class="fas fa-shield-halved text-warning me-1"></i> Trung Tâm Kiểm Duyệt
+                </span>
+                <h1 class="text-white mb-2">Quản Lý & Duyệt Đối Tác</h1>
+                <p class="mb-0">Xét duyệt hồ sơ đối tác cung cấp tour du lịch mới tham gia nền tảng GlobeTrek.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light rounded-pill px-3 py-2 fw-bold text-primary shadow-sm" onclick="location.reload()">
+                    <i class="fas fa-arrows-rotate me-1"></i> Làm Mới Dữ Liệu
+                </button>
+            </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="">
-            <div class="card-body">
-                <% if (unverifiedPartners && unverifiedPartners.length > 0) { %>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Tên Đối Tác</th>
-                                    <th>Email</th>
-                                    <th>Trạng Thái</th>
-                                    <th>Thao Tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% unverifiedPartners.forEach(partner => { %>
-                                    <tr class="">
-                                        <td><strong><%= partner.name %></strong></td>
-                                        <td><%= partner.email %></td>
-                                        <td><span class="badge badge-warning"><%= partner.status %></span></td>
-                                        <td>
-                                            <form action="/api/auth/partner/verify" method="POST" class="d-inline">
-                                                <input type="hidden" name="partnerId" value="<%= partner._id %>">
-                                                <input type="hidden" name="action" value="accept">
-                                                <button type="submit" class="btn btn-success btn-sm">
-                                                    <i class="fas fa-check mr-1"></i>Phê duyệt
-                                                </button>
-                                            </form>
-                                            <form action="/api/auth/partner/verify" method="POST" class="d-inline ml-2">
-                                                <input type="hidden" name="partnerId" value="<%= partner._id %>">
-                                                <input type="hidden" name="action" value="decline">
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    <i class="fas fa-times mr-1"></i>Từ chối
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
+        <!-- Metric KPI Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-icon-amber">
+                        <i class="fas fa-user-clock"></i>
                     </div>
-                <% } else { %>
-                    <div class="text-center py-5">
-                        <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
-                        <p class="lead text-muted">Không có đối tác nào chờ xác thực.</p>
+                    <div>
+                        <div class="kpi-title">Đối Tác Chờ Duyệt</div>
+                        <div class="kpi-value text-warning">
+                            <%= (typeof unverifiedPartners !== 'undefined' && unverifiedPartners) ? unverifiedPartners.length : 0 %>
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-bell"></i> Yêu cầu cần xử lý
+                        </div>
                     </div>
-                <% } %>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-icon-primary">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-title">Đối Tác Đang Hợp Tác</div>
+                        <div class="kpi-value text-emerald">Đã Xác Thực</div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-check-circle"></i> Sẵn sàng bán tour
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-icon-cyan">
+                        <i class="fas fa-map-location-dot"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-title">Quản Lý Tour</div>
+                        <div class="kpi-value">Hệ Thống</div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-arrow-right"></i> Xem danh sách tour
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-icon-purple">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-title">Doanh Thu Hệ Thống</div>
+                        <div class="kpi-value font-display">GlobeTrek</div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-chart-line"></i> Báo cáo tổng hợp
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <% if (typeof message !== 'undefined' && message) { %>
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <i class="fas fa-info-circle mr-2"></i><%= message %>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+            <div class="alert alert-warning alert-dismissible fade show rounded-4 mb-4" role="alert">
+                <i class="fas fa-info-circle me-2"></i> <%= message %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <% } %>
+
+        <!-- Verification Queue Table -->
+        <div class="card-gt p-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h4 class="fw-bold text-main mb-1">Danh Sách Đối Tác Chờ Xác Thực</h4>
+                    <p class="text-muted fs-xs mb-0">Kiểm tra thông tin và tiến hành phê duyệt hoặc từ chối đối tác</p>
+                </div>
+                <span class="badge-gt badge-gt-warning">
+                    <i class="fas fa-clock"></i> <%= (typeof unverifiedPartners !== 'undefined' && unverifiedPartners) ? unverifiedPartners.length : 0 %> hồ sơ chờ
+                </span>
+            </div>
+
+            <div class="table-gt-container border-0 shadow-none">
+                <div class="table-responsive">
+                    <table class="table-gt">
+                        <thead>
+                            <tr>
+                                <th>Tên Doanh Nghiệp / Đối Tác</th>
+                                <th>Email Đăng Ký</th>
+                                <th>Trạng Thái</th>
+                                <th>Ngày Yêu Cầu</th>
+                                <th class="text-end">Hành Động Xét Duyệt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (typeof unverifiedPartners !== 'undefined' && unverifiedPartners && unverifiedPartners.length > 0) { %>
+                                <% unverifiedPartners.forEach(partner => { %>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="modal-icon-badge cyan" style="width: 38px; height: 38px; font-weight: 700; font-size: 0.95rem;">
+                                                    <%= partner.name ? partner.name.charAt(0).toUpperCase() : 'P' %>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-main fs-sm"><%= partner.name %></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fs-sm text-main fw-semibold">
+                                                <i class="fas fa-envelope text-primary me-1"></i><%= partner.email %>
+                                            </div>
+                                            <% if (partner.phone || partner.phoneNumber) { %>
+                                                <div class="fs-xs text-muted mt-1">
+                                                    <i class="fas fa-phone text-secondary me-1"></i><%= partner.phone || partner.phoneNumber %>
+                                                </div>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <span class="badge-gt badge-gt-warning">
+                                                <i class="fas fa-spinner fa-spin"></i> <%= partner.status %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="fs-xs text-muted">
+                                                <%= partner.createdAt ? new Date(partner.createdAt).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN') %>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex align-items-center gap-1">
+                                                <button type="button" 
+                                                        class="btn btn-gt-ghost text-primary btn-gt-sm btn-partner-detail" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#detailUnverifiedPartnerModal"
+                                                        data-id="<%= partner._id %>"
+                                                        data-name="<%= partner.name %>"
+                                                        data-email="<%= partner.email %>"
+                                                        data-phone="<%= partner.phone || partner.phoneNumber || 'Chưa cập nhật' %>"
+                                                        data-address="<%= partner.address || 'Chưa cập nhật' %>"
+                                                        data-status="<%= partner.status %>"
+                                                        data-created="<%= partner.createdAt ? new Date(partner.createdAt).toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN') %>"
+                                                        title="Xem toàn bộ hồ sơ đối tác">
+                                                    <i class="fas fa-eye me-1"></i> Chi tiết
+                                                </button>
+
+                                                <form action="/api/auth/partner/verify" method="POST" class="d-inline m-0">
+                                                    <input type="hidden" name="partnerId" value="<%= partner._id %>">
+                                                    <input type="hidden" name="action" value="accept">
+                                                    <button type="submit" class="btn btn-gt-primary btn-gt-sm">
+                                                        <i class="fas fa-check me-1"></i> Duyệt
+                                                    </button>
+                                                </form>
+
+                                                <form action="/api/auth/partner/verify" method="POST" class="d-inline m-0">
+                                                    <input type="hidden" name="partnerId" value="<%= partner._id %>">
+                                                    <input type="hidden" name="action" value="decline">
+                                                    <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn từ chối đối tác này?');" class="btn btn-gt-ghost text-danger btn-gt-sm">
+                                                        <i class="fas fa-times me-1"></i> Từ Chối
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="empty-state-gt border-0 py-4">
+                                            <div class="empty-state-icon">
+                                                <i class="fas fa-clipboard-check"></i>
+                                            </div>
+                                            <h5 class="fw-bold text-main">Tất Cả Đã Được Xử Lý!</h5>
+                                            <p class="empty-state-desc mb-0">Hiện tại không có đối tác nào đang chờ xác thực trong hệ thống.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Modal: Xem Chi Tiết Đối Tác Chờ Duyệt -->
+    <div class="modal fade" id="detailUnverifiedPartnerModal" tabindex="-1" aria-labelledby="detailUnverifiedPartnerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge cyan" id="detailUnverifiedAvatar" style="font-weight: 700; font-size: 1.15rem;">
+                            P
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main mb-0" id="detailUnverifiedName">Hồ Sơ Doanh Nghiệp Đối Tác</h5>
+                            <span class="badge-gt badge-gt-warning fs-xs mt-1">
+                                <i class="fas fa-clock me-1"></i> Chờ duyệt xác thực
+                            </span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-body">
+                    <div class="detail-section-card mb-0">
+                        <div class="detail-section-title">
+                            <i class="fas fa-building text-primary"></i> Thông Tin Đăng Ký Đối Tác
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Email Đăng Ký:</span>
+                            <span class="detail-field-value fw-semibold text-primary" id="detailUnverifiedEmail">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Số Điện Thoại:</span>
+                            <span class="detail-field-value" id="detailUnverifiedPhone">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Địa Chỉ:</span>
+                            <span class="detail-field-value" id="detailUnverifiedAddress">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Thời Gian Gửi Đơn:</span>
+                            <span class="detail-field-value text-muted fs-xs" id="detailUnverifiedCreated">—</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-white d-flex justify-content-between">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                    <div class="d-flex gap-2" id="detailUnverifiedActions">
+                        <form action="/api/auth/partner/verify" method="POST" class="d-inline m-0" id="modalDeclineForm">
+                            <input type="hidden" name="partnerId" id="modalDeclinePartnerId" value="">
+                            <input type="hidden" name="action" value="decline">
+                            <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn từ chối đối tác này?');" class="btn btn-gt-ghost text-danger border">
+                                <i class="fas fa-times me-1"></i> Từ Chối
+                            </button>
+                        </form>
+                        <form action="/api/auth/partner/verify" method="POST" class="d-inline m-0" id="modalAcceptForm">
+                            <input type="hidden" name="partnerId" id="modalAcceptPartnerId" value="">
+                            <input type="hidden" name="action" value="accept">
+                            <button type="submit" class="btn btn-gt-primary">
+                                <i class="fas fa-check me-1"></i> Phê Duyệt Ngay
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Loading overlay
-        window.addEventListener('load', function() {
-            const loadingOverlay = document.querySelector('.loading-overlay');
-            loadingOverlay.style.opacity = '0';
-            setTimeout(() => {
-                loadingOverlay.style.display = 'none';
-            }, 500);
-        });
+        const detailUnverifiedModal = document.getElementById('detailUnverifiedPartnerModal');
+        if (detailUnverifiedModal) {
+            detailUnverifiedModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+
+                const id = button.getAttribute('data-id') || '';
+                const name = button.getAttribute('data-name') || 'Hồ Sơ Doanh Nghiệp';
+                const email = button.getAttribute('data-email') || '—';
+                const phone = button.getAttribute('data-phone') || 'Chưa cập nhật';
+                const address = button.getAttribute('data-address') || 'Chưa cập nhật';
+                const created = button.getAttribute('data-created') || '—';
+
+                const nameEl = document.getElementById('detailUnverifiedName');
+                if (nameEl) nameEl.textContent = name;
+
+                const avatarEl = document.getElementById('detailUnverifiedAvatar');
+                if (avatarEl) avatarEl.textContent = name ? name.charAt(0).toUpperCase() : 'P';
+
+                const emailEl = document.getElementById('detailUnverifiedEmail');
+                if (emailEl) emailEl.textContent = email;
+
+                const phoneEl = document.getElementById('detailUnverifiedPhone');
+                if (phoneEl) phoneEl.textContent = phone;
+
+                const addressEl = document.getElementById('detailUnverifiedAddress');
+                if (addressEl) addressEl.textContent = address;
+
+                const createdEl = document.getElementById('detailUnverifiedCreated');
+                if (createdEl) createdEl.textContent = created;
+
+                const modalDeclineEl = document.getElementById('modalDeclinePartnerId');
+                if (modalDeclineEl) modalDeclineEl.value = id;
+
+                const modalAcceptEl = document.getElementById('modalAcceptPartnerId');
+                if (modalAcceptEl) modalAcceptEl.value = id;
+            });
+        }
     </script>
 </body>
 </html>

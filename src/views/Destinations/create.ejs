@@ -1,24 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <title>Create Destination</title>
+    <meta http-equiv="refresh" content="0; url=/admin/destinations/">
+    <title>Chuyển hướng - Quản Lý Điểm Đến</title>
+    <script>window.location.href = '/admin/destinations/';</script>
 </head>
 <body>
-    
-    <%- include('../header', { pageTitle: '' }) %>
-    <div class="container mt-5">
-        <h1 class="mt-5">Create Destination</h1>
-        <form action="/admin/destinations/create" method="POST">
-            <div class="form-group">
-                <label for="name">Destination Name</label>
-                <input type="text" class="form-control" id="name" name="name" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Create</button>
-            <a href="/destinations" class="btn btn-secondary">Cancel</a>
-        </form>
-    </div>
+    <p>Đang chuyển hướng tới trang Quản lý Điểm đến... <a href="/admin/destinations/">Nhấp vào đây nếu không tự chuyển</a></p>
 </body>
 </html>

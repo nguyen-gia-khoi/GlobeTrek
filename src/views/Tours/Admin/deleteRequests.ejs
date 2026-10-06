@@ -1,45 +1,162 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh sách yêu cầu xóa Tour - Admin</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Duyệt Xóa Tour - GlobeTrek Admin</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
     <%- include('../../header', { pageTitle: ' ' }) %>
-    <div class="container mt-5">
-        <h2 class="mt-5">Danh sách yêu cầu xóa Tour</h2>
-        <% if (formattedRequests.length === 0) { %>
-            <div class="alert alert-warning">Không có yêu cầu xóa nào.</div>
-        <% } else { %>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tên Tour</th>
-                        <th>Partner</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% formattedRequests.forEach(request => { %>
+
+    <div class="main-content-layout">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <a href="/admin/tours/list" class="text-muted fs-sm fw-semibold d-inline-flex align-items-center gap-1 mb-2">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách tour
+                </a>
+                <h2 class="fw-bold text-main mb-1">Yêu Cầu Gỡ Bỏ & Xóa Tour</h2>
+                <p class="text-muted fs-sm mb-0">Xác nhận các yêu cầu xóa tour từ phía đối tác quản trị</p>
+            </div>
+            <span class="badge-gt badge-gt-danger">
+                <i class="fas fa-trash-alt"></i> <%= (typeof formattedRequests !== 'undefined' && formattedRequests) ? formattedRequests.length : 0 %> Yêu cầu
+            </span>
+        </div>
+
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
                         <tr>
-                            <td><%= request.id %></td>
-                            <td><%= request.title %></td>
-                            <th><%= request.partnerName  %></th>
-                            <td>
-                                <form method="POST" action="/admin/tours/confirm-delete/<%= request.id %>">
-                                    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
-                                </form>
-                            </td>
+                            <th>Mã Yêu Cầu</th>
+                            <th>Tên Tour</th>
+                            <th>Đối Tác</th>
+                            <th class="text-end">Hành Động</th>
                         </tr>
-                    <% }); %>
-                </tbody>
-            </table>
-        <% } %>
-        
-          
+                    </thead>
+                    <tbody>
+                        <% if (!formattedRequests || formattedRequests.length === 0) { %>
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="empty-state-gt border-0 py-4">
+                                        <div class="empty-state-icon">
+                                            <i class="fas fa-circle-check"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-main">Không Có Yêu Cầu Xóa Nào</h5>
+                                        <p class="empty-state-desc mb-0">Hiện tại không có yêu cầu xóa tour nào cần phê duyệt.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% formattedRequests.forEach(request => { %>
+                                <tr>
+                                    <td>
+                                        <span class="fs-xs font-monospace fw-bold text-muted">#<%= request.id %></span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-main fs-6"><%= request.title %></div>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt badge-gt-info">
+                                            <i class="fas fa-handshake"></i> <%= request.partnerName %>
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex align-items-center gap-1">
+                                            <button type="button" 
+                                                    class="btn btn-gt-ghost text-primary btn-gt-sm btn-delete-req-detail" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#detailDeleteRequestModal"
+                                                    data-id="<%= request.id %>"
+                                                    data-title="<%= request.title %>"
+                                                    data-partner="<%= request.partnerName %>"
+                                                    title="Xem chi tiết yêu cầu xóa">
+                                                <i class="fas fa-eye me-1"></i> Chi tiết
+                                            </button>
+                                            <form method="POST" action="/admin/tours/confirm-delete/<%= request.id %>" class="d-inline m-0">
+                                                <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn tour này khỏi hệ thống?');" class="btn btn-gt-danger btn-gt-sm">
+                                                    <i class="fas fa-trash-can me-1"></i> Xác Nhận Xóa
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
+    <!-- Modal: Xem Chi Tiết Yêu Cầu Xóa -->
+    <div class="modal fade" id="detailDeleteRequestModal" tabindex="-1" aria-labelledby="detailDeleteRequestModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main mb-0" id="detailDeleteReqTitle">Yêu Cầu Xóa Tour</h5>
+                            <span class="badge-gt badge-gt-danger fs-xs mt-1">Chờ xác nhận xóa</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-body">
+                    <div class="detail-section-card mb-0">
+                        <div class="detail-section-title">
+                            <i class="fas fa-info-circle text-primary"></i> Thông Tin Yêu Cầu
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Tên Tour:</span>
+                            <span class="detail-field-value fw-bold text-main" id="detailDeleteReqTourTitle">—</span>
+                        </div>
+                        <div class="detail-field-row">
+                            <span class="detail-field-label">Đối Tác Yêu Cầu:</span>
+                            <span class="detail-field-value text-primary fw-semibold" id="detailDeleteReqPartner">—</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-white">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                    <form id="modalConfirmDeleteForm" action="" method="POST" class="d-inline m-0">
+                        <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn tour này khỏi hệ thống?');" class="btn btn-gt-danger">
+                            <i class="fas fa-trash-can me-1"></i> Xác Nhận Xóa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const detailDeleteReqModal = document.getElementById('detailDeleteRequestModal');
+        if (detailDeleteReqModal) {
+            detailDeleteReqModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+
+                const id = button.getAttribute('data-id') || '';
+                const title = button.getAttribute('data-title') || '—';
+                const partner = button.getAttribute('data-partner') || '—';
+
+                const titleEl = document.getElementById('detailDeleteReqTourTitle');
+                if (titleEl) titleEl.textContent = title;
+
+                const partnerEl = document.getElementById('detailDeleteReqPartner');
+                if (partnerEl) partnerEl.textContent = partner;
+
+                const formEl = document.getElementById('modalConfirmDeleteForm');
+                if (formEl) formEl.action = `/admin/tours/confirm-delete/${id}`;
+            });
+        }
+    </script>
 </body>
 </html>

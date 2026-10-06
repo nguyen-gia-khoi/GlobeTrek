@@ -2,7 +2,10 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../../controllers/Admin/tourController');
 const {uploadMultiple} = require('../../Middleware/cloudinary');
-const {verifyAdmin} = require('../../Middleware/authMiddleware');
+const { requireAdmin } = require('../../Middleware/authMiddleware');
+
+router.use(requireAdmin);
+
 // Danh sách tour (Admin)
 router.get('/list' , adminController.getTours);
 router.get('/api/list' , adminController.getToursAPI);

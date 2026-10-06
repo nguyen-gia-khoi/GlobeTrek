@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # 1. GlobeTrek Node.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: globetrek_app
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/GlobeTrek
+      - REDIS_URL=redis://redis:6379
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_USE_SSL=false
+      - MINIO_ACCESS_KEY=admin_globetrek
+      - MINIO_SECRET_KEY=MatKhauSieuBaoMat123@
+      - MINIO_BUCKET_NAME=globetrek-media
+      - MINIO_PUBLIC_URL=http://localhost:9000
+      - USE_CLOUDINARY=false
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+      - minio
+    networks:
+      - globetrek_network
+
+  # 2. MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: globetrek_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/mongo_data:/data/db
+    networks:
+      - globetrek_network
+
+  # 3. Redis Cache & Session
+  redis:
+    image: redis:alpine
+    container_name: globetrek_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis_data:/data
+    networks:
+      - globetrek_network
+
+  # 4. MinIO Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: globetrek_minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000" # S3 API Port
+      - "9001:9001" # Web Management Console Port
+    environment:
+      MINIO_ROOT_USER: admin_globetrek
+      MINIO_ROOT_PASSWORD: MatKhauSieuBaoMat123@
+    volumes:
+      - ./data/minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - globetrek_network
+
+  # 5. MinIO Auto-Initialization (Bucket Creation & Public Access Policy)
+  minio-init:
+    image: minio/mc:latest
+    container_name: globetrek_minio_init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO server to start...';
+      sleep 3;
+      mc alias set local http://minio:9000 admin_globetrek MatKhauSieuBaoMat123@;
+      echo 'Creating bucket globetrek-media if not exists...';
+      mc mb --ignore-existing local/globetrek-media;
+      echo 'Setting public download policy on bucket...';
+      mc anonymous set download local/globetrek-media;
+      echo 'MinIO initialization complete!';
+      exit 0;
+      "
+    networks:
+      - globetrek_network
+
+networks:
+  globetrek_network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  redis_data:
+  minio_data:

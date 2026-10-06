@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Hiệu Suất Tour - GlobeTrek</title>
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <%- include('../../DashboardPN', { pageTitle: 'Báo Cáo Hiệu Suất Tour' }) %>
+
+    <%
+        const changeLabel = (metric) => {
+            if (metric.change === null) return 'Mới so với kỳ trước';
+            if (metric.change === 0) return 'Không đổi so với kỳ trước';
+            return `${metric.change > 0 ? '+' : ''}${metric.change.toLocaleString('vi-VN')}% so với kỳ trước`;
+        };
+        const trendClass = (metric, inverse = false) => {
+            if (metric.change === null) return 'positive';
+            const improves = inverse ? metric.change <= 0 : metric.change >= 0;
+            return improves ? 'positive' : 'negative';
+        };
+        const trendIcon = (metric) => {
+            if (metric.change === null || metric.change === 0) return 'fa-minus';
+            return metric.change > 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+        };
+    %>
+
+    <main class="main-content-layout">
+        <div class="hero-header-gt d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="hero-badge-pill">
+                    <i class="fas fa-chart-line text-info me-1"></i> Phân Tích Vận Hành
+                </span>
+                <h1 class="text-white mb-2">Báo Cáo Hiệu Suất Tour</h1>
+                <p class="mb-0">Theo dõi doanh thu, lượng khách, công suất và tỷ lệ hủy theo ngày khởi hành.</p>
+            </div>
+            <button type="button" class="btn btn-light rounded-pill px-3 py-2 fw-bold text-primary shadow-sm" onclick="exportToExcel()">
+                <i class="fas fa-file-excel text-success me-1"></i> Xuất Báo Cáo Excel
+            </button>
+        </div>
+
+        <section class="card-gt p-4 mb-4" aria-labelledby="performanceFiltersTitle">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2 mb-3">
+                <div>
+                    <h2 class="fw-bold text-main fs-5 mb-1" id="performanceFiltersTitle">Bộ lọc báo cáo</h2>
+                    <p class="text-muted fs-sm mb-0">
+                        Kỳ so sánh: <%= new Date(`${period.previousFromDate}T00:00:00`).toLocaleDateString('vi-VN') %>
+                        – <%= new Date(`${period.previousToDate}T00:00:00`).toLocaleDateString('vi-VN') %>
+                    </p>
+                </div>
+                <span class="badge-gt badge-gt-info"><%= partnerName %></span>
+            </div>
+
+            <form method="GET" action="/partner/revenue/tour-performance" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="fromDate" class="form-label fw-semibold fs-sm">Từ ngày khởi hành</label>
+                    <input type="date" class="form-control" id="fromDate" name="fromDate" value="<%= filters.fromDate %>" required>
+                </div>
+                <div class="col-md-3">
+                    <label for="toDate" class="form-label fw-semibold fs-sm">Đến ngày khởi hành</label>
+                    <input type="date" class="form-control" id="toDate" name="toDate" value="<%= filters.toDate %>" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="tourId" class="form-label fw-semibold fs-sm">Tour</label>
+                    <select class="form-select" id="tourId" name="tourId">
+                        <option value="">Tất cả tour</option>
+                        <% tours.forEach((tour) => { %>
+                            <option value="<%= tour._id %>" <%= filters.tourId === String(tour._id) ? 'selected' : '' %>>
+                                <%= tour.title %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-gt-primary">
+                        <i class="fas fa-filter"></i> Áp dụng
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="row g-4 mb-4" aria-label="Chỉ số hiệu suất chính">
+            <div class="col-sm-6 col-xl">
+                <div class="kpi-card h-100">
+                    <div class="kpi-icon-wrap kpi-icon-primary"><i class="fas fa-coins"></i></div>
+                    <div>
+                        <div class="kpi-title">Doanh Thu</div>
+                        <div class="kpi-value text-primary font-display"><%= metrics.revenue.current.toLocaleString('vi-VN') %> ₫</div>
+                        <div class="kpi-trend <%= trendClass(metrics.revenue) %>">
+                            <i class="fas <%= trendIcon(metrics.revenue) %>"></i> <%= changeLabel(metrics.revenue) %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl">
+                <div class="kpi-card h-100">
+                    <div class="kpi-icon-wrap kpi-icon-cyan"><i class="fas fa-receipt"></i></div>
+                    <div>
+                        <div class="kpi-title">Đơn Đã Thanh Toán</div>
+                        <div class="kpi-value font-display"><%= metrics.paidOrders.current.toLocaleString('vi-VN') %></div>
+                        <div class="kpi-trend <%= trendClass(metrics.paidOrders) %>">
+                            <i class="fas <%= trendIcon(metrics.paidOrders) %>"></i> <%= changeLabel(metrics.paidOrders) %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl">
+                <div class="kpi-card h-100">
+                    <div class="kpi-icon-wrap kpi-icon-primary"><i class="fas fa-users"></i></div>
+                    <div>
+                        <div class="kpi-title">Số Khách</div>
+                        <div class="kpi-value font-display"><%= metrics.guests.current.toLocaleString('vi-VN') %></div>
+                        <div class="kpi-trend <%= trendClass(metrics.guests) %>">
+                            <i class="fas <%= trendIcon(metrics.guests) %>"></i> <%= changeLabel(metrics.guests) %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl">
+                <div class="kpi-card h-100">
+                    <div class="kpi-icon-wrap kpi-icon-cyan"><i class="fas fa-chart-pie"></i></div>
+                    <div>
+                        <div class="kpi-title">Công Suất</div>
+                        <div class="kpi-value font-display"><%= metrics.occupancyRate.current.toLocaleString('vi-VN') %>%</div>
+                        <div class="kpi-trend <%= trendClass(metrics.occupancyRate) %>">
+                            <i class="fas <%= trendIcon(metrics.occupancyRate) %>"></i> <%= changeLabel(metrics.occupancyRate) %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl">
+                <div class="kpi-card h-100">
+                    <div class="kpi-icon-wrap kpi-icon-primary"><i class="fas fa-ban"></i></div>
+                    <div>
+                        <div class="kpi-title">Tỷ Lệ Hủy</div>
+                        <div class="kpi-value font-display"><%= metrics.cancellationRate.current.toLocaleString('vi-VN') %>%</div>
+                        <div class="kpi-trend <%= trendClass(metrics.cancellationRate, true) %>">
+                            <i class="fas <%= trendIcon(metrics.cancellationRate) %>"></i> <%= changeLabel(metrics.cancellationRate) %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="row g-4 mb-4">
+            <div class="col-xl-8">
+                <div class="card-gt p-4 h-100">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                        <h2 class="fw-bold text-main fs-5 mb-0">Xu Hướng Theo Ngày Khởi Hành</h2>
+                        <span class="text-muted fs-xs">Doanh thu & công suất</span>
+                    </div>
+                    <div style="height: 330px;">
+                        <canvas id="performanceTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="card-gt p-4 h-100">
+                    <h2 class="fw-bold text-main fs-5 mb-3">Top Tour Theo Doanh Thu</h2>
+                    <div id="rankingChartWrap" style="height: 330px;">
+                        <canvas id="tourRankingChart"></canvas>
+                    </div>
+                    <p id="rankingEmpty" class="text-muted text-center my-auto d-none">Chưa có doanh thu trong kỳ đã chọn.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="card-gt p-4">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+                <div>
+                    <h2 class="fw-bold text-main fs-5 mb-1">Chi Tiết Theo Tour</h2>
+                    <p class="text-muted fs-sm mb-0">
+                        <%= totals.departures.toLocaleString('vi-VN') %> lịch khởi hành,
+                        <%= totals.soldSeats.toLocaleString('vi-VN') %>/<%= totals.capacity.toLocaleString('vi-VN') %> chỗ đã bán
+                    </p>
+                </div>
+                <span class="badge-gt badge-gt-neutral"><%= reportRows.length %> tour</span>
+            </div>
+
+            <div class="table-gt-container border-0 shadow-none">
+                <div class="table-responsive">
+                    <table class="table-gt" id="performanceTable">
+                        <thead>
+                            <tr>
+                                <th>Tour</th>
+                                <th class="text-end">Doanh thu</th>
+                                <th class="text-center">Đơn</th>
+                                <th class="text-center">Khách</th>
+                                <th class="text-center">Công suất</th>
+                                <th class="text-center">Tỷ lệ hủy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="performanceTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="performancePagination" class="d-none flex-wrap align-items-center justify-content-between gap-2 mt-3">
+                <span class="text-muted fs-xs" id="performancePageInfo"></span>
+                <div class="d-flex flex-wrap gap-2" id="performancePageButtons"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const reportRows = <%- JSON.stringify(reportRows).replace(/</g, '\\u003c') %>;
+        const trendData = <%- JSON.stringify(trendData).replace(/</g, '\\u003c') %>;
+        const selectedPeriod = <%- JSON.stringify(period).replace(/</g, '\\u003c') %>;
+        const PAGE_SIZE = 8;
+        let currentPage = 1;
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatMoney(value) {
+            return `${(Number(value) || 0).toLocaleString('vi-VN')} ₫`;
+        }
+
+        function renderTable() {
+            const body = document.getElementById('performanceTableBody');
+            const pagination = document.getElementById('performancePagination');
+            const pageInfo = document.getElementById('performancePageInfo');
+            const pageButtons = document.getElementById('performancePageButtons');
+
+            if (!reportRows.length) {
+                body.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">Chưa có tour nào để lập báo cáo.</td></tr>';
+                pagination.classList.add('d-none');
+                pagination.classList.remove('d-flex');
+                return;
+            }
+
+            const totalPages = Math.ceil(reportRows.length / PAGE_SIZE);
+            currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageRows = reportRows.slice(start, start + PAGE_SIZE);
+
+            body.innerHTML = pageRows.map((row) => `
+                <tr>
+                    <td>
+                        <div class="fw-bold text-main fs-sm">${escapeHtml(row.tourName)}</div>
+                        <div class="text-muted fs-xs">${Number(row.departures) || 0} lịch khởi hành</div>
+                    </td>
+                    <td class="text-end">
+                        <strong class="text-primary font-display">${formatMoney(row.revenue)}</strong>
+                        <div class="text-muted fs-xs">Kỳ trước: ${formatMoney(row.previousRevenue)}</div>
+                    </td>
+                    <td class="text-center"><span class="badge-gt badge-gt-neutral">${Number(row.paidOrders) || 0}</span></td>
+                    <td class="text-center">${Number(row.guests) || 0}</td>
+                    <td class="text-center">
+                        <strong>${Number(row.occupancyRate || 0).toLocaleString('vi-VN')}%</strong>
+                        <div class="text-muted fs-xs">${Number(row.soldSeats) || 0}/${Number(row.capacity) || 0} chỗ</div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge-gt ${Number(row.cancellationRate) > 20 ? 'badge-gt-danger' : 'badge-gt-info'}">
+                            ${Number(row.cancellationRate || 0).toLocaleString('vi-VN')}%
+                        </span>
+                        <div class="text-muted fs-xs">${Number(row.canceledOrders) || 0} đơn hủy</div>
+                    </td>
+                </tr>
+            `).join('');
+
+            pageInfo.textContent = `${start + 1}–${start + pageRows.length} của ${reportRows.length} tour`;
+            const buttons = [
+                `<button type="button" class="btn btn-gt-outline btn-gt-sm" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>Trước</button>`,
+            ];
+            for (let page = 1; page <= totalPages; page += 1) {
+                buttons.push(`<button type="button" class="btn ${page === currentPage ? 'btn-gt-primary' : 'btn-gt-outline'} btn-gt-sm" data-page="${page}">${page}</button>`);
+            }
+            buttons.push(`<button type="button" class="btn btn-gt-outline btn-gt-sm" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Sau</button>`);
+            pageButtons.innerHTML = buttons.join('');
+            pagination.classList.remove('d-none');
+            pagination.classList.add('d-flex');
+        }
+
+        function renderCharts() {
+            new Chart(document.getElementById('performanceTrendChart'), {
+                type: 'bar',
+                data: {
+                    labels: trendData.map((point) => point.label),
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'Doanh thu (VNĐ)',
+                            data: trendData.map((point) => point.revenue),
+                            backgroundColor: 'rgba(16, 185, 129, 0.35)',
+                            borderColor: '#10b981',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                            yAxisID: 'revenue',
+                        },
+                        {
+                            type: 'line',
+                            label: 'Công suất (%)',
+                            data: trendData.map((point) => point.occupancyRate),
+                            borderColor: '#2563eb',
+                            backgroundColor: '#2563eb',
+                            pointRadius: 3,
+                            tension: 0.3,
+                            yAxisID: 'rate',
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        revenue: {
+                            beginAtZero: true,
+                            position: 'left',
+                            ticks: {
+                                callback: (value) => Number(value).toLocaleString('vi-VN', { notation: 'compact' }),
+                            },
+                        },
+                        rate: {
+                            beginAtZero: true,
+                            suggestedMax: 100,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: { callback: (value) => `${value}%` },
+                        },
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => context.dataset.yAxisID === 'revenue'
+                                    ? ` ${context.dataset.label}: ${formatMoney(context.raw)}`
+                                    : ` ${context.dataset.label}: ${Number(context.raw || 0).toLocaleString('vi-VN')}%`,
+                            },
+                        },
+                    },
+                },
+            });
+
+            const ranking = reportRows.filter((row) => Number(row.revenue) > 0).slice(0, 6);
+            if (!ranking.length) {
+                document.getElementById('rankingChartWrap').classList.add('d-none');
+                document.getElementById('rankingEmpty').classList.remove('d-none');
+                return;
+            }
+
+            new Chart(document.getElementById('tourRankingChart'), {
+                type: 'bar',
+                data: {
+                    labels: ranking.map((row) => row.tourName),
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: ranking.map((row) => row.revenue),
+                        backgroundColor: ['#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899'],
+                        borderRadius: 6,
+                    }],
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { callback: (value) => Number(value).toLocaleString('vi-VN', { notation: 'compact' }) },
+                        },
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (context) => ` ${formatMoney(context.raw)}` } },
+                    },
+                },
+            });
+        }
+
+        function exportToExcel() {
+            const rows = reportRows.map((row) => ({
+                'Tên Tour': row.tourName,
+                'Doanh Thu (VNĐ)': Number(row.revenue) || 0,
+                'Đơn Đã Thanh Toán': Number(row.paidOrders) || 0,
+                'Số Khách': Number(row.guests) || 0,
+                'Số Lịch Khởi Hành': Number(row.departures) || 0,
+                'Chỗ Đã Bán': Number(row.soldSeats) || 0,
+                'Tổng Sức Chứa': Number(row.capacity) || 0,
+                'Công Suất (%)': Number(row.occupancyRate) || 0,
+                'Đơn Hủy': Number(row.canceledOrders) || 0,
+                'Tỷ Lệ Hủy (%)': Number(row.cancellationRate) || 0,
+            }));
+            const fallback = [{ 'Tên Tour': '', 'Doanh Thu (VNĐ)': 0, 'Đơn Đã Thanh Toán': 0 }];
+            const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : fallback);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, sheet, 'HieuSuatTour');
+            XLSX.writeFile(workbook, `GlobeTrek_HieuSuatTour_${selectedPeriod.fromDate}_${selectedPeriod.toDate}.xlsx`);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            renderCharts();
+            document.getElementById('performancePageButtons').addEventListener('click', (event) => {
+                const button = event.target.closest('button[data-page]');
+                if (!button || button.disabled) return;
+                currentPage = Number(button.dataset.page);
+                renderTable();
+            });
+
+            const fromDate = document.getElementById('fromDate');
+            const toDate = document.getElementById('toDate');
+            fromDate.addEventListener('change', () => {
+                toDate.min = fromDate.value;
+                if (toDate.value < fromDate.value) toDate.value = fromDate.value;
+            });
+            toDate.min = fromDate.value;
+        });
+    </script>
+</body>
+</html>

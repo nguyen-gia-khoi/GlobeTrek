@@ -1,23 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <title>Edit Tour Type</title>
+    <title>Chỉnh Sửa Loại Tour - GlobeTrek Admin</title>
 </head>
 <body>
     <%- include('../header', { pageTitle: 'Edit Tour Type' }) %>
-    <div class="container mt-5">
-        <h1 class="mt-5">Edit Tour Type</h1>
-        <form action="/tourTypes/<%= tourType._id %>?_method=PUT" method="POST">
-            <div class="form-group">
-                <label for="name">Tour Type Name:</label>
-                <input type="text" id="name" name="name" class="form-control" value="<%= tourType.name %>" required>
+    
+    <div class="main-content-layout">
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <a href="/tourTypes" class="text-muted fs-sm fw-semibold d-inline-flex align-items-center gap-1">
+                <i class="fas fa-arrow-left"></i> Danh sách loại tour
+            </a>
+        </div>
+
+        <div class="card-gt p-4" style="max-width: 600px;">
+            <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                <div class="rounded-circle p-2 bg-cyan text-white fs-xs" style="background: var(--secondary);">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <h4 class="fw-bold text-main mb-0 fs-5">Chỉnh Sửa Loại Tour</h4>
             </div>
-            <button type="submit" class="btn btn-primary">Update</button>
-            <a href="/tourtypes" class="btn btn-secondary">Cancel</a>
-        </form>
+
+            <form action="/tourTypes/<%= tourType._id %>?_method=PUT" method="POST">
+                <div class="form-group-gt mb-4">
+                    <label for="name" class="form-label-gt">Tên Loại Tour <span class="text-danger">*</span></label>
+                    <input type="text" id="name" name="name" class="form-control-gt" value="<%= tourType.name %>" required>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-gt-primary">
+                        <i class="fas fa-save me-1"></i> Lưu Thay Đổi
+                    </button>
+                    <a href="/tourTypes" class="btn btn-gt-ghost">Hủy</a>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>

@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const tourController = require('../controllers/tourController');
 // const { uploadMultiple } = require('../Middleware/cloudinary');
-const {verifyAdmin} = require('../Middleware/authMiddleware');
 
 router.get('/', tourController.getTours); // Hiển thị danh sách tour
 router.get('/api',tourController.getToursAPI); // API để lấy danh sách tour

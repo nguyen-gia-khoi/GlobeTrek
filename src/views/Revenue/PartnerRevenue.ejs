@@ -1,169 +1,181 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doanh thu hàng năm</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Báo Cáo Doanh Thu Đối Tác - GlobeTrek</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
+    
+    <!-- Chart.js & SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .card {
-            border-radius: 15px;
-            margin-bottom: 30px;
-        }
-
-        .table th,
-        .table td {
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .chart-container {
-            width: 100%;
-            height: 400px;
-        }
-
-        .total-revenue {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #17a2b8;
-        }
-
-        .btn-refresh {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .btn-refresh:hover {
-            background-color: #0056b3;
-        }
-
-        .table-container {
-            margin-top: 30px;
-        }
-
-        .chart-row {
-            display: flex;
-            justify-content: center;
-        }
-
-        .chart-container {
-            width: 60%;
-            height: 300px;
-        }
-    </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
 </head>
-
 <body>
-    <%- include('../DashboardPN', { pageTitle: '' }) %>
+    <%- include('../DashboardPN', { pageTitle: 'Doanh Thu' }) %>
 
-    <div class="container mt-5">
-        <h1 class="text-center mt-5 text-primary">Doanh Thu của Các Tour</h1>
-        <p class="text-center">Xem doanh thu hàng năm của các tour mà bạn đã tạo</p>
+    <div class="main-content-layout">
+        <!-- Page Header -->
+        <div class="hero-header-gt d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="hero-badge-pill">
+                    <i class="fas fa-coins text-warning me-1"></i> Báo Cáo Tài Chính
+                </span>
+                <h1 class="text-white mb-2">Báo Cáo Doanh Thu Tour</h1>
+                <p class="mb-0">Xem thống kê doanh thu chi tiết theo từng tour và tỷ lệ đóng góp của từng hành trình.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light rounded-pill px-3 py-2 fw-bold text-primary shadow-sm" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel text-success me-1"></i> Xuất Excel
+                </button>
+            </div>
+        </div>
 
-        <!-- Bảng Doanh Thu -->
-        <div class="table-container">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Danh sách Tour và Doanh Thu</h5>
-                    <button class="btn-refresh" onclick="location.reload()">Làm mới</button>
-                </div>
-                <div class="card-body">
-                    <h1>Welcome, <%= partnerName || 'Partner' %></h1>
-                    <p class="total-revenue"><strong>Tổng Doanh Thu đến nay:</strong> <%= totalRevenue.toLocaleString() %> VND</p>
-                    <p class="text-center"><strong>doanh thu đến ngày:</strong> <%= new Date().toLocaleDateString() %></p> 
-
-                    <table class="table table-bordered table-striped table-hover">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>Tên Tour</th>
-                                <th>Số Đơn Hàng</th>
-                                <th>Doanh Thu</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (revenueData && revenueData.length > 0) { %>
-                                <% revenueData.forEach(data => { %>
-                                    <tr>
-                                        <td><%= data.tourName %></td>
-                                        <td><%= data.ordersCount %></td>
-                                        <td><%= data.revenue.toLocaleString() %> VND</td>
-                                    </tr>
-                                <% }) %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="3">Không có dữ liệu doanh thu</td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-
-                    <!-- Biểu đồ Doanh Thu -->
-                    <div class="chart-row">
-                        <div class="chart-container">
-                            <canvas id="revenueChart"></canvas>
+        <!-- KPI Revenue Summary -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-icon-primary">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-title">Tổng Doanh Thu Đến Nay</div>
+                        <div class="kpi-value text-primary font-display">
+                            <%= (typeof totalRevenue !== 'undefined' && totalRevenue ? totalRevenue : 0).toLocaleString('vi-VN') %> VNĐ
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-clock"></i> Tính đến ngày <%= new Date().toLocaleDateString('vi-VN') %>
                         </div>
                     </div>
+                </div>
+            </div>
 
+            <div class="col-md-6">
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-icon-cyan">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div>
+                        <div class="kpi-title">Số Tour Có Doanh Thu</div>
+                        <div class="kpi-value">
+                            <%= (typeof revenueData !== 'undefined' && revenueData ? revenueData.length : 0) %> Tour
+                        </div>
+                        <div class="kpi-trend positive">
+                            <i class="fas fa-circle-check"></i> Đang ghi nhận giao dịch
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts & Table -->
+        <div class="row g-4">
+            <!-- Table of Tours Revenue -->
+            <div class="col-lg-7">
+                <div class="card-gt p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <h4 class="fw-bold text-main mb-0 fs-5">Doanh Thu Theo Từng Tour</h4>
+                        <span class="badge-gt badge-gt-info">
+                            <%= typeof partnerName !== 'undefined' && partnerName ? partnerName : 'Đối tác' %>
+                        </span>
+                    </div>
+
+                    <div class="table-gt-container border-0 shadow-none">
+                        <div class="table-responsive">
+                            <table class="table-gt" id="revenueTable">
+                                <thead>
+                                    <tr>
+                                        <th>Tên Tour</th>
+                                        <th class="text-center">Số Đơn</th>
+                                        <th class="text-end">Doanh Thu (VNĐ)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (typeof revenueData !== 'undefined' && revenueData && revenueData.length > 0) { %>
+                                        <% revenueData.forEach(data => { %>
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold text-main fs-sm"><%= data.tourName %></div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge-gt badge-gt-neutral"><%= data.ordersCount %> đơn</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <strong class="text-primary font-display"><%= (data.revenue || 0).toLocaleString('vi-VN') %> VNĐ</strong>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="3" class="text-center py-4 text-muted">Chưa có dữ liệu doanh thu cho các tour.</td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Distribution Chart -->
+            <div class="col-lg-5">
+                <div class="card-gt p-4 h-100 d-flex flex-column">
+                    <h4 class="fw-bold text-main mb-3 fs-5">Phân Bổ Tỷ Trọng Doanh Thu</h4>
+                    <div class="d-flex align-items-center justify-content-center flex-grow-1" style="min-height: 280px;">
+                        <canvas id="partnerRevenuePieChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Dữ liệu cho biểu đồ
-        const revenueData = <%- JSON.stringify(revenueData) %>;
+        document.addEventListener('DOMContentLoaded', function () {
+            const revenueData = <%- (typeof revenueData !== 'undefined' && revenueData) ? JSON.stringify(revenueData) : '[]' %>;
+            
+            if (revenueData && revenueData.length > 0) {
+                const tourNames = revenueData.map(d => d.tourName);
+                const revenues = revenueData.map(d => d.revenue);
 
-        // Lấy tên tour và doanh thu từ revenueData
-        const tourNames = revenueData.map(data => data.tourName);
-        const revenues = revenueData.map(data => data.revenue);
+                const palette = ['#10b981', '#06b6d4', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
 
-        // Tạo màu sắc ngẫu nhiên
-        const getRandomColor = () => {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
-        };
-
-        const colors = revenueData.map(() => getRandomColor());
-
-        // Vẽ biểu đồ tròn
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',  // Chuyển thành biểu đồ tròn (pie chart)
-            data: {
-                labels: tourNames,
-                datasets: [{
-                    label: 'Doanh Thu (VND)',
-                    data: revenues,
-                    backgroundColor: colors,
-                    borderColor: colors,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top'
+                const ctx = document.getElementById('partnerRevenuePieChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: tourNames,
+                        datasets: [{
+                            data: revenues,
+                            backgroundColor: palette.slice(0, revenues.length),
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: tooltipItem => tooltipItem.raw.toLocaleString() + ' VND'
-                        }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans', size: 11 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString('vi-VN')} VNĐ`
+                                }
+                            }
+                        },
+                        cutout: '65%'
                     }
-                }
+                });
             }
         });
+
+        function exportToExcel() {
+            const table = document.getElementById('revenueTable');
+            const wb = XLSX.utils.table_to_book(table, { sheet: "DoanhThu" });
+            XLSX.writeFile(wb, "GlobeTrek_DoanhThu_Partner.xlsx");
+        }
     </script>
 </body>
-
 </html>

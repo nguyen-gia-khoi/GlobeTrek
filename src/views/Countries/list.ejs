@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Quốc Gia - GlobeTrek Admin</title>
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
+</head>
+<body>
+    <%- include('../header', { pageTitle: 'Danh Sách Quốc Gia' }) %>
+    
+    <div class="main-content-layout">
+        <!-- Page Header with Action Button -->
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <a href="/admin/destinations" class="text-muted fs-sm fw-semibold text-decoration-none">
+                        <i class="fas fa-location-dot me-1"></i> Điểm Đến
+                    </a>
+                    <span class="text-muted fs-xs">/</span>
+                    <span class="text-primary fs-sm fw-bold">Quốc Gia</span>
+                </div>
+                <h2 class="fw-bold text-main mb-1">Quản Lý Danh Mục Quốc Gia</h2>
+                <p class="text-muted fs-sm mb-0">Quản lý các quốc gia mở rộng mạng lưới tour du lịch trên hệ thống GlobeTrek</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/admin/regions" class="btn btn-gt-outline btn-gt-sm">
+                    <i class="fas fa-map-location-dot me-1"></i> Quản Lý Vùng Miền
+                </a>
+                <button type="button" class="btn btn-gt-primary btn-gt-sm" data-bs-toggle="modal" data-bs-target="#addCountryModal">
+                    <i class="fas fa-plus-circle me-1"></i> Thêm Quốc Gia
+                </button>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <%
+          const currentSort = (typeof filters !== 'undefined' && filters.sortBy) ? filters.sortBy : 'createdAt';
+          const currentOrder = (typeof filters !== 'undefined' && filters.order) ? filters.order : 'desc';
+          const currentSearch = (typeof filters !== 'undefined' && filters.search) ? filters.search : '';
+
+          function getSortUrl(field) {
+            let nextOrder = 'desc';
+            if (currentSort === field) {
+              nextOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+            }
+            const params = new URLSearchParams();
+            if (currentSearch) params.set('search', currentSearch);
+            params.set('sortBy', field);
+            params.set('order', nextOrder);
+            return '?' + params.toString();
+          }
+
+          function getSortIcon(field) {
+            if (currentSort !== field) return '<i class="fas fa-sort text-muted ms-1 fs-xs"></i>';
+            return currentOrder === 'asc' 
+              ? '<i class="fas fa-sort-up text-primary ms-1"></i>' 
+              : '<i class="fas fa-sort-down text-primary ms-1"></i>';
+          }
+        %>
+        <div class="card-gt p-4">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <h4 class="fw-bold text-main mb-0 fs-5">Danh Sách Quốc Gia</h4>
+                    <span class="badge-gt badge-gt-info">
+                        <i class="fas fa-globe"></i> <%= typeof totalItems !== 'undefined' ? totalItems : (countries ? countries.length : 0) %> Quốc gia
+                    </span>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Quick Sort Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-gt-outline btn-gt-sm dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-arrow-down-short-wide text-primary me-1"></i>
+                            <span>
+                                <% if (currentSort === 'tours' && currentOrder === 'desc') { %>Nhiều tour nhất
+                                <% } else if (currentSort === 'tours' && currentOrder === 'asc') { %>Ít tour nhất
+                                <% } else if (currentSort === 'createdAt' && currentOrder === 'asc') { %>Cũ nhất
+                                <% } else if (currentSort === 'name' && currentOrder === 'asc') { %>Tên (A-Z)
+                                <% } else if (currentSort === 'name' && currentOrder === 'desc') { %>Tên (Z-A)
+                                <% } else { %>Mới nhất<% } %>
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                            <li><a class="dropdown-item fs-sm py-2 <%= (currentSort === 'createdAt' && currentOrder === 'desc') ? 'active fw-bold' : '' %>" href="?sortBy=createdAt&order=desc<%= currentSearch ? '&search=' + currentSearch : '' %>"><i class="far fa-clock me-2"></i>Mới nhất (Mặc định)</a></li>
+                            <li><a class="dropdown-item fs-sm py-2 <%= (currentSort === 'createdAt' && currentOrder === 'asc') ? 'active fw-bold' : '' %>" href="?sortBy=createdAt&order=asc<%= currentSearch ? '&search=' + currentSearch : '' %>"><i class="fas fa-history me-2"></i>Cũ nhất</a></li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li><a class="dropdown-item fs-sm py-2 <%= (currentSort === 'tours' && currentOrder === 'desc') ? 'active fw-bold' : '' %>" href="?sortBy=tours&order=desc<%= currentSearch ? '&search=' + currentSearch : '' %>"><i class="fas fa-arrow-down-wide-short me-2"></i>Số tour: Nhiều nhất</a></li>
+                            <li><a class="dropdown-item fs-sm py-2 <%= (currentSort === 'tours' && currentOrder === 'asc') ? 'active fw-bold' : '' %>" href="?sortBy=tours&order=asc<%= currentSearch ? '&search=' + currentSearch : '' %>"><i class="fas fa-arrow-up-wide-short me-2"></i>Số tour: Ít nhất</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Search Input -->
+                    <form action="/admin/countries" method="GET" class="m-0">
+                        <input type="hidden" name="sortBy" value="<%= currentSort %>">
+                        <input type="hidden" name="order" value="<%= currentOrder %>">
+                        <div class="search-input-group" style="width: 240px;">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="countrySearchInput" name="search" class="form-control-gt py-1 fs-sm" placeholder="Tìm tên, mã quốc gia..." value="<%= currentSearch %>">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-gt-container border-0 shadow-none">
+                <div class="table-responsive">
+                    <table class="table-gt" id="countryTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <a href="<%- getSortUrl('name') %>" class="text-decoration-none text-main d-inline-flex align-items-center" title="Sắp xếp theo tên">
+                                        Tên Quốc Gia <%- getSortIcon('name') %>
+                                    </a>
+                                </th>
+                                <th>Mã Code</th>
+                                <th>Mô Tả</th>
+                                <th>
+                                    <a href="<%- getSortUrl('regions') %>" class="text-decoration-none text-main d-inline-flex align-items-center" title="Sắp xếp theo số vùng miền">
+                                        Vùng Miền <%- getSortIcon('regions') %>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="<%- getSortUrl('destinations') %>" class="text-decoration-none text-main d-inline-flex align-items-center" title="Sắp xếp theo số điểm đến">
+                                        Điểm Đến <%- getSortIcon('destinations') %>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="<%- getSortUrl('tours') %>" class="text-decoration-none text-main d-inline-flex align-items-center" title="Sắp xếp theo số lượng tour">
+                                        Số Tour <%- getSortIcon('tours') %>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="<%- getSortUrl('createdAt') %>" class="text-decoration-none text-main d-inline-flex align-items-center" title="Sắp xếp theo ngày tạo">
+                                        Ngày Tạo <%- getSortIcon('createdAt') %>
+                                    </a>
+                                </th>
+                                <th>Trạng Thái</th>
+                                <th class="text-end">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (!countries || countries.length === 0) { %>
+                                <tr>
+                                    <td colspan="9" class="text-center py-5 text-muted">
+                                        <div class="empty-state-gt border-0 py-3">
+                                            <div class="empty-state-icon">
+                                                <i class="fas fa-globe-americas"></i>
+                                            </div>
+                                            <h6 class="fw-bold text-main">Chưa có quốc gia nào phù hợp.</h6>
+                                            <p class="empty-state-desc mb-3">Nhấn nút "Thêm Quốc Gia" ở trên để tạo quốc gia đầu tiên.</p>
+                                            <button type="button" class="btn btn-gt-primary btn-gt-sm" data-bs-toggle="modal" data-bs-target="#addCountryModal">
+                                                <i class="fas fa-plus-circle me-1"></i> Thêm Quốc Gia
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% countries.forEach(country => { %>
+                                    <tr class="country-item" data-name="<%= country.name ? country.name.toLowerCase() : '' %>" data-code="<%= country.code ? country.code.toLowerCase() : '' %>">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-circle bg-subtle-mint text-primary p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                                    <i class="fas fa-flag"></i>
+                                                </div>
+                                                <div class="fw-bold text-main fs-6"><%= country.name %></div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <% if (country.code) { %>
+                                                <span class="badge-gt badge-gt-secondary font-monospace fw-bold"><%= country.code %></span>
+                                            <% } else { %>
+                                                <span class="text-muted fs-xs">—</span>
+                                            <% } %>
+                                        </td>
+                                        <td style="max-width: 250px;">
+                                            <div class="text-muted fs-sm text-truncate" title="<%= country.description || 'Chưa có mô tả' %>">
+                                                <%= country.description || '—' %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="/admin/regions?countryId=<%= country._id %>" class="badge-gt badge-gt-info text-decoration-none" title="Xem các vùng miền của quốc gia này">
+                                                <i class="fas fa-map me-1"></i> <%= country.regionCount || 0 %> Vùng
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge-gt badge-gt-neutral">
+                                                <i class="fas fa-location-dot me-1"></i> <%= country.destCount || 0 %> Điểm
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="/admin/tours/list?country=<%= country._id %>" class="badge-gt badge-gt-neutral text-decoration-none" title="Xem các tour của quốc gia này">
+                                                <i class="fas fa-route me-1"></i> <%= country.tourCount || 0 %> Tour
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <div class="fs-sm text-muted">
+                                                <i class="far fa-clock me-1"></i>
+                                                <%= country.createdAt ? new Date(country.createdAt).toLocaleDateString('vi-VN') : 'Mới tạo' %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-gt <%= country.isActive !== false ? 'badge-gt-success' : 'badge-gt-danger' %>">
+                                                <i class="fas fa-circle-dot"></i> <%= country.isActive !== false ? 'Hoạt động' : 'Tạm tắt' %>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" 
+                                                    class="btn btn-gt-outline btn-gt-sm me-1 btn-edit-country" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editCountryModal"
+                                                    data-id="<%= country._id %>"
+                                                    data-name="<%= country.name %>"
+                                                    data-code="<%= country.code || '' %>"
+                                                    data-description="<%= country.description || '' %>"
+                                                    data-active="<%= country.isActive !== false ? 'true' : 'false' %>">
+                                                <i class="fas fa-pen-to-square me-1"></i> Sửa
+                                            </button>
+                                            <form action="/admin/countries/delete/<%= country._id %>" method="POST" class="d-inline m-0" onsubmit="return confirm('Bạn có chắc muốn xóa quốc gia này?');">
+                                                <button type="submit" class="btn btn-gt-ghost text-danger btn-gt-sm border" <%= (country.regionCount > 0 || country.destCount > 0 || country.tourCount > 0) ? 'title="Không thể xóa khi còn vùng miền, điểm đến hoặc tour du lịch" disabled' : '' %>>
+                                                    <i class="fas fa-trash-can me-1"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-4 pt-3 border-top">
+                    <div class="fs-sm text-muted">
+                        Hiển thị <strong><%= (currentPage - 1) * 8 + 1 %> - <%= Math.min(currentPage * 8, totalItems) %></strong> trong tổng số <strong><%= totalItems %></strong> quốc gia
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <% if (currentPage > 1) { %>
+                            <a href="?page=<%= currentPage - 1 %><%= typeof queryString !== 'undefined' ? queryString : '' %>" class="btn btn-gt-outline btn-gt-sm">
+                                <i class="fas fa-chevron-left me-1"></i> Trước
+                            </a>
+                        <% } else { %>
+                            <button class="btn btn-gt-outline btn-gt-sm" disabled>
+                                <i class="fas fa-chevron-left me-1"></i> Trước
+                            </button>
+                        <% } %>
+
+                        <div class="d-flex gap-1">
+                            <% for (let p = 1; p <= totalPages; p++) { %>
+                                <% if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) { %>
+                                    <a href="?page=<%= p %><%= typeof queryString !== 'undefined' ? queryString : '' %>" 
+                                       class="btn btn-gt-sm <%= p === currentPage ? 'btn-gt-primary' : 'btn-gt-outline' %> px-3">
+                                        <%= p %>
+                                    </a>
+                                <% } else if (p === currentPage - 2 || p === currentPage + 2) { %>
+                                    <span class="px-2 text-muted align-self-center">...</span>
+                                <% } %>
+                            <% } %>
+                        </div>
+
+                        <% if (currentPage < totalPages) { %>
+                            <a href="?page=<%= currentPage + 1 %><%= typeof queryString !== 'undefined' ? queryString : '' %>" class="btn btn-gt-outline btn-gt-sm">
+                                Sau <i class="fas fa-chevron-right ms-1"></i>
+                            </a>
+                        <% } else { %>
+                            <button class="btn btn-gt-outline btn-gt-sm" disabled>
+                                Sau <i class="fas fa-chevron-right ms-1"></i>
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Modal: Thêm Quốc Gia -->
+    <div class="modal fade" id="addCountryModal" tabindex="-1" aria-labelledby="addCountryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge emerald">
+                            <i class="fas fa-flag"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main mb-0" id="addCountryModalLabel">Thêm Quốc Gia Mới</h5>
+                            <p class="text-muted fs-xs mb-0">Thêm quốc gia mới vào hệ thống điểm đến</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/admin/countries/create" method="POST">
+                    <div class="modal-body p-4 bg-body">
+                        <div class="mb-3">
+                            <label for="countryName" class="form-label-gt">Tên Quốc Gia <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control-gt" id="countryName" name="name" required placeholder="Ví dụ: Việt Nam, Thái Lan..." maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label for="countryCode" class="form-label-gt">Mã Quốc Gia (Alpha Code)</label>
+                            <input type="text" class="form-control-gt text-uppercase" id="countryCode" name="code" placeholder="Ví dụ: VN, TH, JP..." maxlength="10">
+                        </div>
+                        <div class="mb-3">
+                            <label for="countryDescription" class="form-label-gt">Mô Tả</label>
+                            <textarea class="form-control-gt" id="countryDescription" name="description" rows="3" placeholder="Mô tả tóm tắt về quốc gia..." maxlength="500"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 bg-white">
+                        <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-gt-primary">
+                            <i class="fas fa-plus me-1"></i> Thêm Quốc Gia
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Sửa Quốc Gia -->
+    <div class="modal fade" id="editCountryModal" tabindex="-1" aria-labelledby="editCountryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge emerald">
+                            <i class="fas fa-pen-to-square"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main mb-0" id="editCountryModalLabel">Cập Nhật Quốc Gia</h5>
+                            <p class="text-muted fs-xs mb-0">Chỉnh sửa thông tin quốc gia</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editCountryForm" action="" method="POST">
+                    <div class="modal-body p-4 bg-body">
+                        <div class="mb-3">
+                            <label for="editCountryName" class="form-label-gt">Tên Quốc Gia <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control-gt" id="editCountryName" name="name" required maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCountryCode" class="form-label-gt">Mã Quốc Gia (Alpha Code)</label>
+                            <input type="text" class="form-control-gt text-uppercase" id="editCountryCode" name="code" maxlength="10">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCountryDescription" class="form-label-gt">Mô Tả</label>
+                            <textarea class="form-control-gt" id="editCountryDescription" name="description" rows="3" maxlength="500"></textarea>
+                        </div>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="editCountryActive" name="isActive">
+                            <label class="form-check-label fs-sm fw-semibold text-main" for="editCountryActive">Đang hoạt động</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 bg-white">
+                        <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-gt-primary">
+                            <i class="fas fa-save me-1"></i> Lưu Thay Đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Live Search
+        const searchInput = document.getElementById('countrySearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim().toLowerCase();
+                const items = document.querySelectorAll('.country-item');
+                items.forEach(item => {
+                    const name = item.getAttribute('data-name') || '';
+                    const code = item.getAttribute('data-code') || '';
+                    item.style.display = (!query || name.includes(query) || code.includes(query)) ? '' : 'none';
+                });
+            });
+        }
+
+        // Edit Modal binding
+        const editModal = document.getElementById('editCountryModal');
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+
+                const id = button.getAttribute('data-id');
+                const name = button.getAttribute('data-name') || '';
+                const code = button.getAttribute('data-code') || '';
+                const desc = button.getAttribute('data-description') || '';
+                const active = button.getAttribute('data-active') === 'true';
+
+                document.getElementById('editCountryName').value = name;
+                document.getElementById('editCountryCode').value = code;
+                document.getElementById('editCountryDescription').value = desc;
+                document.getElementById('editCountryActive').checked = active;
+
+                document.getElementById('editCountryForm').action = `/admin/countries/edit/${id}`;
+            });
+        }
+    </script>
+</body>
+</html>

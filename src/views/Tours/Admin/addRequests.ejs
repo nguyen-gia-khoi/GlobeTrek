@@ -1,39 +1,435 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh sách yêu cầu thêm Tour - Admin</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Yêu Cầu Phê Duyệt Tour Mới - GlobeTrek Admin</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
 </head>
 <body>
-    <%- include('../../header', { pageTitle: ' ' }) %>
-    <div class="container mt-5">
-        <h2 class="mt-5">Danh sách yêu cầu thêm Tour</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Tên Tour</th>
-                    <th>Partner</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% addRequests.forEach(request => { %>
-                    <tr>
-                        <td><%= request.id %></td> 
-                        <td><%= request.title %></td> 
-                        <td><%= request.partnerName %></td> 
-                        <td>
-                            <form action="/admin/tours/confirm-add/<%= request.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-success">Xác nhận</button>
-                            </form>
-                        </td>
-                    </tr>
-                <% }); %>
-            </tbody>    
-        </table>
+    <%- include('../../header', { pageTitle: 'Duyệt Tour Mới' }) %>
+
+    <div class="main-content-layout">
+        <!-- Page Header -->
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <a href="/admin/tours/list" class="text-muted fs-sm fw-semibold d-inline-flex align-items-center gap-1 mb-2 text-decoration-none">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách tour
+                </a>
+                <h2 class="fw-bold text-main mb-1">Yêu Cầu Phê Duyệt Tour Mới</h2>
+                <p class="text-muted fs-sm mb-0">Kiểm tra thông tin chi tiết các tour du lịch do đối tác gửi lên trước khi phê duyệt mở bán</p>
+            </div>
+            <div>
+                <span class="badge-gt badge-gt-warning fs-sm py-2 px-3">
+                    <i class="fas fa-clock me-1"></i> <%= (typeof addRequests !== 'undefined' && addRequests) ? addRequests.length : 0 %> Tour Chờ Duyệt
+                </span>
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
+                        <tr>
+                            <th>Tên Tour & Địa Điểm</th>
+                            <th>Đối Tác</th>
+                            <th style="min-width: 180px;">Giá Bán (VNĐ)</th>
+                            <th>Thời Lượng</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-end">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!addRequests || addRequests.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="empty-state-gt border-0 py-4">
+                                        <div class="empty-state-icon">
+                                            <i class="fas fa-check-double"></i>
+                                        </div>
+                                        <h5 class="fw-bold text-main">Không Có Yêu Cầu Chờ Duyệt</h5>
+                                        <p class="empty-state-desc mb-0">Tất cả tour mới do các đối tác tạo đã được phê duyệt đầy đủ và sẵn sàng mở bán.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% addRequests.forEach(tour => { %>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-3 overflow-hidden flex-shrink-0 bg-light border gt-img-preview" 
+                                                 style="width: 52px; height: 52px; cursor: pointer;"
+                                                 data-gt-preview="<%= (tour.images && tour.images.length > 0) ? tour.images[0] : '' %>"
+                                                 data-gt-title="<%= tour.title %>"
+                                                 title="Nhấp để xem ảnh gốc">
+                                                <% if (tour.images && tour.images.length > 0) { %>
+                                                    <img src="<%= tour.images[0] %>" alt="<%= tour.title %>" class="w-100 h-100 object-fit-cover">
+                                                <% } else { %>
+                                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted fs-xs">
+                                                        <i class="fas fa-image"></i>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-main fs-6 mb-1"><%= tour.title %></div>
+                                                
+                                                <!-- Phân Cấp Địa Lý: Điểm Đến -> Vùng Miền -> Quốc Gia -->
+                                                <div class="d-flex flex-wrap align-items-center gap-1 mb-1">
+                                                    <% if (tour.destination) { %>
+                                                        <span class="badge-gt badge-gt-primary py-1 px-2" style="font-size: 0.72rem;">
+                                                            <i class="fas fa-location-dot me-1"></i><%= tour.destination.name || tour.destination %>
+                                                        </span>
+                                                    <% } %>
+                                                    <% if (tour.region) { %>
+                                                        <span class="badge-gt badge-gt-info py-1 px-2" style="font-size: 0.72rem;">
+                                                            <i class="fas fa-map me-1"></i><%= tour.region.name || tour.region %>
+                                                        </span>
+                                                    <% } %>
+                                                    <% if (tour.country) { %>
+                                                        <span class="badge-gt badge-gt-neutral py-1 px-2" style="font-size: 0.72rem;">
+                                                            <i class="fas fa-globe me-1 text-secondary"></i><%= tour.country.name || tour.country %>
+                                                        </span>
+                                                    <% } %>
+                                                </div>
+                                                
+                                                <div class="fs-xs text-muted">
+                                                    <i class="fas fa-map-pin text-primary me-1"></i><%= tour.location || 'Việt Nam' %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt badge-gt-info">
+                                            <i class="fas fa-handshake"></i> <%= tour.partner ? tour.partner.name : 'Chưa gán' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column gap-1" style="min-width: 180px;">
+                                            <div class="fw-bold text-primary font-display fs-6 text-nowrap">
+                                                <%= (tour.price || 0).toLocaleString('vi-VN') %> đ
+                                            </div>
+                                            <div class="fs-xs d-flex flex-column gap-1 pt-1 border-top">
+                                                <div class="d-flex justify-content-between gap-3 text-muted text-nowrap">
+                                                    <span><i class="fas fa-child text-secondary me-1"></i>Trẻ em:</span>
+                                                    <span class="fw-semibold text-secondary"><%= (tour.childPrice || Math.round((tour.price || 0) * (tour.childPercent || 75) / 100)).toLocaleString('vi-VN') %> đ</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between gap-3 text-nowrap">
+                                                    <span class="text-warning"><i class="fas fa-star me-1"></i>Lễ (NL):</span>
+                                                    <span class="fw-semibold text-warning"><%= (tour.specialAdultPrice || Math.round((tour.price || 0) * (tour.holidayAdultPercent || 150) / 100)).toLocaleString('vi-VN') %> đ</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between gap-3 text-nowrap">
+                                                    <span class="text-warning"><i class="fas fa-star me-1"></i>Lễ (TE):</span>
+                                                    <span class="fw-semibold text-warning"><%= (tour.specialChildPrice || Math.round(((tour.childPrice || (tour.price || 0) * (tour.childPercent || 75) / 100)) * (tour.holidayChildPercent || 150) / 100)).toLocaleString('vi-VN') %> đ</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt badge-gt-neutral">
+                                            <i class="fas fa-clock"></i> <%= tour.duration %> Ngày
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-gt badge-gt-warning">
+                                            <i class="fas fa-clock"></i> Chờ duyệt
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex align-items-center gap-1">
+                                            <button type="button" 
+                                                    class="btn btn-gt-ghost text-primary btn-gt-sm btn-add-tour-detail" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#detailAddTourModal"
+                                                    data-tour='<%- JSON.stringify(tour).replace(/'/g, "&apos;") %>'
+                                                    title="Xem toàn bộ thông tin chi tiết tour">
+                                                <i class="fas fa-eye me-1"></i> Chi tiết
+                                            </button>
+                                            <form action="/admin/tours/confirm-add/<%= tour._id %>" method="POST" class="d-inline m-0">
+                                                <button type="submit" class="btn btn-gt-primary btn-gt-sm">
+                                                    <i class="fas fa-check me-1"></i> Phê Duyệt
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
+    <!-- Modal: Xem Chi Tiết Tour Cần Duyệt (Admin) -->
+    <div class="modal fade" id="detailAddTourModal" tabindex="-1" aria-labelledby="detailAddTourModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content modal-gt-content">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-icon-badge emerald">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main mb-0" id="detailTourTitle">Chi Tiết Tour Du Lịch</h5>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <span class="badge-gt badge-gt-info fs-xs" id="detailTourPartner">Đối Tác</span>
+                                <span class="badge-gt badge-gt-secondary fs-xs" id="detailTourLocation">Việt Nam</span>
+                                <span class="badge-gt badge-gt-success fs-xs font-display" id="detailTourPrice">0 VNĐ</span>
+                                <span class="badge-gt badge-gt-warning fs-xs">Chờ Phê Duyệt</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-body" style="max-height: 75vh; overflow-y: auto;">
+                    <!-- Geographic Classification Section -->
+                    <div class="detail-section-card mb-3">
+                        <div class="detail-section-title">
+                            <i class="fas fa-map-location-dot text-primary"></i> Phân Cấp Địa Lý & Khu Vực
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-sm-4">
+                                <div class="p-2 rounded-3 bg-white border text-center shadow-xs">
+                                    <small class="text-muted fs-xs d-block mb-1"><i class="fas fa-location-dot text-danger me-1"></i>Điểm Đến</small>
+                                    <strong class="text-primary fs-sm" id="detailTourDestination">—</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-2 rounded-3 bg-white border text-center shadow-xs">
+                                    <small class="text-muted fs-xs d-block mb-1"><i class="fas fa-map text-secondary me-1"></i>Vùng Miền</small>
+                                    <strong class="text-secondary fs-sm" id="detailTourRegion">—</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-2 rounded-3 bg-white border text-center shadow-xs">
+                                    <small class="text-muted fs-xs d-block mb-1"><i class="fas fa-globe text-success me-1"></i>Quốc Gia</small>
+                                    <strong class="text-main fs-sm" id="detailTourCountry">—</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Gallery (Images & Videos) -->
+                    <div class="detail-section-card" id="detailTourMediaSection">
+                        <div class="detail-section-title">
+                            <i class="fas fa-photo-film text-primary"></i> Hình Ảnh & Video Gốc
+                        </div>
+                        <div class="detail-gallery-grid" id="detailTourGalleryGrid"></div>
+                    </div>
+
+                    <!-- Price Breakdown Section -->
+                    <div class="detail-section-card">
+                        <div class="detail-section-title">
+                            <i class="fas fa-tags text-primary"></i> Khung Bảng Giá Vé Chi Tiết
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-md-3">
+                                <div class="p-3 rounded-3 bg-white border text-center shadow-xs">
+                                    <div class="fs-xs text-muted mb-1"><i class="fas fa-user text-primary me-1"></i>Người Lớn (Thường)</div>
+                                    <div class="font-display fw-bold text-primary fs-5" id="detailTourPriceAdult">0 VNĐ</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="p-3 rounded-3 bg-white border text-center shadow-xs">
+                                    <div class="fs-xs text-muted mb-1"><i class="fas fa-child text-secondary me-1"></i><span id="detailTourPriceChildLabel">Trẻ Em (75%)</span></div>
+                                    <div class="font-display fw-bold text-secondary fs-5" id="detailTourPriceChild">0 VNĐ</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="p-3 rounded-3 bg-white border text-center shadow-xs" style="background: rgba(245, 158, 11, 0.05);">
+                                    <div class="fs-xs text-warning mb-1"><i class="fas fa-star me-1"></i><span id="detailTourPriceSpecialAdultLabel">Lễ - NL (150%)</span></div>
+                                    <div class="font-display fw-bold text-warning fs-5" id="detailTourPriceSpecialAdult">0 VNĐ</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="p-3 rounded-3 bg-white border text-center shadow-xs" style="background: rgba(245, 158, 11, 0.05);">
+                                    <div class="fs-xs text-warning mb-1"><i class="fas fa-star me-1"></i><span id="detailTourPriceSpecialChildLabel">Lễ - TE (150%)</span></div>
+                                    <div class="font-display fw-bold text-warning fs-5" id="detailTourPriceSpecialChild">0 VNĐ</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Highlights & Summary -->
+                    <div class="detail-section-card">
+                        <div class="detail-section-title">
+                            <i class="fas fa-star text-warning"></i> Điểm Nhấn Nổi Bật (Highlights)
+                        </div>
+                        <div class="detail-text-box mb-3" id="detailTourHighlights">Chưa có thông tin điểm nhấn.</div>
+
+                        <div class="detail-section-title mt-4">
+                            <i class="fas fa-align-left text-secondary"></i> Mô Tả Chi Tiết Toàn Bộ
+                        </div>
+                        <div class="detail-text-box" id="detailTourDesc">Chưa có mô tả chi tiết.</div>
+                    </div>
+
+                    <!-- Daily Schedules (Lịch Trình Chi Tiết Từng Ngày) -->
+                    <div class="detail-section-card">
+                        <div class="detail-section-title">
+                            <i class="fas fa-calendar-days text-info"></i> Lịch Trình Chi Tiết Từng Ngày
+                        </div>
+                        <div id="detailTourSchedulesList" class="d-flex flex-column gap-2"></div>
+                    </div>
+
+                    <!-- Availabilities (Ngày Khởi Hành & Số Chỗ) -->
+                    <div class="detail-section-card mb-0">
+                        <div class="detail-section-title">
+                            <i class="fas fa-calendar-check text-success"></i> Các Đợt Khởi Hành & Chỗ Trống
+                        </div>
+                        <div id="detailTourAvailabilitiesList" class="row g-2"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-white">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                    <form id="modalConfirmAddForm" action="" method="POST" class="d-inline m-0">
+                        <button type="submit" class="btn btn-gt-primary">
+                            <i class="fas fa-check me-1"></i> Phê Duyệt Mở Bán
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAddReqSchedule(id) {
+            const div = document.getElementById("add-sch-" + id);
+            if (div) {
+                div.style.display = div.style.display === "none" ? "block" : "none";
+            }
+        }
+
+        // Add Request Detail Tour Modal Populator
+        const detailAddTourModal = document.getElementById('detailAddTourModal');
+        if (detailAddTourModal) {
+            detailAddTourModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                const tourDataStr = button.getAttribute('data-tour');
+                if (!tourDataStr) return;
+                const tour = JSON.parse(tourDataStr);
+
+                const childPercent = tour.childPercent || 75;
+                const holidayAdultPercent = tour.holidayAdultPercent || 150;
+                const holidayChildPercent = tour.holidayChildPercent || 150;
+
+                const adultPrice = tour.price || 0;
+                const childPrice = tour.childPrice || Math.round((adultPrice * childPercent) / 100);
+                const specialAdultPrice = tour.specialAdultPrice || Math.round((adultPrice * holidayAdultPercent) / 100);
+                const specialChildPrice = tour.specialChildPrice || Math.round((childPrice * holidayChildPercent) / 100);
+
+                document.getElementById('detailTourTitle').textContent = tour.title || 'Chi Tiết Tour';
+                document.getElementById('detailTourPartner').innerHTML = `<i class="fas fa-handshake me-1"></i> ${tour.partner ? tour.partner.name : 'Chưa gán'}`;
+                document.getElementById('detailTourLocation').innerHTML = `<i class="fas fa-map-pin me-1"></i> ${tour.location || 'Việt Nam'} (${tour.duration || 1} Ngày)`;
+                document.getElementById('detailTourPrice').textContent = `${adultPrice.toLocaleString('vi-VN')} VNĐ`;
+
+                // Set Price Breakdown
+                document.getElementById('detailTourPriceAdult').textContent = `${adultPrice.toLocaleString('vi-VN')} VNĐ`;
+                document.getElementById('detailTourPriceChild').textContent = `${childPrice.toLocaleString('vi-VN')} VNĐ`;
+                document.getElementById('detailTourPriceSpecialAdult').textContent = `${specialAdultPrice.toLocaleString('vi-VN')} VNĐ`;
+                document.getElementById('detailTourPriceSpecialChild').textContent = `${specialChildPrice.toLocaleString('vi-VN')} VNĐ`;
+
+                const childLbl = document.getElementById('detailTourPriceChildLabel');
+                if (childLbl) childLbl.textContent = `Trẻ Em (${childPercent}%)`;
+                const spAdultLbl = document.getElementById('detailTourPriceSpecialAdultLabel');
+                if (spAdultLbl) spAdultLbl.textContent = `Lễ - NL (${holidayAdultPercent}%)`;
+                const spChildLbl = document.getElementById('detailTourPriceSpecialChildLabel');
+                if (spChildLbl) spChildLbl.textContent = `Lễ - TE (${holidayChildPercent}%)`;
+
+                document.getElementById('detailTourHighlights').textContent = tour.highlights || 'Chưa có thông tin điểm nhấn.';
+                document.getElementById('detailTourDesc').textContent = tour.description || 'Chưa có mô tả chi tiết.';
+
+                // Populate Geographic Info
+                const destName = tour.destination ? (tour.destination.name || tour.destination) : '—';
+                const regionName = tour.region ? (tour.region.name || tour.region) : '—';
+                const countryName = tour.country ? (tour.country.name || tour.country) : 'Việt Nam';
+                
+                const destEl = document.getElementById('detailTourDestination');
+                if (destEl) destEl.textContent = destName;
+                const regEl = document.getElementById('detailTourRegion');
+                if (regEl) regEl.textContent = regionName;
+                const ctryEl = document.getElementById('detailTourCountry');
+                if (ctryEl) ctryEl.textContent = countryName;
+
+                // Populate Media Gallery
+                const galleryGrid = document.getElementById('detailTourGalleryGrid');
+                galleryGrid.innerHTML = '';
+                const images = tour.images || [];
+                const videos = tour.videos || [];
+
+                images.forEach((imgUrl, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'detail-gallery-item gt-img-preview';
+                    item.setAttribute('data-gt-preview', imgUrl);
+                    item.setAttribute('data-gt-title', `${tour.title} (Ảnh ${idx + 1})`);
+                    item.innerHTML = `
+                        <img src="${imgUrl}" alt="Tour image ${idx + 1}">
+                        <div class="gallery-overlay"><i class="fas fa-magnifying-glass-plus fs-5"></i></div>
+                    `;
+                    galleryGrid.appendChild(item);
+                });
+
+                videos.forEach((vidUrl, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'detail-gallery-item';
+                    item.innerHTML = `
+                        <video src="${vidUrl}" controls preload="metadata"></video>
+                    `;
+                    galleryGrid.appendChild(item);
+                });
+
+                if (images.length === 0 && videos.length === 0) {
+                    galleryGrid.innerHTML = '<p class="text-muted fs-xs mb-0">Tour chưa tải lên hình ảnh hoặc video nào.</p>';
+                }
+
+                // Populate Schedules
+                const schedContainer = document.getElementById('detailTourSchedulesList');
+                schedContainer.innerHTML = '';
+                if (tour.schedules && tour.schedules.length > 0) {
+                    tour.schedules.forEach(sch => {
+                        const row = document.createElement('div');
+                        row.className = 'p-3 rounded-3 bg-white border d-flex align-items-start gap-3';
+                        row.innerHTML = `
+                            <span class="badge-gt badge-gt-primary flex-shrink-0">Ngày ${sch.day || sch.date}</span>
+                            <div class="fs-sm text-main">${sch.activity}</div>
+                        `;
+                        schedContainer.appendChild(row);
+                    });
+                } else {
+                    schedContainer.innerHTML = '<p class="text-muted fs-xs mb-0">Chưa thiết lập lịch trình từng ngày.</p>';
+                }
+
+                // Populate Availabilities
+                const avContainer = document.getElementById('detailTourAvailabilitiesList');
+                avContainer.innerHTML = '';
+                if (tour.departures && tour.departures.length > 0) {
+                    tour.departures.forEach(av => {
+                        const col = document.createElement('div');
+                        col.className = 'col-sm-6 col-md-4';
+                        col.innerHTML = `
+                            <div class="p-2 rounded-3 bg-white border d-flex align-items-center justify-content-between fs-xs">
+                                <span><i class="fas fa-calendar-alt text-primary me-1"></i> ${new Date(av.date).toLocaleDateString('vi-VN')}</span>
+                                <strong class="text-success">${av.availableSeats} chỗ</strong>
+                            </div>
+                        `;
+                        avContainer.appendChild(col);
+                    });
+                } else {
+                    avContainer.innerHTML = '<p class="text-muted fs-xs mb-0">Chưa có lịch khởi hành nào.</p>';
+                }
+
+                // Update form action in modal
+                const formEl = document.getElementById('modalConfirmAddForm');
+                if (formEl) {
+                    formEl.action = `/admin/tours/confirm-add/${tour._id}`;
+                }
+            });
+        }
+    </script>
 </body>
 </html>

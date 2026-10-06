@@ -1,163 +1,212 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký - GlobeTrek</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Đăng Ký Tài Khoản - GlobeTrek</title>
+    
+    <!-- Favicon / Brand Logo -->
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/images/logo.jpg">
+    <link rel="apple-touch-icon" href="/images/logo.jpg">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- GlobeTrek Design System -->
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        .register-container {
-            max-width: 900px;
-            margin: 2rem auto;
-            background: var(--glass-bg);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-lg);
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        .left-section {
-            background: var(--gradient-primary);
-            padding: 3rem;
+        body {
+            background-color: var(--bg-body);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
-            min-height: 100%;
+            padding: 2rem 1rem;
         }
 
-        .left-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
-            background-size: 60px 60px;
-            animation: headerPattern 60s linear infinite;
-            opacity: 0.6;
-        }
-
-        .left-section h2 {
-            color: white;
-            font-size: 2.5rem;
-            font-weight: 800;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .right-section {
-            padding: 3rem;
-        }
-
-        .register-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 2rem;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-        }
-
-        .form-group label {
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-control {
-            height: auto;
-            padding: 1rem;
-        }
-
-        .btn-auth {
+        .auth-card {
             width: 100%;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: var(--transition);
+            max-width: 960px;
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
         }
 
-        .btn-register {
-            background: var(--gradient-primary);
+        .auth-hero-side {
+            background: linear-gradient(135deg, rgba(6, 78, 59, 0.88) 0%, rgba(6, 182, 212, 0.85) 100%), 
+                        url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+            padding: 3.5rem 3rem;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .auth-form-side {
+            padding: 3.5rem 3rem;
+            background: #ffffff;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
             border: none;
-            color: white;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
         }
 
-        .btn-auth:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .error-message {
-            color: #ef4444;
-            background: rgba(239, 68, 68, 0.1);
-            padding: 1rem;
-            border-radius: var(--border-radius);
-            text-align: center;
-            margin-top: 1rem;
+        .password-toggle-btn:hover {
+            color: var(--primary-600);
         }
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div class="loading-overlay">
-        <div class="loading-spinner"></div>
-    </div>
-
-    <div class="container d-flex align-items-center min-vh-100">
-        <div class="register-container row">
-            <!-- Left Section -->
-            <div class="col-md-5 left-section d-none d-md-flex">
-                <h2>Chào mừng đến với GlobeTrek</h2>
+    <div class="auth-card row g-0">
+        <!-- Left Side: Clean Branding & Visual -->
+        <div class="col-lg-5 auth-hero-side d-none d-lg-flex">
+            <div>
+                <div class="brand-logo-wrap text-white mb-4">
+                    <img src="/images/logo.jpg" alt="Logo GlobeTrek" class="brand-logo-img">
+                    <span class="brand-name text-white fs-3">GlobeTrek</span>
+                </div>
+                <h2 class="display-6 fw-bold text-white mb-3">Đăng Ký Đối Tác Cùng GlobeTrek</h2>
+                <p class="text-white-50 fs-sm mb-0">Tham gia hệ thống phân phối tour du lịch và theo dõi doanh thu chuyên nghiệp.</p>
             </div>
 
-            <!-- Right Section -->
-            <div class="col-md-7 right-section">
-                <h1 class="register-title">Đăng ký tài khoản</h1>
-                <form action="/api/auth/signup" method="POST">
-                    <div class="form-group">
-                        <label for="name">Họ và tên</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Mật khẩu</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <button type="submit" class="btn btn-auth btn-register">Đăng ký</button>
-                </form>
+            <div class="text-white-50 fs-xs">
+                © <%= new Date().getFullYear() %> GlobeTrek Management Platform.
+            </div>
+        </div>
 
-                <% if (message) { %>
-                    <div class="error-message">
-                        <%= message %>
+        <!-- Right Side: Clean Register Form -->
+        <div class="col-lg-7 auth-form-side d-flex flex-column justify-content-center">
+            <div class="mb-4">
+                <div class="d-inline-flex d-lg-none brand-logo-wrap mb-3">
+                    <img src="/images/logo.jpg" alt="Logo GlobeTrek" class="brand-logo-img">
+                    <span class="brand-name">GlobeTrek</span>
+                </div>
+                <h3 class="fw-bold text-main mb-1">Đăng Ký Tài Khoản</h3>
+                <p class="text-muted fs-sm">Điền thông tin để đăng ký tài khoản đối tác</p>
+            </div>
+
+            <% if (typeof message !== 'undefined' && message) { %>
+                <div class="alert alert-danger d-flex align-items-center gap-2 rounded-4 py-2 px-3 mb-4" role="alert">
+                    <i class="fas fa-circle-exclamation flex-shrink-0"></i>
+                    <div class="fs-sm"><%= message %></div>
+                </div>
+            <% } %>
+
+            <form action="/api/auth/signup" method="POST">
+                <div class="form-group-gt mb-3">
+                    <label for="name" class="form-label-gt">
+                        <i class="fas fa-building text-primary me-1"></i> Họ và tên / Tên doanh nghiệp
+                    </label>
+                    <input type="text" class="form-control-gt" id="name" name="name" placeholder="Ví dụ: Công ty Du Lịch Á Châu hoặc Nguyễn Văn A" maxlength="50" required>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group-gt">
+                            <label for="phone" class="form-label-gt">
+                                <i class="fas fa-phone text-secondary me-1"></i> Số điện thoại
+                            </label>
+                            <input type="tel" class="form-control-gt" id="phone" name="phone" placeholder="0912345678" maxlength="20" required>
+                        </div>
                     </div>
-                <% } %>
+                    <div class="col-md-6">
+                        <div class="form-group-gt">
+                            <label for="email" class="form-label-gt">
+                                <i class="fas fa-envelope text-primary me-1"></i> Email
+                            </label>
+                            <input type="email" class="form-control-gt" id="email" name="email" placeholder="partner@gmail.com" maxlength="50" required autocomplete="email">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group-gt">
+                            <label for="dob" class="form-label-gt">
+                                <i class="fas fa-calendar-alt text-info me-1"></i> Ngày sinh (DOB)
+                            </label>
+                            <input type="date" class="form-control-gt" id="dob" name="dob">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-gt">
+                            <label for="gender" class="form-label-gt">
+                                <i class="fas fa-venus-mars text-success me-1"></i> Giới tính
+                            </label>
+                            <select class="form-select form-control-gt" id="gender" name="gender">
+                                <option value="Male">Nam (Male)</option>
+                                <option value="Female">Nữ (Female)</option>
+                                <option value="Other">Khác (Other)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group-gt mb-3">
+                    <label for="address" class="form-label-gt">
+                        <i class="fas fa-location-dot text-danger me-1"></i> Địa chỉ trụ sở / Liên hệ
+                    </label>
+                    <input type="text" class="form-control-gt" id="address" name="address" placeholder="Ví dụ: 123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM" maxlength="255" required>
+                </div>
+
+                <div class="form-group-gt mb-3">
+                    <label for="password" class="form-label-gt">
+                        <i class="fas fa-lock text-warning me-1"></i> Mật Khẩu
+                    </label>
+                    <div class="position-relative">
+                        <input type="password" class="form-control-gt pe-5" id="password" name="password" placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)" minlength="6" maxlength="50" required autocomplete="new-password">
+                        <button type="button" class="password-toggle-btn" id="regPasswordToggleBtn" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye" id="regPasswordEyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="termsAgree" required checked>
+                    <label class="form-check-label fs-xs text-muted" for="termsAgree">
+                        Tôi đồng ý với các điều khoản hoạt động của GlobeTrek.
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-gt-primary w-100 btn-gt-lg mb-3">
+                    <i class="fas fa-user-plus me-1"></i> Đăng Ký Tài Khoản Đối Tác
+                </button>
+            </form>
+
+            <div class="text-center pt-3 border-top">
+                <p class="fs-sm text-muted mb-0">
+                    Đã có tài khoản? 
+                    <a href="/api/auth/login" class="fw-bold text-primary">Đăng nhập ngay</a>
+                </p>
             </div>
         </div>
     </div>
 
+    <script src="/js/csrf.js"></script>
     <script>
-        // Remove loading overlay when page is loaded
-        window.addEventListener('load', function() {
-            const loadingOverlay = document.querySelector('.loading-overlay');
-            loadingOverlay.style.opacity = '0';
-            setTimeout(() => {
-                loadingOverlay.style.display = 'none';
-            }, 500);
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('regPasswordToggleBtn');
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('regPasswordEyeIcon');
+
+            if (toggleBtn && passwordInput) {
+                toggleBtn.addEventListener('click', function () {
+                    const isPassword = passwordInput.getAttribute('type') === 'password';
+                    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                    eyeIcon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+                });
+            }
         });
     </script>
 </body>

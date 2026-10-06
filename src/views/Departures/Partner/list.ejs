@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Khởi Hành & Chỗ - GlobeTrek Partner</title>
+</head>
+<body>
+    <%- include('../../DashboardPN', { pageTitle: 'Lịch Khởi Hành & Chỗ' }) %>
+
+    <div class="main-content-layout">
+        <div class="hero-header-gt d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="hero-badge-pill"><i class="fas fa-calendar-check text-warning me-1"></i> Vận Hành Tour</span>
+                <h1 class="text-white mb-2">Lịch Khởi Hành & Chỗ</h1>
+                <p class="mb-0">Quản lý sức chứa, chỗ đang giữ, chỗ đã bán và trạng thái mở bán từng lịch.</p>
+            </div>
+            <button class="btn btn-light rounded-pill px-4 py-2 fw-bold text-primary shadow-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createDepartureModal">
+                <i class="fas fa-plus-circle me-1"></i> Thêm Lịch
+            </button>
+        </div>
+
+        <form method="GET" action="/partner/departures" class="card-gt card-gt-static p-3 mb-4">
+            <div class="departure-filters">
+                <div class="filter-field">
+                    <label class="form-label fs-xs fw-bold">Tên tour</label>
+                    <input type="search" class="form-control" name="search" value="<%= filters.search %>" placeholder="Tìm tên tour...">
+                </div>
+                <div class="filter-field">
+                    <label class="form-label fs-xs fw-bold">Từ ngày</label>
+                    <input type="date" class="form-control" name="fromDate" value="<%= filters.fromDate %>">
+                </div>
+                <div class="filter-field">
+                    <label class="form-label fs-xs fw-bold">Đến ngày</label>
+                    <input type="date" class="form-control" name="toDate" value="<%= filters.toDate %>">
+                </div>
+                <div class="filter-field">
+                    <label class="form-label fs-xs fw-bold">Trạng thái</label>
+                    <select class="form-select" name="status">
+                        <option value="">Tất cả</option>
+                        <option value="open" <%= filters.status === 'open' ? 'selected' : '' %>>Đang mở bán</option>
+                        <option value="closed" <%= filters.status === 'closed' ? 'selected' : '' %>>Đã đóng bán</option>
+                        <option value="departed" <%= filters.status === 'departed' ? 'selected' : '' %>>Đã khởi hành</option>
+                        <option value="canceled" <%= filters.status === 'canceled' ? 'selected' : '' %>>Đã hủy</option>
+                    </select>
+                </div>
+                <div class="filter-field filter-field-sort">
+                    <label class="form-label fs-xs fw-bold">Sắp xếp</label>
+                    <select class="form-select" name="sort">
+                        <option value="date_asc" <%= filters.sort === 'date_asc' ? 'selected' : '' %>>Ngày tăng dần</option>
+                        <option value="date_desc" <%= filters.sort === 'date_desc' ? 'selected' : '' %>>Ngày giảm dần</option>
+                        <option value="available_desc" <%= filters.sort === 'available_desc' ? 'selected' : '' %>>Chỗ trống giảm dần</option>
+                        <option value="available_asc" <%= filters.sort === 'available_asc' ? 'selected' : '' %>>Chỗ trống tăng dần</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-gt-primary btn-gt-sm" type="submit" title="Áp dụng"><i class="fas fa-filter"></i></button>
+                    <a class="btn btn-gt-outline btn-gt-sm" href="/partner/departures" title="Xóa lọc"><i class="fas fa-rotate-left"></i></a>
+                </div>
+            </div>
+        </form>
+
+        <div id="departureAlert"></div>
+        <div class="table-gt-container">
+            <div class="table-responsive">
+                <table class="table-gt">
+                    <thead>
+                        <tr>
+                            <th>Tour</th>
+                            <th>Ngày khởi hành</th>
+                            <th class="text-center">Sức chứa</th>
+                            <th class="text-center">Đang giữ</th>
+                            <th class="text-center">Đã bán</th>
+                            <th class="text-center">Còn trống</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!departures.length) { %>
+                            <tr><td colspan="8" class="text-center text-muted py-5">Không có lịch khởi hành phù hợp.</td></tr>
+                        <% } %>
+                        <% departures.forEach(departure => { 
+                            const statusText = {
+                                open: 'Đang mở bán',
+                                closed: 'Đã đóng bán',
+                                departed: 'Đã khởi hành',
+                                canceled: 'Đã hủy'
+                            }[departure.status] || departure.status;
+                            const statusClass = departure.status === 'open' ? 'badge-gt-success' : (departure.status === 'closed' ? 'badge-gt-warning' : 'badge-gt-neutral');
+                        %>
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-main fs-sm"><%= departure.title %></div>
+                                    <% if (departure.note) { %><div class="text-muted fs-xs"><%= departure.note %></div><% } %>
+                                </td>
+                                <td><span class="badge-gt badge-gt-info"><i class="fas fa-calendar-day"></i> <%= departure.departureText %></span></td>
+                                <td class="text-center fw-bold"><%= departure.capacity %></td>
+                                <td class="text-center text-warning fw-semibold"><%= departure.heldSeats %></td>
+                                <td class="text-center text-primary fw-semibold"><%= departure.soldSeats %></td>
+                                <td class="text-center"><span class="badge-gt <%= departure.availableSeats > 0 ? 'badge-gt-success' : 'badge-gt-danger' %>"><%= departure.availableSeats %></span></td>
+                                <td><span class="badge-gt <%= statusClass %>"><%= statusText %></span></td>
+                                <td class="text-end text-nowrap">
+                                    <a class="btn btn-gt-ghost btn-gt-sm text-primary"
+                                       href="/partner/orders?search=<%= encodeURIComponent(departure.title) %>&departureDate=<%= departure.departureDate %>">
+                                        <i class="fas fa-users"></i>
+                                    </a>
+                                    <button class="btn btn-gt-ghost btn-gt-sm text-primary edit-departure"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editDepartureModal"
+                                            data-departure='<%- JSON.stringify(departure).replace(/'/g, "&#39;") %>'>
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <button class="btn btn-gt-ghost btn-gt-sm text-danger delete-departure"
+                                            data-id="<%= departure.id %>"
+                                            data-title="<%= departure.title %> — <%= departure.departureText %>">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <% if (total > 0) { %>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
+                <span class="text-muted fs-xs"><%= (currentPage - 1) * pageSize + 1 %>–<%= Math.min(currentPage * pageSize, total) %> của <%= total %> lịch</span>
+                <% if (totalPages > 1) { %>
+                    <div class="d-flex gap-2">
+                        <% const startPage = Math.max(1, currentPage - 2); const endPage = Math.min(totalPages, currentPage + 2); %>
+                        <% if (currentPage > 1) { %>
+                            <a href="?<%= paginationQuery ? paginationQuery + '&' : '' %>page=<%= currentPage - 1 %>" class="btn btn-gt-outline btn-gt-sm">Trước</a>
+                        <% } %>
+                        <% for (let page = startPage; page <= endPage; page++) { %>
+                            <a href="?<%= paginationQuery ? paginationQuery + '&' : '' %>page=<%= page %>"
+                               class="btn <%= page === currentPage ? 'btn-gt-primary' : 'btn-gt-outline' %> btn-gt-sm"><%= page %></a>
+                        <% } %>
+                        <% if (currentPage < totalPages) { %>
+                            <a href="?<%= paginationQuery ? paginationQuery + '&' : '' %>page=<%= currentPage + 1 %>" class="btn btn-gt-outline btn-gt-sm">Sau</a>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+
+    <div class="modal fade" id="createDepartureModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <form class="modal-content modal-gt-content" id="createDepartureForm">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <h5 class="modal-title fw-bold">Thêm lịch khởi hành</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Tour</label>
+                            <select class="form-select" name="tourId" required>
+                                <option value="">Chọn tour</option>
+                                <% tours.forEach(tour => { %><option value="<%= tour._id %>"><%= tour.title %></option><% }) %>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Sức chứa mỗi lịch</label>
+                            <input class="form-control" type="number" name="capacity" min="1" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Cách tạo lịch</label>
+                            <div class="d-flex gap-3">
+                                <label><input type="radio" name="mode" value="custom" checked> Chọn ngày</label>
+                                <label><input type="radio" name="mode" value="range"> Tạo theo khoảng</label>
+                            </div>
+                        </div>
+                        <div class="col-12" id="customDatesFields">
+                            <label class="form-label fw-semibold">Ngày khởi hành</label>
+                            <div id="departureDateInputs"><input class="form-control mb-2" type="date" name="dates[]" required></div>
+                            <button type="button" class="btn btn-gt-outline btn-gt-sm" id="addDepartureDate"><i class="fas fa-plus"></i> Thêm ngày</button>
+                        </div>
+                        <div class="col-12 d-none" id="rangeDatesFields">
+                            <div class="row g-3">
+                                <div class="col-md-4"><label class="form-label">Từ ngày</label><input class="form-control" type="date" name="startDate"></div>
+                                <div class="col-md-4"><label class="form-label">Đến ngày</label><input class="form-control" type="date" name="endDate"></div>
+                                <div class="col-md-4"><label class="form-label">Chu kỳ (ngày)</label><input class="form-control" type="number" name="intervalDays" min="1" value="7"></div>
+                            </div>
+                        </div>
+                        <div class="col-12"><label class="form-label fw-semibold">Ghi chú</label><textarea class="form-control" name="note" maxlength="500"></textarea></div>
+                    </div>
+                    <div class="text-danger fs-sm mt-3" id="createDepartureError"></div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-gt-primary">Tạo lịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editDepartureModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content modal-gt-content" id="editDepartureForm">
+                <div class="modal-header border-0 bg-subtle-mint">
+                    <h5 class="modal-title fw-bold">Cập nhật lịch khởi hành</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="editDepartureId">
+                    <p class="fw-bold text-main" id="editDepartureTitle"></p>
+                    <label class="form-label">Sức chứa</label>
+                    <input class="form-control mb-3" id="editDepartureCapacity" type="number" min="1" required>
+                    <div class="text-muted fs-xs mb-3" id="editDepartureMinimum"></div>
+                    <label class="form-label">Trạng thái</label>
+                    <select class="form-select mb-3" id="editDepartureStatus">
+                        <option value="open">Đang mở bán</option>
+                        <option value="closed">Đóng bán</option>
+                    </select>
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-control" id="editDepartureNote" maxlength="500"></textarea>
+                    <div class="text-danger fs-sm mt-3" id="editDepartureError"></div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-gt-ghost" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-gt-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const requestJson = async (url, options) => {
+            const response = await fetch(url, {
+                ...options,
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(options?.headers || {}) },
+            });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.message || 'Có lỗi xảy ra');
+            return payload;
+        };
+
+        document.querySelectorAll('input[name="mode"]').forEach(input => input.addEventListener('change', function () {
+            const range = this.value === 'range';
+            document.getElementById('customDatesFields').classList.toggle('d-none', range);
+            document.getElementById('rangeDatesFields').classList.toggle('d-none', !range);
+        }));
+        document.getElementById('addDepartureDate').addEventListener('click', function () {
+            document.getElementById('departureDateInputs').insertAdjacentHTML('beforeend', '<input class="form-control mb-2" type="date" name="dates[]">');
+        });
+
+        document.getElementById('createDepartureForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const data = new FormData(this);
+            const payload = Object.fromEntries(data.entries());
+            payload.dates = data.getAll('dates[]').filter(Boolean);
+            try {
+                await requestJson('/partner/departures', { method: 'POST', body: JSON.stringify(payload) });
+                location.reload();
+            } catch (error) {
+                document.getElementById('createDepartureError').textContent = error.message;
+            }
+        });
+
+        document.querySelectorAll('.edit-departure').forEach(button => button.addEventListener('click', function () {
+            const departure = JSON.parse(this.dataset.departure);
+            document.getElementById('editDepartureId').value = departure.id;
+            document.getElementById('editDepartureTitle').textContent = `${departure.title} — ${departure.departureText}`;
+            document.getElementById('editDepartureCapacity').value = departure.capacity;
+            document.getElementById('editDepartureCapacity').min = Math.max(1, departure.heldSeats + departure.soldSeats);
+            document.getElementById('editDepartureStatus').value = ['open', 'closed'].includes(departure.status) ? departure.status : 'closed';
+            document.getElementById('editDepartureNote').value = departure.note || '';
+            document.getElementById('editDepartureMinimum').textContent = `Tối thiểu ${Math.max(1, departure.heldSeats + departure.soldSeats)} chỗ (${departure.heldSeats} đang giữ, ${departure.soldSeats} đã bán)`;
+            document.getElementById('editDepartureError').textContent = '';
+        }));
+
+        document.getElementById('editDepartureForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const id = document.getElementById('editDepartureId').value;
+            try {
+                await requestJson(`/partner/departures/${id}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        capacity: Number(document.getElementById('editDepartureCapacity').value),
+                        status: document.getElementById('editDepartureStatus').value,
+                        note: document.getElementById('editDepartureNote').value,
+                    }),
+                });
+                location.reload();
+            } catch (error) {
+                document.getElementById('editDepartureError').textContent = error.message;
+            }
+        });
+
+        document.querySelectorAll('.delete-departure').forEach(button => button.addEventListener('click', async function () {
+            if (!confirm(`Xóa lịch ${this.dataset.title}?`)) return;
+            try {
+                await requestJson(`/partner/departures/${this.dataset.id}/delete`, { method: 'POST', body: '{}' });
+                location.reload();
+            } catch (error) {
+                alert(error.message);
+            }
+        }));
+    </script>
+</body>
+</html>
