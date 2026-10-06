@@ -4,8 +4,8 @@ require('dotenv').config();
 const endpoint = process.env.MINIO_ENDPOINT || 'localhost';
 const port = parseInt(process.env.MINIO_PORT, 10) || 9000;
 const useSSL = process.env.MINIO_USE_SSL === 'true';
-const accessKey = process.env.MINIO_ACCESS_KEY || 'admin_globetrek';
-const secretKey = process.env.MINIO_SECRET_KEY || 'MatKhauSieuBaoMat123@';
+const accessKey = process.env.MINIO_ACCESS_KEY || '';
+const secretKey = process.env.MINIO_SECRET_KEY || '';
 const bucketName = process.env.MINIO_BUCKET_NAME || 'globetrek-media';
 const publicUrl = process.env.MINIO_PUBLIC_URL || `http://${endpoint}:${port}`;
 

@@ -18,8 +18,8 @@ services:
       - MINIO_ENDPOINT=minio
       - MINIO_PORT=9000
       - MINIO_USE_SSL=false
-      - MINIO_ACCESS_KEY=admin_globetrek
-      - MINIO_SECRET_KEY=MatKhauSieuBaoMat123@
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
       - MINIO_BUCKET_NAME=globetrek-media
       - MINIO_PUBLIC_URL=http://localhost:9000
       - USE_CLOUDINARY=false
@@ -65,8 +65,8 @@ services:
       - "9000:9000" # S3 API Port
       - "9001:9001" # Web Management Console Port
     environment:
-      MINIO_ROOT_USER: admin_globetrek
-      MINIO_ROOT_PASSWORD: MatKhauSieuBaoMat123@
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     volumes:
       - ./data/minio_data:/data
     command: server /data --console-address ":9001"
@@ -79,11 +79,14 @@ services:
     container_name: globetrek_minio_init
     depends_on:
       - minio
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     entrypoint: >
       /bin/sh -c "
       echo 'Waiting for MinIO server to start...';
       sleep 3;
-      mc alias set local http://minio:9000 admin_globetrek MatKhauSieuBaoMat123@;
+      mc alias set local http://minio:9000 \"$${MINIO_ACCESS_KEY}\" \"$${MINIO_SECRET_KEY}\";
       echo 'Creating bucket globetrek-media if not exists...';
       mc mb --ignore-existing local/globetrek-media;
       echo 'Setting public download policy on bucket...';
