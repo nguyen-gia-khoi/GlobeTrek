@@ -195,7 +195,7 @@ const signin = async (req, res) => {
           return res.redirect(area === "admin" ? "/home" : "/homePartner");
         }
         const message = "Your account has not been verified by an admin. Please wait for approval.";
-        return res.render('Authen/login', { message });
+        return res.render('Authen/Login', { message });
       }
     } else {
       // Invalid email or password
@@ -204,7 +204,7 @@ const signin = async (req, res) => {
       if (isClient) {
         return res.status(400).json({ message });
       } else {
-        return res.render('Authen/login', { message });
+        return res.render('Authen/Login', { message });
       }
     }
   } catch (error) {
@@ -212,7 +212,7 @@ const signin = async (req, res) => {
     if (isClient) {
       return res.status(500).json({ message, error: error.message });
     } else {
-      return res.render('Authen/login', { message });
+      return res.render('Authen/Login', { message });
     }
   }
 };
