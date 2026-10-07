@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -13,7 +11,7 @@ services:
       PORT: 8081
       NODE_ENV: ${NODE_ENV:-production}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
-      MONGODB_URI: mongodb://mongodb:27017/GlobeTrek
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/GlobeTrek?authSource=admin
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
@@ -39,6 +37,11 @@ services:
     image: mongo:6.0
     container_name: globetrek_mongodb
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     volumes:
       - ./data/mongo_data:/data/db
     healthcheck:
@@ -65,7 +68,7 @@ services:
       - globetrek_network
 
   minio:
-    image: minio/minio:latest
+    image: pgsty/silo:RELEASE.2026-09-16T00-00-00Z
     container_name: globetrek_minio
     restart: unless-stopped
     ports:
@@ -78,36 +81,11 @@ services:
       - ./data/minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
       interval: 5s
       timeout: 5s
       retries: 20
       start_period: 10s
-    networks:
-      - globetrek_network
-
-  minio-init:
-    image: minio/mc:latest
-    container_name: globetrek_minio_init
-    restart: on-failure
-    depends_on:
-      minio:
-        condition: service_healthy
-    environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-globetrek-media}
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        until mc alias set local http://minio:9000 "$$MINIO_ACCESS_KEY" "$$MINIO_SECRET_KEY"; do
-          echo "Waiting for MinIO login..."
-          sleep 2
-        done
-        mc mb --ignore-existing "local/$$MINIO_BUCKET_NAME"
-        mc anonymous set download "local/$$MINIO_BUCKET_NAME"
-        echo "MinIO bucket is ready"
     networks:
       - globetrek_network
 
